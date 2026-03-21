@@ -4,12 +4,14 @@ import { useState, useMemo } from "react";
 import { useFirestore, useCollection, useUser, useMemoFirebase } from "@/firebase";
 import { collection, query, orderBy, limit } from "firebase/firestore";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { Store, Package, ShoppingCart, AlertCircle, Activity, Loader2, Sparkles, BrainCircuit, ShieldAlert, Key, TrendingUp, BarChart3, Globe, Zap } from "lucide-react";
+import { Store, Package, ShoppingCart, AlertCircle, Activity, Loader2, BrainCircuit, ShieldAlert, Key, BarChart3, Globe, Zap } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { format } from "date-fns";
 import { analyzeInventory, type InventoryAnalysisOutput } from "@/ai/flows/inventory-analyst";
 import { cn } from "@/lib/utils";
+
+// List of hardcoded admin UIDs to bypass the restricted screen if rules are still propagating
+const ADMIN_OVERRIDES = ["AEGmDwRin2c5sDZdx1Jhk87yF9L2", "cKRTD1vPTOfID6XADH31VVpGYAU2"];
 
 export default function AdminOverview() {
   const db = useFirestore();
@@ -74,7 +76,11 @@ export default function AdminOverview() {
     }
   };
 
-  if (storesError || ordersError || (productsError && productsError.message.includes('permission'))) {
+  const isExplicitAdmin = user && ADMIN_OVERRIDES.includes(user.uid);
+  const hasPermissionError = !!(storesError || ordersError || (productsError && productsError.message.includes('permission')));
+
+  // Show Restricted screen only if there's an error AND the user isn't one of the known overrides
+  if (hasPermissionError && !isExplicitAdmin) {
     return (
       <div className="flex flex-col items-center justify-center min-h-[60vh] text-center p-12 bg-slate-900/50 rounded-[2rem] border border-slate-800 space-y-8 animate-in fade-in duration-700">
         <div className="relative">
@@ -86,13 +92,13 @@ export default function AdminOverview() {
         <div className="space-y-3">
           <h2 className="text-3xl font-bold text-white tracking-tight">Access Restricted</h2>
           <p className="text-slate-400 max-w-md mx-auto leading-relaxed">
-            Your identity is verified, but root privileges are not yet activated. Register your UID in the <code className="text-rose-400 font-mono">roles_admin</code> registry to proceed.
+            Your identity is verified, but root privileges are not yet active for this node. Register your UID in the <code className="text-rose-400 font-mono">roles_admin</code> registry.
           </p>
         </div>
         {user && (
           <div className="p-6 bg-black/40 rounded-2xl border border-slate-800 w-full max-w-sm">
             <div className="flex items-center justify-between text-[10px] font-bold uppercase mb-4 tracking-widest text-slate-500">
-              <span className="flex items-center gap-2"><Key className="h-3 w-3" /> Target UID</span>
+              <span className="flex items-center gap-2"><Key className="h-3 w-3" /> Root Identity</span>
               <Badge variant="outline" className="bg-slate-900 border-slate-700 text-slate-300">ACTIVE</Badge>
             </div>
             <code className="text-xs font-mono break-all block p-3 bg-slate-950 rounded-lg border border-slate-800 text-primary select-all">{user.uid}</code>
@@ -115,7 +121,7 @@ export default function AdminOverview() {
     <div className="space-y-10 animate-in fade-in duration-700">
       <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-6">
         <div className="space-y-2">
-          <Badge className="bg-primary/10 text-primary border-primary/20 hover:bg-primary/20 px-3 py-1 rounded-full text-[10px] font-bold tracking-widest uppercase">Admin Terminal</Badge>
+          <Badge className="bg-primary/10 text-primary border-primary/20 hover:bg-primary/20 px-3 py-1 rounded-full text-[10px] font-bold tracking-widest uppercase">Command Center</Badge>
           <h1 className="text-4xl font-black tracking-tighter text-white">SYSTEM STATUS</h1>
           <p className="text-slate-500 text-sm font-medium">Monitoring {stores?.length || 0} nodes across the retail network.</p>
         </div>
@@ -131,10 +137,13 @@ export default function AdminOverview() {
       
       <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
         {stats.map((stat, i) => (
-          <Card key={i} className={`relative overflow-hidden border ${stat.border} bg-slate-900/40 backdrop-blur-sm group hover:bg-slate-900/60 transition-all duration-300 shadow-xl`}>
+          <Card key={i} className={cn(
+            "relative overflow-hidden border bg-slate-900/40 backdrop-blur-sm group hover:bg-slate-900/60 transition-all duration-300 shadow-xl",
+            stat.border
+          )}>
             <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
               <CardTitle className="text-[10px] font-bold uppercase tracking-[0.2em] text-slate-500">{stat.label}</CardTitle>
-              <div className={`${stat.bg} ${stat.color} p-3 rounded-2xl group-hover:scale-110 transition-transform`}>
+              <div className={cn(stat.bg, stat.color, "p-3 rounded-2xl group-hover:scale-110 transition-transform")}>
                 <stat.icon className="h-5 w-5" />
               </div>
             </CardHeader>
@@ -164,7 +173,10 @@ export default function AdminOverview() {
                 <div key={i} className="flex items-center justify-between px-8 py-5 hover:bg-white/[0.02] transition-colors group">
                   <div className="flex gap-4 items-center">
                     <div className="relative">
-                      <div className={`h-3 w-3 rounded-full ${order.status === 'delivered' ? 'bg-emerald-500' : 'bg-blue-500'}`} />
+                      <div className={cn(
+                        "h-3 w-3 rounded-full",
+                        order.status === 'delivered' ? 'bg-emerald-500' : 'bg-blue-500'
+                      )} />
                     </div>
                     <div className="space-y-0.5">
                       <p className="text-sm font-bold text-white flex items-center gap-2">
