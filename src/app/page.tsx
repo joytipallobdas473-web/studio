@@ -3,32 +3,26 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import Link from "next/link";
-import { AuthCardWrapper } from "@/components/auth-card-wrapper";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Package, Lock, User, ShieldCheck, Loader2, AlertCircle } from "lucide-react";
+import { Package, User, ShieldCheck, Loader2, Info } from "lucide-react";
 import { useAuth, useUser } from "@/firebase";
 import { signInAnonymously } from "firebase/auth";
 import { toast } from "@/hooks/use-toast";
-import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 
 export default function Home() {
   const router = useRouter();
   const auth = useAuth();
   const { user, loading: userLoading } = useUser();
   const [isLoading, setIsLoading] = useState(false);
-  const [authError, setAuthError] = useState<string | null>(null);
 
-  const handleLogin = async (e: React.FormEvent, role: "retailer" | "admin") => {
-    e.preventDefault();
+  const handleLogin = async (role: "retailer" | "admin") => {
     setIsLoading(true);
-    setAuthError(null);
 
     try {
       // Authenticate with Firebase. Prototype uses Anonymous Auth.
+      // Any credentials entered in the form are ignored in this prototype.
       if (!auth.currentUser) {
         await signInAnonymously(auth);
       }
@@ -45,14 +39,11 @@ export default function Home() {
       }
     } catch (error: any) {
       console.error("Auth error:", error);
-      let message = "Authentication failed. Ensure Anonymous Auth is enabled in Firebase Console.";
-      
-      if (error.code === 'auth/api-key-not-valid') {
-        message = "Invalid Firebase API Key. Please check src/firebase/config.ts.";
-      }
-      
-      setAuthError(message);
-      toast({ title: "Login Failed", description: message, variant: "destructive" });
+      toast({ 
+        title: "Login Failed", 
+        description: "Authentication failed. Ensure Anonymous Auth is enabled in the Firebase Console.", 
+        variant: "destructive" 
+      });
       setIsLoading(false);
     }
   };
@@ -67,51 +58,73 @@ export default function Home() {
 
   return (
     <div className="min-h-screen flex flex-col items-center justify-center p-4 bg-background">
-      <div className="mb-8 flex flex-col items-center animate-in fade-in slide-in-from-top-4">
-        <div className="bg-primary p-4 rounded-2xl shadow-xl mb-4"><Package className="h-10 w-10 text-white" /></div>
-        <h1 className="text-4xl font-bold text-primary tracking-tight">Retails Stocks</h1>
-        <p className="text-muted-foreground font-medium">Enterprise Inventory Network</p>
+      <div className="mb-8 flex flex-col items-center animate-in fade-in slide-in-from-top-4 duration-500">
+        <div className="bg-primary p-4 rounded-2xl shadow-xl mb-4">
+          <Package className="h-10 w-10 text-white" />
+        </div>
+        <h1 className="text-4xl font-bold text-primary tracking-tight text-center">Retail Network</h1>
+        <p className="text-muted-foreground font-medium">Inventory & Stock Management</p>
       </div>
 
-      {authError && (
-        <div className="w-full max-w-[400px] mb-6">
-          <Alert variant="destructive">
-            <AlertCircle className="h-4 w-4" />
-            <AlertDescription className="text-xs font-medium">{authError}</AlertDescription>
-          </Alert>
-        </div>
-      )}
+      <Card className="w-full max-w-[400px] shadow-lg border-t-4 border-t-primary animate-in zoom-in duration-300">
+        <CardHeader>
+          <CardTitle>Test Portal Access</CardTitle>
+          <CardDescription>
+            This prototype uses **Anonymous Authentication**. You do not need real credentials to test.
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-6">
+          <div className="grid gap-4">
+            <Button 
+              onClick={() => handleLogin("retailer")} 
+              className="h-14 font-bold flex justify-between px-6 hover:bg-muted/50"
+              variant="outline"
+              disabled={isLoading}
+            >
+              <div className="flex items-center gap-3">
+                <div className="bg-accent/20 p-2 rounded-lg text-accent">
+                  <User className="h-5 w-5" />
+                </div>
+                <div className="text-left">
+                  <p className="text-sm">Retailer Portal</p>
+                  <p className="text-[10px] font-normal text-muted-foreground uppercase">Store Manager Access</p>
+                </div>
+              </div>
+              <Loader2 className={isLoading ? "animate-spin h-4 w-4" : "hidden"} />
+            </Button>
 
-      <Tabs defaultValue="retailer" className="w-full max-w-[400px]">
-        <TabsList className="grid w-full grid-cols-2 mb-6 h-12">
-          <TabsTrigger value="retailer" className="font-bold text-xs uppercase"><User className="h-4 w-4 mr-2" /> Retailer</TabsTrigger>
-          <TabsTrigger value="admin" className="font-bold text-xs uppercase"><ShieldCheck className="h-4 w-4 mr-2" /> Admin</TabsTrigger>
-        </TabsList>
+            <Button 
+              onClick={() => handleLogin("admin")} 
+              className="h-14 font-bold flex justify-between px-6 bg-slate-900 text-white hover:bg-slate-800"
+              disabled={isLoading}
+            >
+              <div className="flex items-center gap-3">
+                <div className="bg-accent p-2 rounded-lg text-slate-900">
+                  <ShieldCheck className="h-5 w-5" />
+                </div>
+                <div className="text-left">
+                  <p className="text-sm">Central Admin</p>
+                  <p className="text-[10px] font-normal text-slate-400 uppercase">Warehouse Management</p>
+                </div>
+              </div>
+              <Loader2 className={isLoading ? "animate-spin h-4 w-4" : "hidden"} />
+            </Button>
+          </div>
 
-        <TabsContent value="retailer">
-          <AuthCardWrapper headerTitle="Retailer Portal" headerLabel="Store Manager Login">
-            <form onSubmit={(e) => handleLogin(e, "retailer")} className="space-y-4">
-              <Input placeholder="Manager ID" className="h-11 bg-muted/20" required />
-              <Input type="password" placeholder="Security Pin" className="h-11 bg-muted/20" required />
-              <Button type="submit" className="w-full h-11 font-bold" disabled={isLoading}>
-                {isLoading ? <Loader2 className="animate-spin" /> : "Access Dashboard"}
-              </Button>
-            </form>
-          </AuthCardWrapper>
-        </TabsContent>
-
-        <TabsContent value="admin">
-          <AuthCardWrapper headerTitle="Central Admin" headerLabel="Warehouse Management">
-            <form onSubmit={(e) => handleLogin(e, "admin")} className="space-y-4">
-              <Input type="email" placeholder="Admin Email" className="h-11 bg-muted/20" required />
-              <Input type="password" placeholder="Master Password" className="h-11 bg-muted/20" required />
-              <Button type="submit" className="w-full h-11 bg-slate-900 text-white font-bold" disabled={isLoading}>
-                {isLoading ? <Loader2 className="animate-spin" /> : "Open Control Center"}
-              </Button>
-            </form>
-          </AuthCardWrapper>
-        </TabsContent>
-      </Tabs>
+          <div className="bg-blue-50 p-4 rounded-lg flex gap-3 items-start border border-blue-100">
+            <Info className="h-5 w-5 text-blue-600 shrink-0 mt-0.5" />
+            <div className="text-[11px] text-blue-800 space-y-2">
+              <p className="font-bold">Important for Admin Testing:</p>
+              <p>Security rules restrict Admin write access. To test adding products, you must manually add your UID to the <code>roles_admin</code> collection in the Firebase Console.</p>
+              {user && (
+                <div className="bg-white p-2 rounded border border-blue-200 select-all font-mono">
+                  Your UID: <span className="font-bold">{user.uid}</span>
+                </div>
+              )}
+            </div>
+          </div>
+        </CardContent>
+      </Card>
     </div>
   );
 }
