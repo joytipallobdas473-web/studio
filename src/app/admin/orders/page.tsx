@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Download, Search, FileText, Filter, Loader2, Globe, Phone, MapPin } from "lucide-react";
+import { Download, Search, FileText, Filter, Loader2, Globe, Phone, MapPin, Mail } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
 import { format } from "date-fns";
 import { errorEmitter } from "@/firebase/error-emitter";
@@ -51,6 +51,7 @@ export default function AdminOrdersPage() {
       order.id.toLowerCase().includes(searchQuery.toLowerCase()) || 
       (order.storeName || "").toLowerCase().includes(searchQuery.toLowerCase()) ||
       (order.phoneNumber || "").toLowerCase().includes(searchQuery.toLowerCase()) ||
+      (order.email || "").toLowerCase().includes(searchQuery.toLowerCase()) ||
       (order.deliveryAddress || "").toLowerCase().includes(searchQuery.toLowerCase());
     return matchesStore && matchesSearch;
   });
@@ -58,9 +59,9 @@ export default function AdminOrdersPage() {
   const downloadPO = (orderId?: string) => {
     const ordersToExport = orderId ? orders?.filter(o => o.id === orderId) : filteredOrders;
     if (!ordersToExport || ordersToExport.length === 0) return;
-    const headers = ["Packet ID", "Node", "Contact", "Address", "Timestamp", "Payload", "Value ($)", "Status"];
+    const headers = ["Packet ID", "Node", "Email", "Contact", "Address", "Timestamp", "Payload", "Value ($)", "Status"];
     const csvContent = [headers, ...ordersToExport.map(o => [
-      o.id, o.storeName || 'SYSTEM', o.phoneNumber || 'N/A', o.deliveryAddress || 'N/A',
+      o.id, o.storeName || 'SYSTEM', o.email || 'N/A', o.phoneNumber || 'N/A', o.deliveryAddress || 'N/A',
       o.createdAt?.toDate ? format(o.createdAt.toDate(), 'yyyy-MM-dd HH:mm') : 'PENDING',
       `"${o.items || 'Restock'}"`, (o.total || 0).toFixed(2), o.status
     ])].map(e => e.join(",")).join("\n");
@@ -99,7 +100,7 @@ export default function AdminOrdersPage() {
         <div className="md:col-span-2 relative">
           <Search className="absolute left-6 top-1/2 -translate-y-1/2 h-5 w-5 text-slate-400" />
           <Input 
-            placeholder="Search by Node, Merchant, Phone, or Address..." 
+            placeholder="Search by Node, Email, Phone, or Address..." 
             className="pl-16 h-16 bg-white border-slate-200 text-slate-900 placeholder:text-slate-400 rounded-[1.5rem] focus:ring-primary text-base" 
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
@@ -136,7 +137,7 @@ export default function AdminOrdersPage() {
             <TableBody>
               {filteredOrders?.length ? (
                 filteredOrders.map((order) => (
-                  <TableRow key={order.id} className="border-slate-50 hover:bg-slate-50/50 transition-all group h-28">
+                  <TableRow key={order.id} className="border-slate-50 hover:bg-slate-50/50 transition-all group h-32">
                     <TableCell className="pl-10">
                       <div className="flex items-center gap-4">
                         <div className="h-2 w-2 rounded-full bg-primary" />
@@ -147,7 +148,11 @@ export default function AdminOrdersPage() {
                       <div className="flex flex-col gap-1.5 py-4">
                         <span className="font-black text-slate-900 text-sm uppercase italic">{order.storeName || 'ROOT_SYSTEM'}</span>
                         <div className="flex items-center gap-2 text-[10px] text-primary font-bold">
-                          <Phone className="h-2.5 w-2.5" />
+                          <Mail className="h-2.5 w-2.5 opacity-50" />
+                          {order.email || 'NO_EMAIL'}
+                        </div>
+                        <div className="flex items-center gap-2 text-[10px] text-slate-600 font-bold">
+                          <Phone className="h-2.5 w-2.5 opacity-50" />
                           {order.phoneNumber || 'NO_CONTACT'}
                         </div>
                         <div className="flex items-start gap-2 text-[9px] text-slate-500 font-medium max-w-[200px]">

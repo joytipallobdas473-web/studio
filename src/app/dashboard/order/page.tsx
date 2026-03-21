@@ -19,7 +19,8 @@ import {
   Filter, 
   Info,
   Phone,
-  MapPin
+  MapPin,
+  Mail
 } from "lucide-react";
 import { useFirestore, useCollection, useUser, useMemoFirebase, useDoc } from "@/firebase";
 import { collection, serverTimestamp, query, orderBy, doc } from "firebase/firestore";
@@ -113,6 +114,7 @@ export default function NewOrderPage() {
       total: (selectedProduct.price || 0) * qty,
       phoneNumber: phoneNumber.trim(),
       deliveryAddress: deliveryAddress.trim(),
+      email: store?.email || user.email || "N/A",
       status: "pending",
       storeName: store?.name || "Retailer Node", 
       location: store?.location || "North East",
