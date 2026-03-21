@@ -9,7 +9,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { 
   Boxes, 
-  User, 
+  User as UserIcon, 
   Mail, 
   MapPin, 
   Building, 
@@ -18,8 +18,8 @@ import {
   ChevronRight,
   CheckCircle2
 } from "lucide-react";
-import { useFirestore, useAuth, addDocumentNonBlocking } from "@/firebase";
-import { collection, serverTimestamp } from "firebase/firestore";
+import { useFirestore, useAuth, setDocumentNonBlocking } from "@/firebase";
+import { doc, serverTimestamp } from "firebase/firestore";
 import { signInAnonymously } from "firebase/auth";
 import { toast } from "@/hooks/use-toast";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
@@ -45,12 +45,16 @@ export default function RegisterPage() {
     setIsLoading(true);
 
     try {
-      // Ensure the user is signed in to perform writes
-      if (!auth.currentUser) {
-        await signInAnonymously(auth);
+      let currentUser = auth.currentUser;
+      if (!currentUser) {
+        const cred = await signInAnonymously(auth);
+        currentUser = cred.user;
       }
 
+      if (!currentUser) throw new Error("Authentication failed");
+
       const storeData = {
+        id: currentUser.uid,
         name: formData.storeName.trim(),
         managerName: formData.managerName.trim(),
         email: formData.email.trim(),
@@ -59,22 +63,20 @@ export default function RegisterPage() {
         createdAt: serverTimestamp()
       };
 
-      addDocumentNonBlocking(collection(db, "stores"), storeData)
-        .then(() => {
-          setIsSuccess(true);
-          toast({
-            title: "Registration Queued",
-            description: "Your regional node application is pending verification.",
-          });
-          setTimeout(() => router.push("/"), 3000);
-        })
-        .catch(() => {
-          setIsLoading(false);
-          toast({ title: "Registration Failed", description: "Protocol rejected. Please try again.", variant: "destructive" });
-        });
+      // Link store to the user's UID
+      const storeRef = doc(db, "stores", currentUser.uid);
+      setDocumentNonBlocking(storeRef, storeData, { merge: true });
+      
+      setIsSuccess(true);
+      toast({
+        title: "Registration Logged",
+        description: "Your regional node application is pending verification.",
+      });
+      setTimeout(() => router.push("/dashboard"), 3000);
+      
     } catch (error) {
       setIsLoading(false);
-      toast({ title: "Auth Error", description: "Could not establish secure session.", variant: "destructive" });
+      toast({ title: "Registration Error", description: "Protocol rejected. Please try again.", variant: "destructive" });
     }
   };
 
@@ -89,9 +91,9 @@ export default function RegisterPage() {
              <h2 className="text-3xl font-bold text-slate-900 tracking-tight">Application Logged</h2>
              <p className="text-slate-500 font-medium">Regional administrators will verify your branch details shortly.</p>
            </div>
-           <Link href="/">
-             <Button variant="outline" className="mt-4 border-primary text-primary font-bold rounded-xl">
-               Return to Home
+           <Link href="/dashboard">
+             <Button className="mt-4 bg-primary text-white font-bold rounded-xl px-8 h-12">
+               Enter Portal
              </Button>
            </Link>
         </div>
@@ -104,7 +106,7 @@ export default function RegisterPage() {
       <div className="w-full max-w-xl space-y-8">
         <Link href="/" className="flex items-center gap-2 text-slate-500 hover:text-primary transition-colors font-bold text-sm group">
           <ArrowLeft className="h-4 w-4 group-hover:-translate-x-1 transition-transform" />
-          Back to Portal Selection
+          Back to Selection
         </Link>
 
         <div className="text-center space-y-2">
@@ -112,11 +114,11 @@ export default function RegisterPage() {
             <Boxes className="h-6 w-6 text-white" />
           </div>
           <h1 className="text-3xl font-bold text-slate-900 tracking-tight">Branch Registration</h1>
-          <p className="text-slate-500 font-medium">Submit your details to join the NE Retail Connect network.</p>
+          <p className="text-slate-500 font-medium font-body">Submit your details to join the NE Retail Connect network.</p>
         </div>
 
-        <Card className="border-none shadow-sm rounded-3xl bg-white">
-          <CardHeader className="p-8 pb-0">
+        <Card className="border-none shadow-sm rounded-3xl bg-white overflow-hidden">
+          <CardHeader className="p-8 pb-0 bg-slate-50/50">
             <CardTitle className="text-lg font-bold text-primary">Regional Onboarding</CardTitle>
             <CardDescription>Fill in your professional information for verification.</CardDescription>
           </CardHeader>
@@ -126,7 +128,7 @@ export default function RegisterPage() {
                 <div className="space-y-2">
                   <Label className="text-xs font-bold uppercase tracking-wider text-slate-500 ml-1">Manager Name</Label>
                   <div className="relative">
-                    <User className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
+                    <UserIcon className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
                     <Input 
                       placeholder="Full Name" 
                       className="pl-12 h-12 bg-slate-50 border-slate-100 rounded-xl focus:ring-primary font-medium" 
