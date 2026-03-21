@@ -7,8 +7,8 @@ import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
-import { Mail, Lock, Loader2, ArrowLeft, ShieldAlert, Zap, Globe, Info, AlertTriangle } from "lucide-react";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { Mail, Lock, Loader2, ArrowLeft, ShieldAlert, Zap, Globe, AlertTriangle } from "lucide-react";
 import { useAuth, useUser } from "@/firebase";
 import { signInWithEmailAndPassword } from "firebase/auth";
 import { toast } from "@/hooks/use-toast";
@@ -37,14 +37,14 @@ export default function AdminLoginPage() {
     setError(null);
     if (!auth) return;
     
-    // Strict Admin Keyword Protocol check
+    // Strict Admin Keyword Protocol check for login
     if (!email.toLowerCase().includes("admin")) {
       toast({
         title: "Access Denied",
-        description: "Standard branch accounts cannot access the Command Portal. Use an 'admin' signature.",
+        description: "Branch accounts cannot access the Command Portal. Use a regional admin signature.",
         variant: "destructive",
       });
-      setError("Email must contain the keyword 'admin' for console access.");
+      setError("Unauthorized signature. Administrator credentials required.");
       return;
     }
 
@@ -59,11 +59,11 @@ export default function AdminLoginPage() {
       setIsLoading(false);
       const isAuthError = error.code === 'auth/invalid-credential' || error.code === 'auth/user-not-found';
       
-      setError(isAuthError ? "Identity not found. Have you registered this admin node yet?" : "Security Authentication Failure.");
+      setError(isAuthError ? "Identity not recognized. Please verify your controller credentials." : "Security Authentication Failure.");
       
       toast({
         title: "Security Authentication Failure",
-        description: isAuthError ? "Account not found. Please register first." : "Invalid credentials.",
+        description: isAuthError ? "Administrator account not found." : "Invalid credentials.",
         variant: "destructive",
       });
     }
@@ -98,7 +98,7 @@ export default function AdminLoginPage() {
         {error && (
           <Alert variant="destructive" className="bg-rose-500/10 border-rose-500/20 text-rose-500 rounded-3xl p-6">
             <AlertTriangle className="h-4 w-4" />
-            <AlertTitle className="font-black uppercase text-[10px] tracking-widest mb-1">Identity Sync Error</AlertTitle>
+            <AlertTitle className="font-black uppercase text-[10px] tracking-widest mb-1">Authorization Error</AlertTitle>
             <AlertDescription className="text-xs font-medium opacity-90">
               {error}
             </AlertDescription>
@@ -107,13 +107,13 @@ export default function AdminLoginPage() {
 
         <Card className="border-white/5 bg-slate-900/50 backdrop-blur-3xl rounded-[2.5rem] overflow-hidden shadow-2xl">
           <CardHeader className="p-10 pb-0">
-            <CardTitle className="text-xl font-black text-primary uppercase italic tracking-tighter">Identity Protocol</CardTitle>
+            <CardTitle className="text-xl font-black text-primary uppercase italic tracking-tighter">Controller Identity</CardTitle>
             <CardDescription className="text-slate-500 font-medium">Restricted access for North East regional administrators.</CardDescription>
           </CardHeader>
           <CardContent className="p-10">
             <form onSubmit={handleAdminSignIn} className="space-y-8">
               <div className="space-y-3">
-                <Label className="text-[10px] font-black uppercase tracking-[0.3em] text-slate-500 ml-1 text-primary">Admin Email (Required 'admin' keyword)</Label>
+                <Label className="text-[10px] font-black uppercase tracking-[0.3em] text-slate-500 ml-1 text-primary">Admin Signature (Email)</Label>
                 <div className="relative">
                   <Mail className="absolute left-5 top-1/2 -translate-y-1/2 h-5 w-5 text-slate-600" />
                   <Input 
@@ -153,21 +153,11 @@ export default function AdminLoginPage() {
               </Button>
             </form>
           </CardContent>
-          <CardFooter className="p-10 pt-0 flex flex-col gap-6">
-             <div className="bg-primary/5 p-6 rounded-3xl border border-primary/10 w-full">
-                <p className="text-[9px] font-black text-primary uppercase tracking-widest flex items-center gap-2 mb-2">
-                   <Info className="h-3 w-3 text-primary" /> NEW ADMIN NODE?
-                </p>
-                <p className="text-[11px] text-slate-400 font-medium leading-relaxed">
-                  If you haven't registered your node, click the button below and use an email containing <span className="text-primary font-black">"admin"</span> to create your credentials.
-                </p>
-             </div>
-             <Link href="/register" className="w-full">
-               <Button variant="outline" className="w-full h-16 rounded-2xl border-white/10 text-white hover:bg-white/5 font-black uppercase tracking-[0.2em] text-[10px]">
-                 Create New Admin Node
-               </Button>
-             </Link>
-          </CardFooter>
+          <div className="p-10 pt-0 text-center">
+            <p className="text-[11px] text-slate-600 font-medium italic">
+              Access is restricted to pre-authorized regional controllers. Contact headquarters for node activation.
+            </p>
+          </div>
         </Card>
       </div>
     </div>
