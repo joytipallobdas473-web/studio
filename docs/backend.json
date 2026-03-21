@@ -8,14 +8,15 @@
       "properties": {
         "name": { "type": "string" },
         "location": { "type": "string" },
-        "managerId": { "type": "string" },
+        "managerName": { "type": "string" },
+        "email": { "type": "string" },
         "status": { 
           "type": "string", 
           "enum": ["pending", "active", "rejected"] 
         },
         "createdAt": { "type": "string", "format": "date-time" }
       },
-      "required": ["name", "managerId", "status"]
+      "required": ["name", "managerName", "email", "status"]
     },
     "Product": {
       "title": "Product",

@@ -8,10 +8,12 @@ import { AuthCardWrapper } from "@/components/auth-card-wrapper";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Package, Lock, User, Mail, MapPin, Building } from "lucide-react";
+import { Package, Lock, User, Mail, MapPin, Building, Loader2 } from "lucide-react";
 import { useFirestore } from "@/firebase";
 import { collection, addDoc, serverTimestamp } from "firebase/firestore";
 import { toast } from "@/hooks/use-toast";
+import { errorEmitter } from "@/firebase/error-emitter";
+import { FirestorePermissionError } from "@/firebase/errors";
 
 export default function RegisterPage() {
   const router = useRouter();
@@ -30,31 +32,33 @@ export default function RegisterPage() {
     if (!db) return;
     
     setIsLoading(true);
-    try {
-      await addDoc(collection(db, "stores"), {
-        name: formData.storeName,
-        managerName: formData.managerName,
-        email: formData.email,
-        location: formData.location,
-        status: "pending",
-        createdAt: serverTimestamp()
+    const storeData = {
+      name: formData.storeName,
+      managerName: formData.managerName,
+      email: formData.email,
+      location: formData.location,
+      status: "pending",
+      createdAt: serverTimestamp()
+    };
+
+    // Use non-blocking addDoc with proper error handling
+    addDoc(collection(db, "stores"), storeData)
+      .then(() => {
+        toast({
+          title: "Registration Submitted",
+          description: "Your store registration is pending admin approval.",
+        });
+        router.push("/");
+      })
+      .catch(async (err) => {
+        const permissionError = new FirestorePermissionError({
+          path: 'stores',
+          operation: 'create',
+          requestResourceData: storeData
+        });
+        errorEmitter.emit('permission-error', permissionError);
+        setIsLoading(false); // Reset loading if it fails
       });
-      
-      toast({
-        title: "Registration Submitted",
-        description: "Your store registration is pending admin approval.",
-      });
-      
-      router.push("/");
-    } catch (error) {
-      toast({
-        variant: "destructive",
-        title: "Registration Failed",
-        description: "There was an error submitting your request.",
-      });
-    } finally {
-      setIsLoading(false);
-    }
   };
 
   return (
@@ -148,7 +152,12 @@ export default function RegisterPage() {
           </div>
 
           <Button type="submit" className="w-full bg-accent text-accent-foreground hover:bg-accent/90 font-bold" disabled={isLoading}>
-            {isLoading ? "Submitting Request..." : "Apply for Registration"}
+            {isLoading ? (
+              <>
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                Submitting Request...
+              </>
+            ) : "Apply for Registration"}
           </Button>
         </form>
         
