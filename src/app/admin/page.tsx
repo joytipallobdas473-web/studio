@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState, useMemo } from "react";
@@ -37,13 +36,13 @@ export default function AdminOverview() {
   const { data: products, loading: inventoryLoading } = useCollection(inventoryQuery);
 
   const stats = useMemo(() => {
-    const pendingStoresCount = stores?.filter(s => s.status === 'pending').length || 0;
-    const activeOrdersCount = orders?.filter(o => !['delivered', 'cancelled'].includes(o.status)).length || 0;
-    const lowStockCount = products?.filter(p => p.currentStock < 10).length || 0;
+    const pendingStoresCount = stores?.filter(s => s.status === 'pending')?.length || 0;
+    const activeOrdersCount = orders?.filter(o => !['delivered', 'cancelled'].includes(o.status))?.length || 0;
+    const lowStockCount = products?.filter(p => p.currentStock < 10)?.length || 0;
 
     return [
       { label: "Pending Registrations", value: pendingStoresCount.toString(), icon: Store, color: "text-orange-600", bg: "bg-orange-50", trend: "Approval needed" },
-      { label: "Total Products", value: products?.length.toString() || "0", icon: Package, color: "text-blue-600", bg: "bg-blue-50", trend: "Global catalog" },
+      { label: "Total Products", value: (products?.length || 0).toString(), icon: Package, color: "text-blue-600", bg: "bg-blue-50", trend: "Global catalog" },
       { label: "Active Orders", value: activeOrdersCount.toString(), icon: ShoppingCart, color: "text-green-600", bg: "bg-green-50", trend: "Ongoing requests" },
       { label: "Low Stock Alerts", value: lowStockCount.toString(), icon: AlertCircle, color: "text-red-600", bg: "bg-red-50", trend: lowStockCount > 0 ? "Action required" : "Healthy" },
     ];
@@ -83,9 +82,9 @@ export default function AdminOverview() {
           mrp: p.mrp
         })),
         recentOrders: orders.map(o => ({
-          items: o.items,
-          status: o.status,
-          total: o.total
+          items: o.items || "Unspecified items",
+          status: o.status || "pending",
+          total: o.total || 0
         }))
       });
       setAiAnalysis(result);

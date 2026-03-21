@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useFirestore, useCollection } from "@/firebase";
@@ -10,42 +9,41 @@ import { Package, ShoppingCart, History, ArrowRight, Clock, Truck, PackageCheck,
 import Link from "next/link";
 import { Badge } from "@/components/ui/badge";
 import { format } from "date-fns";
+import { useMemo } from "react";
 
 export default function DashboardPage() {
   const db = useFirestore();
 
   const ordersQuery = useMemoFirebase(() => {
     if (!db) return null;
-    // Note: In a real app, we would filter by storeId or managerId. 
-    // For this MVP, we show all orders to simulate the "Downtown Brooklyn" branch perspective.
     return query(collection(db, "orders"), orderBy("createdAt", "desc"), limit(10));
   }, [db]);
 
   const { data: orders, loading } = useCollection(ordersQuery);
 
-  const stats = [
+  const stats = useMemo(() => [
     { 
       label: "Pending Orders", 
-      value: orders?.filter(o => o.status === 'pending').length.toString() || "0", 
+      value: orders?.filter(o => o.status === 'pending')?.length?.toString() || "0", 
       icon: ShoppingCart, 
       color: "text-blue-500", 
       bg: "bg-blue-50" 
     },
     { 
       label: "In Transit", 
-      value: orders?.filter(o => o.status === 'shipped').length.toString() || "0", 
+      value: orders?.filter(o => o.status === 'shipped')?.length?.toString() || "0", 
       icon: Truck, 
       color: "text-purple-500", 
       bg: "bg-purple-50" 
     },
     { 
       label: "Delivered", 
-      value: orders?.filter(o => o.status === 'delivered').length.toString() || "0", 
+      value: orders?.filter(o => o.status === 'delivered')?.length?.toString() || "0", 
       icon: PackageCheck, 
       color: "text-green-500", 
       bg: "bg-green-50" 
     },
-  ];
+  ], [orders]);
 
   const getStatusIcon = (status: string) => {
     switch ((status || "").toLowerCase()) {
