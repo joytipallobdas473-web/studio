@@ -44,7 +44,7 @@ function AdminSidebar() {
       
       <SidebarContent className="px-2 pt-6">
         <SidebarGroup>
-          <SidebarGroupLabel className="px-4 text-[10px] uppercase font-bold tracking-[0.2em] text-slate-500 mb-2">Systems</SidebarGroupLabel>
+          <SidebarGroupLabel className="px-4 text-[10px] uppercase font-bold tracking-[0.2em] text-sidebar-foreground/70 outline-none ring-sidebar-ring mb-2">Systems</SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
               {menuItems.map((item) => (
@@ -82,9 +82,6 @@ function AdminSidebar() {
             <div className="text-[10px] font-mono break-all text-slate-300 bg-slate-950 p-2 rounded border border-slate-800 select-all">
               {user.uid}
             </div>
-            <p className="text-[9px] text-slate-500 italic leading-tight">
-              UID restricted. Link this ID to <code>roles_admin</code> to escalate privileges.
-            </p>
           </div>
         )}
         <SidebarMenu>
