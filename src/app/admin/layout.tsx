@@ -2,7 +2,7 @@
 "use client";
 
 import { SidebarProvider, Sidebar, SidebarContent, SidebarHeader, SidebarMenu, SidebarMenuItem, SidebarMenuButton, SidebarGroup, SidebarGroupLabel, SidebarGroupContent, SidebarInset, SidebarTrigger } from "@/components/ui/sidebar";
-import { LayoutDashboard, Store, Package, ShoppingCart, ArrowLeft } from "lucide-react";
+import { LayoutDashboard, Store, Package, ShoppingCart, LogOut } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 
@@ -21,14 +21,14 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
       <div className="flex min-h-screen w-full">
         <Sidebar>
           <SidebarHeader className="p-4 border-b">
-            <Link href="/dashboard" className="flex items-center gap-2 font-bold text-primary">
-              <ArrowLeft className="h-4 w-4" />
-              <span>Back to Dashboard</span>
-            </Link>
+            <div className="flex items-center gap-2 font-bold text-primary">
+              <Package className="h-5 w-5 text-accent" />
+              <span>Admin Portal</span>
+            </div>
           </SidebarHeader>
           <SidebarContent>
             <SidebarGroup>
-              <SidebarGroupLabel>Admin Control</SidebarGroupLabel>
+              <SidebarGroupLabel>Management</SidebarGroupLabel>
               <SidebarGroupContent>
                 <SidebarMenu>
                   {menuItems.map((item) => (
@@ -45,11 +45,17 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
               </SidebarGroupContent>
             </SidebarGroup>
           </SidebarContent>
+          <div className="mt-auto p-4 border-t">
+            <Link href="/" className="flex items-center gap-2 text-sm text-muted-foreground hover:text-primary transition-colors">
+              <LogOut className="h-4 w-4" />
+              <span>Logout Official</span>
+            </Link>
+          </div>
         </Sidebar>
         <SidebarInset className="bg-muted/30">
           <header className="flex h-16 items-center gap-4 border-b bg-background px-6">
             <SidebarTrigger />
-            <h2 className="text-lg font-semibold">Admin Panel</h2>
+            <h2 className="text-lg font-semibold">Official Admin Panel</h2>
           </header>
           <main className="p-6">
             {children}
