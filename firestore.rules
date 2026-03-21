@@ -2,7 +2,7 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
     // Simplified: Allow any authenticated user (anonymous or password) to read and write.
-    // This removes friction for the prototype phase.
+    // This removes friction for the prototype phase and avoids Permission Denied errors.
     match /{document=**} {
       allow read, write: if request.auth != null;
     }

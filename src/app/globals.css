@@ -4,20 +4,20 @@
 
 @layer base {
   :root {
-    /* PRD Colors: Background #ECF0F5, Primary #2260B5, Accent #26CDF2 */
-    --background: 210 25% 94%; 
+    /* North East Retail Connect PRD Palette */
+    --background: 210 25% 94%; /* #ECF0F5 */
     --foreground: 222 47% 11%;
     --card: 0 0% 100%;
     --card-foreground: 222 47% 11%;
     --popover: 0 0% 100%;
     --popover-foreground: 222 47% 11%;
-    --primary: 215 68% 42%; /* #2260B5 */
+    --primary: 215 68% 42%; /* #2260B5 - Deep Blue */
     --primary-foreground: 210 40% 98%;
     --secondary: 210 40% 96%;
     --secondary-foreground: 222 47% 11%;
     --muted: 210 40% 96%;
     --muted-foreground: 215 16% 47%;
-    --accent: 191 88% 55%; /* #26CDF2 */
+    --accent: 191 88% 55%; /* #26CDF2 - Sky Blue */
     --accent-foreground: 222 47% 11%;
     --destructive: 0 84% 60%;
     --destructive-foreground: 210 40% 98%;
@@ -47,7 +47,7 @@
 }
 
 .ne-card {
-  @apply bg-white rounded-3xl shadow-sm border border-slate-100 transition-all hover:shadow-md;
+  @apply bg-white rounded-2xl shadow-sm border border-slate-100 transition-all hover:shadow-md;
 }
 
 .ne-gradient {
