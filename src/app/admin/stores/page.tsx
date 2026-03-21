@@ -26,8 +26,10 @@ export default function StoreManagement() {
   const handleAction = (id: string, newStatus: string) => {
     if (!db) return;
     const storeRef = doc(db, "stores", id);
+    const updateData = { status: newStatus };
     
-    updateDoc(storeRef, { status: newStatus })
+    // Non-blocking Firestore update with contextual error handling
+    updateDoc(storeRef, updateData)
       .then(() => {
         toast({
           title: "Status Updated",
@@ -35,11 +37,12 @@ export default function StoreManagement() {
         });
       })
       .catch(async (err) => {
-        errorEmitter.emit('permission-error', new FirestorePermissionError({
+        const permissionError = new FirestorePermissionError({
           path: storeRef.path,
           operation: 'update',
-          requestResourceData: { status: newStatus }
-        }));
+          requestResourceData: updateData
+        });
+        errorEmitter.emit('permission-error', permissionError);
       });
   };
 
@@ -59,7 +62,7 @@ export default function StoreManagement() {
 
       <Card>
         <CardHeader>
-          <CardTitle>Requests Queue</CardTitle>
+          <CardTitle>Approval Queue</CardTitle>
         </CardHeader>
         <CardContent>
           <Table>

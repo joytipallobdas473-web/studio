@@ -13,13 +13,24 @@ export default function AdminOverview() {
   const db = useFirestore();
 
   // Stabilize queries to prevent infinite loops and ensure efficient updates
-  const storesRef = useMemoFirebase(() => db ? collection(db, "stores") : null, [db]);
-  const ordersRef = useMemoFirebase(() => db ? query(collection(db, "orders"), orderBy("createdAt", "desc"), limit(10)) : null, [db]);
-  const inventoryRef = useMemoFirebase(() => db ? collection(db, "inventory") : null, [db]);
+  const storesQuery = useMemoFirebase(() => {
+    if (!db) return null;
+    return query(collection(db, "stores"), orderBy("createdAt", "desc"));
+  }, [db]);
 
-  const { data: stores, loading: storesLoading } = useCollection(storesRef);
-  const { data: orders, loading: ordersLoading } = useCollection(ordersRef);
-  const { data: products, loading: inventoryLoading } = useCollection(inventoryRef);
+  const ordersQuery = useMemoFirebase(() => {
+    if (!db) return null;
+    return query(collection(db, "orders"), orderBy("createdAt", "desc"), limit(10));
+  }, [db]);
+
+  const inventoryQuery = useMemoFirebase(() => {
+    if (!db) return null;
+    return collection(db, "inventory");
+  }, [db]);
+
+  const { data: stores, loading: storesLoading } = useCollection(storesQuery);
+  const { data: orders, loading: ordersLoading } = useCollection(ordersQuery);
+  const { data: products, loading: inventoryLoading } = useCollection(inventoryQuery);
 
   const pendingStoresCount = stores?.filter(s => s.status === 'pending').length || 0;
   const activeOrdersCount = orders?.filter(o => !['delivered', 'cancelled'].includes(o.status)).length || 0;
@@ -32,7 +43,6 @@ export default function AdminOverview() {
     { label: "Low Stock Alerts", value: lowStockCount.toString(), icon: AlertCircle, color: "text-red-600", bg: "bg-red-50", trend: lowStockCount > 0 ? "Action required" : "Healthy" },
   ];
 
-  // Consolidate recent activities from both stores and orders
   const recentActivities = [
     ...(stores?.map(s => ({
       title: "New store registration",
@@ -63,7 +73,7 @@ export default function AdminOverview() {
   return (
     <div className="space-y-8 animate-in fade-in duration-500">
       <div className="flex flex-col gap-1">
-        <h1 className="text-2xl font-bold tracking-tight text-primary md:text-3xl">Administration Overview</h1>
+        <h1 className="text-2xl font-bold tracking-tight text-primary md:text-3xl">Control Center Overview</h1>
         <p className="text-muted-foreground text-sm md:text-base">Real-time status of your retail network and inventory.</p>
       </div>
       
@@ -117,15 +127,15 @@ export default function AdminOverview() {
 
         <Card className="bg-primary text-primary-foreground shadow-lg border-none">
           <CardHeader>
-            <CardTitle className="text-lg font-bold">Admin Quick Tips</CardTitle>
+            <CardTitle className="text-lg font-bold">Admin Insights</CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="space-y-2">
               <p className="text-primary-foreground/90 text-sm leading-relaxed">
-                Review pending registrations daily to ensure new store managers can start ordering stock without delays.
+                New store registrations require approval to enable warehouse access.
               </p>
               <p className="text-primary-foreground/90 text-sm leading-relaxed">
-                Check low stock alerts to maintain global availability and prevent order cancellations.
+                Stock levels below 10 units trigger global low-stock alerts.
               </p>
             </div>
             <div className="pt-4 border-t border-primary-foreground/20">
@@ -134,7 +144,7 @@ export default function AdminOverview() {
                 <span className="uppercase tracking-widest">Optimal</span>
               </div>
               <div className="mt-2 h-1.5 w-full bg-primary-foreground/20 rounded-full overflow-hidden">
-                <div className="h-full w-[95%] bg-accent transition-all duration-1000" />
+                <div className="h-full w-[98%] bg-accent transition-all duration-1000" />
               </div>
             </div>
           </CardContent>
