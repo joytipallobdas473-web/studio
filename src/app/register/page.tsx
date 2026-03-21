@@ -16,11 +16,12 @@ import {
   Loader2, 
   ArrowLeft,
   ChevronRight,
-  CheckCircle2
+  CheckCircle2,
+  Lock
 } from "lucide-react";
 import { useFirestore, useAuth, setDocumentNonBlocking } from "@/firebase";
 import { doc, serverTimestamp } from "firebase/firestore";
-import { signInAnonymously } from "firebase/auth";
+import { createUserWithEmailAndPassword } from "firebase/auth";
 import { toast } from "@/hooks/use-toast";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 
@@ -34,6 +35,7 @@ export default function RegisterPage() {
   const [formData, setFormData] = useState({
     managerName: "",
     email: "",
+    password: "",
     storeName: "",
     location: ""
   });
@@ -42,16 +44,16 @@ export default function RegisterPage() {
     e.preventDefault();
     if (!db || !auth) return;
     
+    if (formData.password.length < 6) {
+      toast({ title: "Validation Error", description: "Password must be at least 6 characters.", variant: "destructive" });
+      return;
+    }
+
     setIsLoading(true);
 
     try {
-      let currentUser = auth.currentUser;
-      if (!currentUser) {
-        const cred = await signInAnonymously(auth);
-        currentUser = cred.user;
-      }
-
-      if (!currentUser) throw new Error("Authentication failed");
+      const cred = await createUserWithEmailAndPassword(auth, formData.email, formData.password);
+      const currentUser = cred.user;
 
       const storeData = {
         id: currentUser.uid,
@@ -63,7 +65,6 @@ export default function RegisterPage() {
         createdAt: serverTimestamp()
       };
 
-      // Link store to the user's UID
       const storeRef = doc(db, "stores", currentUser.uid);
       setDocumentNonBlocking(storeRef, storeData, { merge: true });
       
@@ -72,11 +73,15 @@ export default function RegisterPage() {
         title: "Registration Logged",
         description: "Your regional node application is pending verification.",
       });
-      setTimeout(() => router.push("/dashboard"), 3000);
+      setTimeout(() => router.push("/dashboard"), 2000);
       
-    } catch (error) {
+    } catch (error: any) {
       setIsLoading(false);
-      toast({ title: "Registration Error", description: "Protocol rejected. Please try again.", variant: "destructive" });
+      toast({ 
+        title: "Registration Error", 
+        description: error.message || "Protocol rejected. Please try again.", 
+        variant: "destructive" 
+      });
     }
   };
 
@@ -91,11 +96,10 @@ export default function RegisterPage() {
              <h2 className="text-3xl font-bold text-slate-900 tracking-tight">Application Logged</h2>
              <p className="text-slate-500 font-medium">Regional administrators will verify your branch details shortly.</p>
            </div>
-           <Link href="/dashboard">
-             <Button className="mt-4 bg-primary text-white font-bold rounded-xl px-8 h-12">
-               Enter Portal
-             </Button>
-           </Link>
+           <div className="flex flex-col items-center gap-2">
+             <Loader2 className="h-6 w-6 animate-spin text-primary" />
+             <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">Finalizing Identity Registry...</p>
+           </div>
         </div>
       </div>
     );
@@ -113,25 +117,25 @@ export default function RegisterPage() {
           <div className="bg-primary p-3 rounded-2xl shadow-lg inline-block mb-4">
             <Boxes className="h-6 w-6 text-white" />
           </div>
-          <h1 className="text-3xl font-bold text-slate-900 tracking-tight">Branch Registration</h1>
-          <p className="text-slate-500 font-medium font-body">Submit your details to join the NE Retail Connect network.</p>
+          <h1 className="text-3xl font-bold text-slate-900 tracking-tight">Branch Onboarding</h1>
+          <p className="text-slate-500 font-medium font-body italic">Register your node for North East Regional access.</p>
         </div>
 
         <Card className="border-none shadow-sm rounded-3xl bg-white overflow-hidden">
           <CardHeader className="p-8 pb-0 bg-slate-50/50">
-            <CardTitle className="text-lg font-bold text-primary">Regional Onboarding</CardTitle>
-            <CardDescription>Fill in your professional information for verification.</CardDescription>
+            <CardTitle className="text-lg font-bold text-primary uppercase italic tracking-tighter">New Branch Registry</CardTitle>
+            <CardDescription>All fields are compulsory for regional verification.</CardDescription>
           </CardHeader>
           <CardContent className="p-8">
             <form onSubmit={handleRegister} className="space-y-6">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div className="space-y-2">
-                  <Label className="text-xs font-bold uppercase tracking-wider text-slate-500 ml-1">Manager Name</Label>
+                  <Label className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 ml-1">Manager Identity</Label>
                   <div className="relative">
                     <UserIcon className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
                     <Input 
                       placeholder="Full Name" 
-                      className="pl-12 h-12 bg-slate-50 border-slate-100 rounded-xl focus:ring-primary font-medium" 
+                      className="pl-12 h-14 bg-slate-50 border-slate-100 rounded-2xl focus:ring-primary font-bold text-slate-900" 
                       required 
                       value={formData.managerName}
                       onChange={(e) => setFormData({...formData, managerName: e.target.value})}
@@ -139,13 +143,13 @@ export default function RegisterPage() {
                   </div>
                 </div>
                 <div className="space-y-2">
-                  <Label className="text-xs font-bold uppercase tracking-wider text-slate-500 ml-1">Work Email</Label>
+                  <Label className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 ml-1">Work Email</Label>
                   <div className="relative">
                     <Mail className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
                     <Input 
                       type="email" 
                       placeholder="email@work.com" 
-                      className="pl-12 h-12 bg-slate-50 border-slate-100 rounded-xl focus:ring-primary font-medium" 
+                      className="pl-12 h-14 bg-slate-50 border-slate-100 rounded-2xl focus:ring-primary font-bold text-slate-900" 
                       required 
                       value={formData.email}
                       onChange={(e) => setFormData({...formData, email: e.target.value})}
@@ -155,12 +159,27 @@ export default function RegisterPage() {
               </div>
               
               <div className="space-y-2">
-                <Label className="text-xs font-bold uppercase tracking-wider text-slate-500 ml-1">Store / Branch Name</Label>
+                <Label className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 ml-1">Secure Password</Label>
+                <div className="relative">
+                  <Lock className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
+                  <Input 
+                    type="password" 
+                    placeholder="Min. 6 characters" 
+                    className="pl-12 h-14 bg-slate-50 border-slate-100 rounded-2xl focus:ring-primary font-bold text-slate-900" 
+                    required 
+                    value={formData.password}
+                    onChange={(e) => setFormData({...formData, password: e.target.value})}
+                  />
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <Label className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 ml-1">Branch Designation</Label>
                 <div className="relative">
                   <Building className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
                   <Input 
                     placeholder="e.g., Guwahati North Station" 
-                    className="pl-12 h-12 bg-slate-50 border-slate-100 rounded-xl focus:ring-primary font-medium" 
+                    className="pl-12 h-14 bg-slate-50 border-slate-100 rounded-2xl focus:ring-primary font-bold text-slate-900" 
                     required 
                     value={formData.storeName}
                     onChange={(e) => setFormData({...formData, storeName: e.target.value})}
@@ -169,12 +188,12 @@ export default function RegisterPage() {
               </div>
 
               <div className="space-y-2">
-                <Label className="text-xs font-bold uppercase tracking-wider text-slate-500 ml-1">Regional Location</Label>
+                <Label className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 ml-1">Regional Location</Label>
                 <div className="relative">
                   <MapPin className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
                   <Input 
                     placeholder="City, State (NE Region)" 
-                    className="pl-12 h-12 bg-slate-50 border-slate-100 rounded-xl focus:ring-primary font-medium" 
+                    className="pl-12 h-14 bg-slate-50 border-slate-100 rounded-2xl focus:ring-primary font-bold text-slate-900" 
                     required 
                     value={formData.location}
                     onChange={(e) => setFormData({...formData, location: e.target.value})}
@@ -182,7 +201,7 @@ export default function RegisterPage() {
                 </div>
               </div>
 
-              <Button type="submit" className="w-full h-14 bg-primary text-white hover:bg-primary/90 font-bold rounded-2xl shadow-md group" disabled={isLoading}>
+              <Button type="submit" className="w-full h-14 bg-primary text-white hover:bg-primary/90 font-black rounded-2xl shadow-md group uppercase tracking-widest text-xs" disabled={isLoading}>
                 {isLoading ? (
                   <Loader2 className="h-5 w-5 animate-spin" />
                 ) : (
@@ -191,6 +210,11 @@ export default function RegisterPage() {
               </Button>
             </form>
           </CardContent>
+          <div className="p-8 pt-0 border-t border-slate-50 bg-slate-50/30 text-center">
+            <p className="text-xs text-slate-500 font-medium">
+              Already have a registered branch? <Link href="/login" className="text-primary font-black hover:underline">Identity Login</Link>
+            </p>
+          </div>
         </Card>
       </div>
     </div>
