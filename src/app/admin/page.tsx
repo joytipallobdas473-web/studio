@@ -4,11 +4,12 @@ import { useState, useMemo } from "react";
 import { useFirestore, useCollection, useUser, useMemoFirebase } from "@/firebase";
 import { collection, query, orderBy, limit } from "firebase/firestore";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { Store, Package, ShoppingCart, AlertCircle, ArrowUpRight, Activity, Loader2, Sparkles, BrainCircuit, ShieldAlert, Key, TrendingUp, BarChart3, Globe } from "lucide-react";
+import { Store, Package, ShoppingCart, AlertCircle, Activity, Loader2, Sparkles, BrainCircuit, ShieldAlert, Key, TrendingUp, BarChart3, Globe, Zap } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { format } from "date-fns";
 import { analyzeInventory, type InventoryAnalysisOutput } from "@/ai/flows/inventory-analyst";
+import { cn } from "@/lib/utils";
 
 export default function AdminOverview() {
   const db = useFirestore();
@@ -83,21 +84,26 @@ export default function AdminOverview() {
           </div>
         </div>
         <div className="space-y-3">
-          <h2 className="text-3xl font-bold text-white tracking-tight">Security Restriction</h2>
+          <h2 className="text-3xl font-bold text-white tracking-tight">Access Restricted</h2>
           <p className="text-slate-400 max-w-md mx-auto leading-relaxed">
-            Unauthorized node access detected. To enable global synchronization, add your unique root ID to the <code className="text-rose-400 font-mono">roles_admin</code> registry.
+            Your identity is verified, but root privileges are not yet activated. Register your UID in the <code className="text-rose-400 font-mono">roles_admin</code> registry to proceed.
           </p>
         </div>
         {user && (
           <div className="p-6 bg-black/40 rounded-2xl border border-slate-800 w-full max-w-sm">
             <div className="flex items-center justify-between text-[10px] font-bold uppercase mb-4 tracking-widest text-slate-500">
-              <span className="flex items-center gap-2"><Key className="h-3 w-3" /> Root UID</span>
-              <Badge variant="outline" className="bg-slate-900 border-slate-700 text-slate-300">AEGmDwRin2c5sDZdx1Jhk87yF9L2</Badge>
+              <span className="flex items-center gap-2"><Key className="h-3 w-3" /> Target UID</span>
+              <Badge variant="outline" className="bg-slate-900 border-slate-700 text-slate-300">ACTIVE</Badge>
             </div>
-            <code className="text-xs font-mono break-all block p-3 bg-slate-950 rounded-lg border border-slate-800 text-slate-300 select-all">{user.uid}</code>
+            <code className="text-xs font-mono break-all block p-3 bg-slate-950 rounded-lg border border-slate-800 text-primary select-all">{user.uid}</code>
+            <p className="mt-4 text-[10px] text-slate-500 text-left">
+              1. Open Firebase Console<br/>
+              2. Create collection: <strong>roles_admin</strong><br/>
+              3. Create document ID: <strong>{user.uid}</strong>
+            </p>
           </div>
         )}
-        <Button onClick={() => window.location.reload()} variant="outline" className="h-12 px-8 rounded-full border-slate-700 hover:bg-slate-800">Re-verify Identity</Button>
+        <Button onClick={() => window.location.reload()} variant="outline" className="h-12 px-8 rounded-full border-slate-700 hover:bg-slate-800">Re-verify Session</Button>
       </div>
     );
   }

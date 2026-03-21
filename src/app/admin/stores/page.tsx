@@ -6,10 +6,11 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Check, X, MapPin, User, Loader2, ShieldAlert, Store, Globe } from "lucide-react";
+import { Check, X, MapPin, Loader2, ShieldAlert, Store, Globe, Key } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
 import { errorEmitter } from "@/firebase/error-emitter";
 import { FirestorePermissionError } from "@/firebase/errors";
+import { cn } from "@/lib/utils";
 
 export default function StoreManagement() {
   const db = useFirestore();
@@ -51,9 +52,12 @@ export default function StoreManagement() {
         {user && (
           <div className="p-6 bg-slate-950 rounded-2xl border border-slate-800 w-full max-w-xs font-mono text-xs break-all mb-8 shadow-2xl">
             <span className="text-slate-600 block mb-2 font-sans font-bold uppercase tracking-widest text-[9px]">YOUR UNIQUE ROOT ID:</span>
-            <span className="text-slate-300">AEGmDwRin2c5sDZdx1Jhk87yF9L2</span>
-            <div className="mt-2 h-px bg-slate-800 w-full" />
-            <span className="text-primary mt-2 block">{user.uid}</span>
+            <span className="text-primary font-bold mb-4 block">{user.uid}</span>
+            <div className="mt-2 h-px bg-slate-800 w-full mb-4" />
+            <div className="flex flex-col items-start gap-2 text-[10px] text-slate-500 font-sans uppercase">
+              <span className="flex items-center gap-1"><Key className="h-3 w-3" /> Step 1: Add collection 'roles_admin'</span>
+              <span className="flex items-center gap-1"><Key className="h-3 w-3" /> Step 2: Add Doc with ID: {user.uid.substring(0, 12)}...</span>
+            </div>
           </div>
         )}
         <Button onClick={() => window.location.reload()} className="h-12 px-10 rounded-xl bg-primary font-bold">Re-verify Security</Button>
