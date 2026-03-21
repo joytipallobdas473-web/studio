@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState, useMemo } from "react";
@@ -152,7 +151,8 @@ export default function NewOrderPage() {
         <div className="space-y-1">
           <h1 className="text-3xl font-bold text-primary tracking-tight italic uppercase">Stock Catalog</h1>
           <p className="text-muted-foreground font-medium flex items-center gap-2">
-            <Info className="h-3.5 w-3.5" /> Select inventory for {store?.name || 'your node'}.
+            <span className="h-1.5 w-1.5 rounded-full bg-accent animate-pulse" />
+            Select inventory for {store?.name || 'your node'}.
           </p>
         </div>
         <div className="relative w-full md:w-96">
