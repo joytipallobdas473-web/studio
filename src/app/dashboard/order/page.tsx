@@ -103,7 +103,9 @@ export default function NewOrderPage() {
         toast({ title: "Order Placed", description: `Request for ${qty} x ${selectedProduct.name} queued.` });
         setTimeout(() => router.push("/dashboard"), 2000);
       })
-      .finally(() => setIsSubmitting(false));
+      .catch(() => {
+        setIsSubmitting(false);
+      });
     
     setOrderDialogOpen(false);
   };

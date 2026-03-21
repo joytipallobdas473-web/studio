@@ -5,33 +5,27 @@ import { initializeApp, getApps, getApp, FirebaseApp } from 'firebase/app';
 import { getAuth, Auth } from 'firebase/auth';
 import { getFirestore, Firestore } from 'firebase/firestore'
 
-// Singleton SDK instances to prevent internal assertion errors
+// Singleton SDK instances to prevent internal assertion errors and re-initialization loops
+let appInstance: FirebaseApp | null = null;
 let authInstance: Auth | null = null;
 let firestoreInstance: Firestore | null = null;
 
 export function initializeFirebase() {
-  let app: FirebaseApp;
-  
-  if (!getApps().length) {
-    try {
-      app = initializeApp(firebaseConfig);
-    } catch (e) {
-      console.error('Firebase initialization failed:', e);
-      app = initializeApp(firebaseConfig);
+  if (typeof window === 'undefined') return { firebaseApp: null, auth: null, firestore: null };
+
+  if (!appInstance) {
+    if (!getApps().length) {
+      appInstance = initializeApp(firebaseConfig);
+    } else {
+      appInstance = getApp();
     }
-  } else {
-    app = getApp();
   }
 
-  return getSdks(app);
-}
+  if (!authInstance) authInstance = getAuth(appInstance);
+  if (!firestoreInstance) firestoreInstance = getFirestore(appInstance);
 
-export function getSdks(firebaseApp: FirebaseApp) {
-  if (!authInstance) authInstance = getAuth(firebaseApp);
-  if (!firestoreInstance) firestoreInstance = getFirestore(firebaseApp);
-  
   return {
-    firebaseApp,
+    firebaseApp: appInstance,
     auth: authInstance,
     firestore: firestoreInstance
   };
