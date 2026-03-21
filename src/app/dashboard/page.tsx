@@ -19,7 +19,13 @@ export default function DashboardPage() {
     return query(collection(db, "orders"), orderBy("createdAt", "desc"), limit(10));
   }, [db]);
 
-  const { data: orders, loading } = useCollection(ordersQuery);
+  const inventoryQuery = useMemoFirebase(() => {
+    if (!db) return null;
+    return query(collection(db, "inventory"), orderBy("name"), limit(5));
+  }, [db]);
+
+  const { data: orders, loading: ordersLoading } = useCollection(ordersQuery);
+  const { data: products, loading: inventoryLoading } = useCollection(inventoryQuery);
 
   const stats = useMemo(() => [
     { 
@@ -67,7 +73,7 @@ export default function DashboardPage() {
     }
   };
 
-  if (loading) {
+  if (ordersLoading || inventoryLoading) {
     return (
       <div className="flex h-[400px] items-center justify-center">
         <Loader2 className="h-8 w-8 animate-spin text-primary" />
@@ -167,23 +173,28 @@ export default function DashboardPage() {
             <CardHeader>
               <CardTitle className="text-lg font-bold flex items-center gap-2">
                 <Package className="h-5 w-5" />
-                Quick Reorder
+                Available Inventory
               </CardTitle>
-              <CardDescription className="text-primary-foreground/70">Frequent stock items.</CardDescription>
+              <CardDescription className="text-primary-foreground/70">Recently stocked items.</CardDescription>
             </CardHeader>
             <CardContent className="space-y-3">
-              <Button variant="secondary" className="w-full justify-start text-xs font-semibold h-11">
-                <div className="flex flex-col items-start">
-                  <span>Electronics Bundle (x10)</span>
-                  <span className="text-[10px] opacity-70">Popular in your store</span>
-                </div>
-              </Button>
-              <Button variant="secondary" className="w-full justify-start text-xs font-semibold h-11">
-                <div className="flex flex-col items-start">
-                  <span>Office Stationery (x50)</span>
-                  <span className="text-[10px] opacity-70">Bulk Essential</span>
-                </div>
-              </Button>
+              {products && products.length > 0 ? products.map((product) => (
+                <Link key={product.id} href={`/dashboard/order?item=${encodeURIComponent(product.name)}&category=${encodeURIComponent(product.category)}`}>
+                  <Button variant="secondary" className="w-full justify-start text-xs font-semibold h-11 mb-2">
+                    <div className="flex flex-col items-start min-w-0">
+                      <span className="truncate w-full">{product.name}</span>
+                      <span className="text-[10px] opacity-70">{product.category} • ${product.mrp?.toFixed(2)}</span>
+                    </div>
+                  </Button>
+                </Link>
+              )) : (
+                <p className="text-xs text-center opacity-70">No products available in catalog.</p>
+              )}
+              <Link href="/dashboard/order">
+                <Button className="w-full mt-2 bg-accent text-accent-foreground font-bold hover:bg-accent/90">
+                  View All Products
+                </Button>
+              </Link>
             </CardContent>
           </Card>
 
