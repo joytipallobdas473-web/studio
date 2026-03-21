@@ -55,7 +55,7 @@ export default function AdminLoginPage() {
       setIsLoading(false);
       toast({
         title: "Security Authentication Failure",
-        description: "Invalid admin credentials or account not registered.",
+        description: "Invalid admin credentials. If you haven't registered this admin node yet, please use the registration link below.",
         variant: "destructive",
       });
     }
@@ -141,7 +141,7 @@ export default function AdminLoginPage() {
                    <Info className="h-3 w-3 text-primary" /> SYSTEM ADVISORY
                 </p>
                 <p className="text-[11px] text-slate-400 font-medium leading-relaxed">
-                  Administrator accounts must include the "admin" keyword. Use the registration page to create an account if you don't have one.
+                  First-time access requires registration. Use the link below to initialize a new administrator identity.
                 </p>
              </div>
              <Link href="/register" className="w-full">
