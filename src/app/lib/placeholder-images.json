@@ -1,0 +1,17 @@
+
+{
+  "placeholderImages": [
+    {
+      "id": "hero-logistics",
+      "description": "Modern warehouse logistics and retail stock management",
+      "imageUrl": "https://picsum.photos/seed/retail1/1200/600",
+      "imageHint": "warehouse logistics"
+    },
+    {
+      "id": "inventory-check",
+      "description": "Checking retail inventory on a tablet",
+      "imageUrl": "https://picsum.photos/seed/retail2/600/400",
+      "imageHint": "inventory management"
+    }
+  ]
+}
