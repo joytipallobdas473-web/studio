@@ -9,7 +9,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Plus, Search, Edit2, Trash2, Loader2, Package } from "lucide-react";
+import { Plus, Search, Edit2, Trash2, Loader2, Package, AlertCircle } from "lucide-react";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -53,17 +53,28 @@ export default function InventoryControl() {
       });
     } else {
       setEditingProduct(null);
-      setFormData({ name: "", sku: "", mrp: "", currentStock: "", category: "Electronics" });
+      setFormData({ 
+        name: "", 
+        sku: "", 
+        mrp: "", 
+        currentStock: "0", 
+        category: "Electronics" 
+      });
     }
     setIsDialogOpen(true);
   };
 
   const handleSave = () => {
     if (!db) return;
-    if (!formData.name || !formData.sku || !formData.mrp || !formData.currentStock) {
+
+    // Strict validation for numeric fields
+    const mrp = parseFloat(formData.mrp);
+    const stock = parseInt(formData.currentStock);
+
+    if (!formData.name.trim() || !formData.sku.trim() || isNaN(mrp) || isNaN(stock)) {
       toast({
-        title: "Missing Fields",
-        description: "Please fill in all required fields.",
+        title: "Invalid Input",
+        description: "Please provide a valid product name, SKU, and numeric values for price and stock.",
         variant: "destructive"
       });
       return;
@@ -72,10 +83,10 @@ export default function InventoryControl() {
     setIsSaving(true);
 
     const productData = {
-      name: formData.name,
-      sku: formData.sku,
-      mrp: parseFloat(formData.mrp),
-      currentStock: parseInt(formData.currentStock),
+      name: formData.name.trim(),
+      sku: formData.sku.trim().toUpperCase(),
+      mrp: mrp,
+      currentStock: stock,
       category: formData.category,
       updatedAt: serverTimestamp()
     };
@@ -84,7 +95,10 @@ export default function InventoryControl() {
       const docRef = doc(db, "inventory", editingProduct.id);
       updateDoc(docRef, productData)
         .then(() => {
-          toast({ title: "Product Updated", description: `${formData.name} updated successfully.` });
+          toast({ 
+            title: "Success", 
+            description: `${productData.name} updated successfully.` 
+          });
           setIsDialogOpen(false);
           setIsSaving(false);
         })
@@ -100,11 +114,12 @@ export default function InventoryControl() {
       const colRef = collection(db, "inventory");
       addDoc(colRef, productData)
         .then(() => {
-          toast({ title: "Product Added", description: `${formData.name} added to global inventory.` });
+          toast({ 
+            title: "Saved", 
+            description: `${productData.name} added to global inventory.` 
+          });
           setIsDialogOpen(false);
           setIsSaving(false);
-          // Clear form after successful addition
-          setFormData({ name: "", sku: "", mrp: "", currentStock: "", category: "Electronics" });
         })
         .catch(async () => {
           setIsSaving(false);
@@ -122,7 +137,11 @@ export default function InventoryControl() {
     const docRef = doc(db, "inventory", id);
     deleteDoc(docRef)
       .then(() => {
-        toast({ title: "Item Removed", description: `${name} deleted from stock.`, variant: "destructive" });
+        toast({ 
+          title: "Item Removed", 
+          description: `${name} deleted from stock.`, 
+          variant: "destructive" 
+        });
       })
       .catch(async () => {
         errorEmitter.emit('permission-error', new FirestorePermissionError({
@@ -133,7 +152,8 @@ export default function InventoryControl() {
   };
 
   const filteredProducts = useMemo(() => {
-    return products?.filter(p => 
+    if (!products) return [];
+    return products.filter(p => 
       p.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
       p.sku.toLowerCase().includes(searchQuery.toLowerCase()) ||
       p.category.toLowerCase().includes(searchQuery.toLowerCase())
@@ -149,62 +169,69 @@ export default function InventoryControl() {
   }
 
   return (
-    <div className="space-y-6">
-      <div className="flex justify-between items-center">
+    <div className="space-y-6 animate-in fade-in duration-500">
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
         <div>
-          <h1 className="text-3xl font-bold text-primary">Stock & MRP Management</h1>
-          <p className="text-muted-foreground text-sm">Add global stock and manage pricing controls.</p>
+          <h1 className="text-3xl font-bold text-primary">Global Stock Management</h1>
+          <p className="text-muted-foreground text-sm">Add and update inventory items across the entire retail network.</p>
         </div>
         <Button 
           onClick={() => handleOpenDialog()}
-          className="bg-accent text-accent-foreground font-bold hover:bg-accent/90"
+          className="bg-accent text-accent-foreground font-bold hover:bg-accent/90 w-full md:w-auto"
         >
-          <Plus className="mr-2 h-4 w-4" /> Add New Item
+          <Plus className="mr-2 h-4 w-4" /> Add New Product
         </Button>
       </div>
 
       <div className="relative">
         <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
         <Input 
-          placeholder="Search stocks by name, category or SKU..." 
-          className="pl-9" 
+          placeholder="Search global inventory..." 
+          className="pl-9 h-11" 
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
         />
       </div>
 
-      <Card>
+      <Card className="border-none shadow-md overflow-hidden">
         <CardContent className="p-0">
           <Table>
             <TableHeader>
-              <TableRow>
+              <TableRow className="bg-muted/50">
                 <TableHead>Product</TableHead>
                 <TableHead>SKU</TableHead>
                 <TableHead>Category</TableHead>
-                <TableHead>MRP ($)</TableHead>
-                <TableHead>Current Stock</TableHead>
+                <TableHead>Price ($)</TableHead>
+                <TableHead>Warehouse Stock</TableHead>
                 <TableHead className="text-right">Actions</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
-              {filteredProducts?.length ? (
+              {filteredProducts.length ? (
                 filteredProducts.map((product) => (
-                  <TableRow key={product.id}>
-                    <TableCell className="font-medium">{product.name}</TableCell>
-                    <TableCell className="text-xs font-code">{product.sku}</TableCell>
-                    <TableCell>{product.category}</TableCell>
-                    <TableCell className="font-bold">${product.mrp.toFixed(2)}</TableCell>
+                  <TableRow key={product.id} className="hover:bg-muted/20">
+                    <TableCell className="font-bold text-primary">{product.name}</TableCell>
+                    <TableCell className="text-xs font-code font-bold opacity-70">{product.sku}</TableCell>
                     <TableCell>
-                      <span className={product.currentStock < 10 ? "text-red-500 font-bold" : ""}>
-                        {product.currentStock}
+                      <span className="text-xs font-medium bg-secondary px-2 py-1 rounded-full uppercase tracking-wider">
+                        {product.category}
                       </span>
+                    </TableCell>
+                    <TableCell className="font-bold">${(product.mrp || 0).toFixed(2)}</TableCell>
+                    <TableCell>
+                      <div className="flex items-center gap-2">
+                        {product.currentStock < 10 && <AlertCircle className="h-3 w-3 text-red-500" />}
+                        <span className={product.currentStock < 10 ? "text-red-500 font-bold" : "font-medium"}>
+                          {product.currentStock}
+                        </span>
+                      </div>
                     </TableCell>
                     <TableCell className="text-right">
                       <div className="flex justify-end gap-1">
                         <Button 
                           size="icon" 
                           variant="ghost"
-                          className="hover:text-primary"
+                          className="hover:text-primary h-8 w-8"
                           onClick={() => handleOpenDialog(product)}
                         >
                           <Edit2 className="h-4 w-4" />
@@ -212,7 +239,7 @@ export default function InventoryControl() {
                         <Button 
                           size="icon" 
                           variant="ghost" 
-                          className="text-red-500 hover:text-red-600 hover:bg-red-50"
+                          className="text-red-500 hover:text-red-600 hover:bg-red-50 h-8 w-8"
                           onClick={() => handleDelete(product.id, product.name)}
                         >
                           <Trash2 className="h-4 w-4" />
@@ -223,8 +250,9 @@ export default function InventoryControl() {
                 ))
               ) : (
                 <TableRow>
-                  <TableCell colSpan={6} className="text-center py-10 text-muted-foreground">
-                    No matching stock items found.
+                  <TableCell colSpan={6} className="text-center py-20 text-muted-foreground">
+                    <Package className="h-10 w-10 mx-auto mb-4 opacity-20" />
+                    No products found in the global catalog.
                   </TableCell>
                 </TableRow>
               )}
@@ -236,41 +264,43 @@ export default function InventoryControl() {
       <Dialog open={isDialogOpen} onOpenChange={(open) => {
         if (!isSaving) setIsDialogOpen(open);
       }}>
-        <DialogContent>
+        <DialogContent className="sm:max-w-[500px]">
           <DialogHeader>
-            <DialogTitle>{editingProduct ? "Edit Stock Item" : "Add Global Stock Item"}</DialogTitle>
+            <DialogTitle className="text-xl font-bold text-primary">
+              {editingProduct ? "Update Product" : "Add New Stock Item"}
+            </DialogTitle>
           </DialogHeader>
-          <div className="grid gap-4 py-4">
-            <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="name" className="text-right text-xs">Name</Label>
+          <div className="grid gap-6 py-4">
+            <div className="space-y-2">
+              <Label htmlFor="name" className="text-xs font-bold uppercase tracking-wider">Product Name</Label>
               <Input 
                 id="name" 
-                className="col-span-3" 
+                placeholder="e.g. Premium Wireless Mouse"
                 value={formData.name}
                 onChange={(e) => setFormData({...formData, name: e.target.value})}
                 disabled={isSaving}
               />
             </div>
-            <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="sku" className="text-right text-xs">SKU</Label>
-              <Input 
-                id="sku" 
-                className="col-span-3" 
-                value={formData.sku}
-                onChange={(e) => setFormData({...formData, sku: e.target.value})}
-                disabled={isSaving}
-              />
-            </div>
-            <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="category" className="text-right text-xs">Category</Label>
-              <div className="col-span-3">
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="sku" className="text-xs font-bold uppercase tracking-wider">SKU Code</Label>
+                <Input 
+                  id="sku" 
+                  placeholder="WH-001"
+                  value={formData.sku}
+                  onChange={(e) => setFormData({...formData, sku: e.target.value})}
+                  disabled={isSaving}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="category" className="text-xs font-bold uppercase tracking-wider">Category</Label>
                 <Select 
                   value={formData.category} 
                   onValueChange={(val) => setFormData({...formData, category: val})}
                   disabled={isSaving}
                 >
                   <SelectTrigger>
-                    <SelectValue placeholder="Select Category" />
+                    <SelectValue placeholder="Category" />
                   </SelectTrigger>
                   <SelectContent>
                     {CATEGORIES.map((cat) => (
@@ -280,39 +310,44 @@ export default function InventoryControl() {
                 </Select>
               </div>
             </div>
-            <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="mrp" className="text-right text-xs">MRP ($)</Label>
-              <Input 
-                id="mrp" 
-                type="number" 
-                className="col-span-3" 
-                value={formData.mrp}
-                onChange={(e) => setFormData({...formData, mrp: e.target.value})}
-                disabled={isSaving}
-              />
-            </div>
-            <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="stock" className="text-right text-xs">Stock</Label>
-              <Input 
-                id="stock" 
-                type="number" 
-                className="col-span-3" 
-                value={formData.currentStock}
-                onChange={(e) => setFormData({...formData, currentStock: e.target.value})}
-                disabled={isSaving}
-              />
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="mrp" className="text-xs font-bold uppercase tracking-wider">Unit Price ($)</Label>
+                <Input 
+                  id="mrp" 
+                  type="number" 
+                  step="0.01"
+                  value={formData.mrp}
+                  onChange={(e) => setFormData({...formData, mrp: e.target.value})}
+                  disabled={isSaving}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="stock" className="text-xs font-bold uppercase tracking-wider">Initial Stock</Label>
+                <Input 
+                  id="stock" 
+                  type="number" 
+                  value={formData.currentStock}
+                  onChange={(e) => setFormData({...formData, currentStock: e.target.value})}
+                  disabled={isSaving}
+                />
+              </div>
             </div>
           </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setIsDialogOpen(false)} disabled={isSaving}>Cancel</Button>
-            <Button onClick={handleSave} className="bg-primary text-primary-foreground min-w-[120px]" disabled={isSaving}>
+          <DialogFooter className="border-t pt-4">
+            <Button variant="ghost" onClick={() => setIsDialogOpen(false)} disabled={isSaving}>Cancel</Button>
+            <Button 
+              onClick={handleSave} 
+              className="bg-primary text-primary-foreground min-w-[140px] font-bold" 
+              disabled={isSaving}
+            >
               {isSaving ? (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                   Saving...
                 </>
               ) : (
-                editingProduct ? "Update Item" : "Save Stock Item"
+                editingProduct ? "Update Item" : "Save Product"
               )}
             </Button>
           </DialogFooter>
