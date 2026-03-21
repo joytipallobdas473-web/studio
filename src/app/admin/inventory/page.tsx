@@ -30,6 +30,7 @@ export default function InventoryControl() {
   const { data: products, loading } = useCollection(productsQuery);
 
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
   const [editingProduct, setEditingProduct] = useState<any>(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [formData, setFormData] = useState({
@@ -68,6 +69,8 @@ export default function InventoryControl() {
       return;
     }
 
+    setIsSaving(true);
+
     const productData = {
       name: formData.name,
       sku: formData.sku,
@@ -83,8 +86,10 @@ export default function InventoryControl() {
         .then(() => {
           toast({ title: "Product Updated", description: `${formData.name} updated successfully.` });
           setIsDialogOpen(false);
+          setIsSaving(false);
         })
         .catch(async () => {
+          setIsSaving(false);
           errorEmitter.emit('permission-error', new FirestorePermissionError({
             path: docRef.path,
             operation: 'update',
@@ -97,8 +102,12 @@ export default function InventoryControl() {
         .then(() => {
           toast({ title: "Product Added", description: `${formData.name} added to global inventory.` });
           setIsDialogOpen(false);
+          setIsSaving(false);
+          // Clear form after successful addition
+          setFormData({ name: "", sku: "", mrp: "", currentStock: "", category: "Electronics" });
         })
         .catch(async () => {
+          setIsSaving(false);
           errorEmitter.emit('permission-error', new FirestorePermissionError({
             path: colRef.path,
             operation: 'create',
@@ -224,7 +233,9 @@ export default function InventoryControl() {
         </CardContent>
       </Card>
 
-      <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+      <Dialog open={isDialogOpen} onOpenChange={(open) => {
+        if (!isSaving) setIsDialogOpen(open);
+      }}>
         <DialogContent>
           <DialogHeader>
             <DialogTitle>{editingProduct ? "Edit Stock Item" : "Add Global Stock Item"}</DialogTitle>
@@ -237,6 +248,7 @@ export default function InventoryControl() {
                 className="col-span-3" 
                 value={formData.name}
                 onChange={(e) => setFormData({...formData, name: e.target.value})}
+                disabled={isSaving}
               />
             </div>
             <div className="grid grid-cols-4 items-center gap-4">
@@ -246,6 +258,7 @@ export default function InventoryControl() {
                 className="col-span-3" 
                 value={formData.sku}
                 onChange={(e) => setFormData({...formData, sku: e.target.value})}
+                disabled={isSaving}
               />
             </div>
             <div className="grid grid-cols-4 items-center gap-4">
@@ -254,6 +267,7 @@ export default function InventoryControl() {
                 <Select 
                   value={formData.category} 
                   onValueChange={(val) => setFormData({...formData, category: val})}
+                  disabled={isSaving}
                 >
                   <SelectTrigger>
                     <SelectValue placeholder="Select Category" />
@@ -274,6 +288,7 @@ export default function InventoryControl() {
                 className="col-span-3" 
                 value={formData.mrp}
                 onChange={(e) => setFormData({...formData, mrp: e.target.value})}
+                disabled={isSaving}
               />
             </div>
             <div className="grid grid-cols-4 items-center gap-4">
@@ -284,13 +299,21 @@ export default function InventoryControl() {
                 className="col-span-3" 
                 value={formData.currentStock}
                 onChange={(e) => setFormData({...formData, currentStock: e.target.value})}
+                disabled={isSaving}
               />
             </div>
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setIsDialogOpen(false)}>Cancel</Button>
-            <Button onClick={handleSave} className="bg-primary text-primary-foreground">
-              {editingProduct ? "Update Item" : "Save Stock Item"}
+            <Button variant="outline" onClick={() => setIsDialogOpen(false)} disabled={isSaving}>Cancel</Button>
+            <Button onClick={handleSave} className="bg-primary text-primary-foreground min-w-[120px]" disabled={isSaving}>
+              {isSaving ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Saving...
+                </>
+              ) : (
+                editingProduct ? "Update Item" : "Save Stock Item"
+              )}
             </Button>
           </DialogFooter>
         </DialogContent>
