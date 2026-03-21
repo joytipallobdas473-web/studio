@@ -10,9 +10,8 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
 import { Boxes, Mail, Lock, Loader2, ArrowLeft, ChevronRight, MapPin } from "lucide-react";
 import { useAuth, useUser } from "@/firebase";
-import { initiateEmailSignIn } from "@/firebase/non-blocking-login";
+import { signInWithEmailAndPassword, onAuthStateChanged } from "firebase/auth";
 import { toast } from "@/hooks/use-toast";
-import { onAuthStateChanged } from "firebase/auth";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -22,29 +21,37 @@ export default function LoginPage() {
   const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
 
-  // Listen for auth state changes to redirect after non-blocking login
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (firebaseUser) => {
       if (firebaseUser) {
         setIsLoading(false);
-        // Simple heuristic: if it's a specific admin email or domain, go to admin
-        // For prototype purposes, we'll check the URL or a flag
-        const isAdmin = email.toLowerCase().includes("admin");
+        const isAdmin = email.toLowerCase().includes("admin") || firebaseUser.email?.toLowerCase().includes("admin");
         router.push(isAdmin ? "/admin" : "/dashboard");
       }
     });
     return () => unsubscribe();
   }, [auth, email, router]);
 
-  const handleSignIn = (e: React.FormEvent) => {
+  const handleSignIn = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!auth) return;
+    
     setIsLoading(true);
-    initiateEmailSignIn(auth, email, password);
-    toast({
-      title: "Authenticating",
-      description: "Synchronizing with regional security node...",
-    });
+    try {
+      await signInWithEmailAndPassword(auth, email, password);
+      toast({
+        title: "Access Authorized",
+        description: "Welcome to the regional logistics network.",
+      });
+    } catch (error: any) {
+      setIsLoading(false);
+      console.error("Auth error:", error);
+      toast({
+        title: "Verification Failed",
+        description: "The credentials provided are invalid. Please check your registry data.",
+        variant: "destructive",
+      });
+    }
   };
 
   return (

@@ -122,6 +122,7 @@ export default function NewOrderPage() {
 
     addDocumentNonBlocking(collection(db, "orders"), orderData)
       .then(() => {
+        setIsSubmitting(false);
         setSubmitted(true);
         toast({ title: "Order Sent", description: `Request for ${selectedProduct.name} saved.` });
         setTimeout(() => router.push("/dashboard"), 1500);

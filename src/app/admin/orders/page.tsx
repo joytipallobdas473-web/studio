@@ -85,35 +85,35 @@ export default function AdminOrdersPage() {
       <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-8">
         <div className="space-y-3">
           <div className="flex items-center gap-3">
-             <div className="h-2 w-2 rounded-full bg-primary shadow-[0_0_10px_#3b82f6]" />
+             <div className="h-2 w-2 rounded-full bg-primary" />
              <span className="text-[10px] font-black tracking-[0.4em] text-primary uppercase">Traffic Controller</span>
           </div>
-          <h1 className="text-5xl font-black tracking-tighter text-white uppercase italic">Global Orders</h1>
+          <h1 className="text-5xl font-black tracking-tighter text-slate-900 uppercase italic">Global Orders</h1>
           <p className="text-slate-500 font-medium text-sm tracking-wide">Real-time restock orchestration across the retail infrastructure.</p>
         </div>
-        <Button onClick={() => downloadPO()} className="h-16 px-8 rounded-2xl bg-white/5 border-white/5 text-slate-300 hover:text-white hover:bg-white/10 transition-all font-black uppercase tracking-widest text-xs">
+        <Button onClick={() => downloadPO()} className="h-16 px-8 rounded-2xl bg-white border border-slate-200 text-slate-600 hover:text-primary transition-all font-black uppercase tracking-widest text-xs">
           <Download className="mr-3 h-5 w-5" /> Export Data Logs
         </Button>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         <div className="md:col-span-2 relative">
-          <Search className="absolute left-6 top-1/2 -translate-y-1/2 h-5 w-5 text-slate-500" />
+          <Search className="absolute left-6 top-1/2 -translate-y-1/2 h-5 w-5 text-slate-400" />
           <Input 
             placeholder="Search by Node, Merchant, Phone, or Address..." 
-            className="pl-16 h-16 bg-slate-950/50 border-white/5 text-white placeholder:text-slate-600 rounded-[1.5rem] focus:ring-primary text-base" 
+            className="pl-16 h-16 bg-white border-slate-200 text-slate-900 placeholder:text-slate-400 rounded-[1.5rem] focus:ring-primary text-base" 
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
           />
         </div>
         <Select value={storeFilter} onValueChange={setStoreFilter}>
-          <SelectTrigger className="h-16 bg-slate-950/50 border-white/5 text-white rounded-[1.5rem] px-6">
+          <SelectTrigger className="h-16 bg-white border-slate-200 text-slate-900 rounded-[1.5rem] px-6">
             <div className="flex items-center gap-3">
-              <Filter className="h-5 w-5 text-slate-500" />
+              <Filter className="h-5 w-5 text-slate-400" />
               <SelectValue placeholder="Node Selection" />
             </div>
           </SelectTrigger>
-          <SelectContent className="bg-slate-950 border-white/10 text-white rounded-2xl">
+          <SelectContent className="bg-white border-slate-200 text-slate-900 rounded-2xl">
             <SelectItem value="all" className="font-bold uppercase tracking-widest text-[10px]">All Active Nodes</SelectItem>
             {Array.from(new Set(orders?.map(o => o.storeName).filter(Boolean) || [])).map(store => (
               <SelectItem key={store} value={store} className="font-bold uppercase tracking-widest text-[10px]">{store}</SelectItem>
@@ -122,11 +122,11 @@ export default function AdminOrdersPage() {
         </Select>
       </div>
 
-      <Card className="border-white/5 bg-slate-950/30 backdrop-blur-3xl rounded-[2.5rem] overflow-hidden shadow-2xl">
+      <Card className="border-none bg-white rounded-[2.5rem] overflow-hidden shadow-sm">
         <CardContent className="p-0">
           <Table>
-            <TableHeader className="bg-white/[0.02]">
-              <TableRow className="border-white/5 h-20">
+            <TableHeader className="bg-slate-50/50">
+              <TableRow className="border-slate-100 h-20">
                 <TableHead className="text-slate-500 uppercase text-[10px] font-black tracking-[0.3em] pl-10">Packet Signature</TableHead>
                 <TableHead className="text-slate-500 uppercase text-[10px] font-black tracking-[0.3em]">Origin & Destination</TableHead>
                 <TableHead className="text-slate-500 uppercase text-[10px] font-black tracking-[0.3em]">Payload Data</TableHead>
@@ -137,21 +137,21 @@ export default function AdminOrdersPage() {
             <TableBody>
               {filteredOrders?.length ? (
                 filteredOrders.map((order) => (
-                  <TableRow key={order.id} className="border-white/5 hover:bg-white/[0.03] transition-all group h-28">
+                  <TableRow key={order.id} className="border-slate-50 hover:bg-slate-50/50 transition-all group h-28">
                     <TableCell className="pl-10">
                       <div className="flex items-center gap-4">
-                        <div className="h-2 w-2 rounded-full bg-primary shadow-[0_0_8px_#3b82f6]" />
+                        <div className="h-2 w-2 rounded-full bg-primary" />
                         <span className="font-mono text-xs font-black text-slate-400 uppercase tracking-widest">{order.id.substring(0, 8)}</span>
                       </div>
                     </TableCell>
                     <TableCell>
                       <div className="flex flex-col gap-1.5 py-4">
-                        <span className="font-black text-white text-sm uppercase italic">{order.storeName || 'ROOT_SYSTEM'}</span>
+                        <span className="font-black text-slate-900 text-sm uppercase italic">{order.storeName || 'ROOT_SYSTEM'}</span>
                         <div className="flex items-center gap-2 text-[10px] text-primary font-bold">
                           <Phone className="h-2.5 w-2.5" />
                           {order.phoneNumber || 'NO_CONTACT'}
                         </div>
-                        <div className="flex items-start gap-2 text-[9px] text-slate-400 font-medium max-w-[200px]">
+                        <div className="flex items-start gap-2 text-[9px] text-slate-500 font-medium max-w-[200px]">
                           <MapPin className="h-2.5 w-2.5 shrink-0 mt-0.5 text-accent" />
                           <span className="truncate">{order.deliveryAddress || 'NO_ADDRESS'}</span>
                         </div>
@@ -159,10 +159,10 @@ export default function AdminOrdersPage() {
                     </TableCell>
                     <TableCell>
                       <div className="flex flex-col gap-1">
-                        <span className="text-xs font-bold text-slate-300 truncate max-w-[180px] uppercase tracking-tight">{order.items || 'Logistics Cluster'}</span>
+                        <span className="text-xs font-bold text-slate-700 truncate max-w-[180px] uppercase tracking-tight">{order.items || 'Logistics Cluster'}</span>
                         <div className="flex items-center gap-2">
                            <span className="text-[10px] font-black text-primary tracking-widest">${(order.total || 0).toFixed(2)}</span>
-                           <span className="text-[9px] text-slate-600 font-mono">
+                           <span className="text-[9px] text-slate-400 font-mono">
                             {order.createdAt?.toDate ? format(order.createdAt.toDate(), 'MMM dd • HH:mm') : 'SYNCING'}
                           </span>
                         </div>
@@ -174,23 +174,23 @@ export default function AdminOrdersPage() {
                         onValueChange={(val) => handleStatusUpdate(order.id, val)}
                       >
                         <SelectTrigger className={cn(
-                          "h-10 w-[140px] text-[10px] font-black uppercase tracking-[0.15em] rounded-xl border-white/5 bg-black/40",
-                          order.status === 'delivered' ? 'text-emerald-500' :
-                          order.status === 'processing' ? 'text-blue-400' :
-                          order.status === 'shipped' ? 'text-purple-400' :
-                          order.status === 'cancelled' ? 'text-rose-500' :
-                          'text-amber-400'
+                          "h-10 w-[140px] text-[10px] font-black uppercase tracking-[0.15em] rounded-xl border-slate-100 bg-slate-50",
+                          order.status === 'delivered' ? 'text-emerald-600' :
+                          order.status === 'processing' ? 'text-blue-600' :
+                          order.status === 'shipped' ? 'text-purple-600' :
+                          order.status === 'cancelled' ? 'text-rose-600' :
+                          'text-amber-600'
                         )}>
                           <div className="flex items-center gap-2">
                             <SelectValue />
                           </div>
                         </SelectTrigger>
-                        <SelectContent className="bg-slate-950 border-white/10 text-white rounded-2xl">
+                        <SelectContent className="bg-white border-slate-200 text-slate-900 rounded-2xl">
                           <SelectItem value="pending" className="text-[10px] font-black tracking-widest uppercase">PENDING</SelectItem>
                           <SelectItem value="processing" className="text-[10px] font-black tracking-widest uppercase">PROCESSING</SelectItem>
                           <SelectItem value="shipped" className="text-[10px] font-black tracking-widest uppercase">SHIPPED</SelectItem>
-                          <SelectItem value="delivered" className="text-[10px] font-black tracking-widest uppercase text-emerald-500">DELIVERED</SelectItem>
-                          <SelectItem value="cancelled" className="text-[10px] font-black tracking-widest uppercase text-rose-500">CANCELLED</SelectItem>
+                          <SelectItem value="delivered" className="text-[10px] font-black tracking-widest uppercase text-emerald-600">DELIVERED</SelectItem>
+                          <SelectItem value="cancelled" className="text-[10px] font-black tracking-widest uppercase text-rose-600">CANCELLED</SelectItem>
                         </SelectContent>
                       </Select>
                     </TableCell>
@@ -198,7 +198,7 @@ export default function AdminOrdersPage() {
                       <Button 
                         size="sm" 
                         variant="ghost" 
-                        className="text-slate-500 hover:text-white h-11 rounded-2xl px-6 hover:bg-white/5 font-bold uppercase tracking-widest text-[10px]"
+                        className="text-slate-400 hover:text-primary h-11 rounded-2xl px-6 hover:bg-slate-50 font-bold uppercase tracking-widest text-[10px]"
                         onClick={() => downloadPO(order.id)}
                       >
                         <FileText className="h-4 w-4 mr-3" /> Packet PO
@@ -208,8 +208,8 @@ export default function AdminOrdersPage() {
                 ))
               ) : (
                 <TableRow>
-                  <TableCell colSpan={5} className="text-center py-40 text-slate-600">
-                    <Globe className="h-20 w-20 mx-auto mb-6 opacity-5 animate-spin-slow" />
+                  <TableCell colSpan={5} className="text-center py-40 text-slate-400">
+                    <Globe className="h-20 w-20 mx-auto mb-6 opacity-10 animate-spin-slow" />
                     <p className="font-black uppercase tracking-[0.3em] text-xs italic">Awaiting telemetry synchronization...</p>
                   </TableCell>
                 </TableRow>
