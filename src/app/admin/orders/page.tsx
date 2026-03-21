@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState } from "react";
@@ -8,7 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Download, Search, FileText, Filter, Loader2, Globe } from "lucide-react";
+import { Download, Search, FileText, Filter, Loader2, Globe, Phone } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
 import { format } from "date-fns";
 import { errorEmitter } from "@/firebase/error-emitter";
@@ -48,16 +49,17 @@ export default function AdminOrdersPage() {
   const filteredOrders = orders?.filter(order => {
     const matchesStore = storeFilter === "all" || order.storeName === storeFilter;
     const matchesSearch = order.id.toLowerCase().includes(searchQuery.toLowerCase()) || 
-                         (order.storeName || "").toLowerCase().includes(searchQuery.toLowerCase());
+                         (order.storeName || "").toLowerCase().includes(searchQuery.toLowerCase()) ||
+                         (order.phoneNumber || "").toLowerCase().includes(searchQuery.toLowerCase());
     return matchesStore && matchesSearch;
   });
 
   const downloadPO = (orderId?: string) => {
     const ordersToExport = orderId ? orders?.filter(o => o.id === orderId) : filteredOrders;
     if (!ordersToExport || ordersToExport.length === 0) return;
-    const headers = ["Packet ID", "Node", "Timestamp", "Payload", "Value ($)", "Status"];
+    const headers = ["Packet ID", "Node", "Contact", "Timestamp", "Payload", "Value ($)", "Status"];
     const csvContent = [headers, ...ordersToExport.map(o => [
-      o.id, o.storeName || 'SYSTEM',
+      o.id, o.storeName || 'SYSTEM', o.phoneNumber || 'N/A',
       o.createdAt?.toDate ? format(o.createdAt.toDate(), 'yyyy-MM-dd HH:mm') : 'PENDING',
       `"${o.items || 'Restock'}"`, (o.total || 0).toFixed(2), o.status
     ])].map(e => e.join(",")).join("\n");
@@ -96,7 +98,7 @@ export default function AdminOrdersPage() {
         <div className="md:col-span-2 relative">
           <Search className="absolute left-6 top-1/2 -translate-y-1/2 h-5 w-5 text-slate-500" />
           <Input 
-            placeholder="Search by Node ID or Merchant Identity..." 
+            placeholder="Search by Node ID, Merchant, or Phone..." 
             className="pl-16 h-16 bg-slate-950/50 border-white/5 text-white placeholder:text-slate-600 rounded-[1.5rem] focus:ring-primary text-base" 
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
@@ -143,15 +145,21 @@ export default function AdminOrdersPage() {
                     <TableCell>
                       <div className="flex flex-col gap-1">
                         <span className="font-black text-white text-sm uppercase italic">{order.storeName || 'ROOT_SYSTEM'}</span>
-                        <span className="text-[10px] text-slate-600 font-mono tracking-tighter">
-                          {order.createdAt?.toDate ? format(order.createdAt.toDate(), 'MMM dd • HH:mm') : 'SYNCING'}
-                        </span>
+                        <div className="flex items-center gap-2 text-[10px] text-primary font-bold">
+                          <Phone className="h-2.5 w-2.5" />
+                          {order.phoneNumber || 'NO_CONTACT'}
+                        </div>
                       </div>
                     </TableCell>
                     <TableCell>
                       <div className="flex flex-col gap-1">
                         <span className="text-xs font-bold text-slate-300 truncate max-w-[180px] uppercase tracking-tight">{order.items || 'Logistics Cluster'}</span>
-                        <span className="text-[10px] font-black text-primary tracking-widest">${(order.total || 0).toFixed(2)}</span>
+                        <div className="flex items-center gap-2">
+                           <span className="text-[10px] font-black text-primary tracking-widest">${(order.total || 0).toFixed(2)}</span>
+                           <span className="text-[9px] text-slate-600 font-mono">
+                            {order.createdAt?.toDate ? format(order.createdAt.toDate(), 'MMM dd • HH:mm') : 'SYNCING'}
+                          </span>
+                        </div>
                       </div>
                     </TableCell>
                     <TableCell>

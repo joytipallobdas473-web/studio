@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, useMemo } from "react";
@@ -18,7 +19,8 @@ import {
   Search, 
   Filter, 
   Info,
-  AlertCircle
+  AlertCircle,
+  Phone
 } from "lucide-react";
 import { useFirestore, useCollection, useUser, useMemoFirebase } from "@/firebase";
 import { collection, serverTimestamp, query, orderBy } from "firebase/firestore";
@@ -48,6 +50,7 @@ export default function NewOrderPage() {
   const [selectedProduct, setSelectedProduct] = useState<any>(null);
   const [orderQuantity, setOrderQuantity] = useState("1");
   const [orderNotes, setOrderNotes] = useState("");
+  const [phoneNumber, setPhoneNumber] = useState("");
 
   const productsQuery = useMemoFirebase(() => {
     if (!db) return null;
@@ -74,12 +77,18 @@ export default function NewOrderPage() {
     setSelectedProduct(product);
     setOrderQuantity("1");
     setOrderNotes("");
+    setPhoneNumber("");
     setOrderDialogOpen(true);
   };
 
   const handleSubmitOrder = () => {
     if (!db || !selectedProduct || !user) {
       toast({ title: "Auth Required", description: "You must be signed in to place an order.", variant: "destructive" });
+      return;
+    }
+
+    if (!phoneNumber || phoneNumber.length < 10) {
+      toast({ title: "Verification Required", description: "Please provide a valid phone number for order confirmation.", variant: "destructive" });
       return;
     }
 
@@ -92,6 +101,7 @@ export default function NewOrderPage() {
       quantity: qty,
       total: (selectedProduct.price || 0) * qty,
       notes: orderNotes,
+      phoneNumber: phoneNumber.trim(),
       status: "pending",
       storeName: "Retailer Outlet", 
       createdAt: serverTimestamp()
@@ -115,6 +125,7 @@ export default function NewOrderPage() {
       <div className="flex flex-col items-center justify-center min-h-[60vh] text-center space-y-4 animate-in zoom-in duration-300">
         <div className="bg-green-100 p-6 rounded-full"><CheckCircle className="h-20 w-20 text-green-500" /></div>
         <h2 className="text-3xl font-bold text-primary">Order Confirmed!</h2>
+        <p className="text-muted-foreground">Logistics node has registered your request.</p>
         <Button variant="outline" onClick={() => router.push("/dashboard")}>Return to Dashboard</Button>
       </div>
     );
@@ -216,34 +227,73 @@ export default function NewOrderPage() {
       </div>
 
       <Dialog open={orderDialogOpen} onOpenChange={setOrderDialogOpen}>
-        <DialogContent>
-          <DialogHeader><DialogTitle className="font-bold">Stock Reorder Request</DialogTitle></DialogHeader>
+        <DialogContent className="rounded-3xl border-none p-0 overflow-hidden bg-white max-w-[500px]">
+          <DialogHeader className="p-8 pb-0">
+            <DialogTitle className="text-2xl font-bold text-primary">Finalize Reorder</DialogTitle>
+          </DialogHeader>
           {selectedProduct && (
-            <div className="space-y-6 py-4">
-              <div className="flex gap-4 p-4 bg-muted/30 rounded-lg">
-                <div className="relative h-20 w-20 rounded bg-white shadow-sm shrink-0 border">
+            <div className="p-8 space-y-6">
+              <div className="flex gap-4 p-4 bg-slate-50 rounded-2xl border border-slate-100">
+                <div className="relative h-20 w-20 rounded-xl bg-white shadow-sm shrink-0 border overflow-hidden">
                    <Image src={`https://picsum.photos/seed/${selectedProduct.id}/200`} alt={selectedProduct.name} fill className="object-cover" />
                 </div>
-                <div className="flex-1">
-                  <h4 className="font-bold text-sm">{selectedProduct.name}</h4>
-                  <p className="text-lg font-bold text-primary">${(selectedProduct.price || 0).toFixed(2)}</p>
+                <div className="flex-1 flex flex-col justify-center">
+                  <h4 className="font-bold text-slate-900 leading-tight">{selectedProduct.name}</h4>
+                  <p className="text-lg font-black text-primary">${(selectedProduct.price || 0).toFixed(2)}</p>
                 </div>
               </div>
-              <div className="space-y-4">
-                <div className="grid grid-cols-4 items-center gap-4">
-                  <Label className="text-right font-bold text-xs">Quantity</Label>
-                  <Input id="quantity" type="number" min="1" value={orderQuantity} onChange={(e) => setOrderQuantity(e.target.value)} className="col-span-3 text-center font-bold" />
+              
+              <div className="space-y-5">
+                <div className="space-y-2">
+                  <Label className="text-xs font-black uppercase tracking-widest text-slate-400 ml-1">Confirmation Phone</Label>
+                  <div className="relative">
+                    <Phone className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-primary" />
+                    <Input 
+                      placeholder="Enter mobile number..." 
+                      className="h-14 pl-12 rounded-xl bg-slate-50 border-slate-100 focus:ring-primary font-bold" 
+                      value={phoneNumber}
+                      onChange={(e) => setPhoneNumber(e.target.value)}
+                    />
+                  </div>
+                  <p className="text-[10px] text-slate-400 italic px-1">Required for logistics verification.</p>
                 </div>
-                <div className="grid grid-cols-4 items-start gap-4">
-                  <Label className="text-right font-bold text-xs mt-3">Notes</Label>
-                  <Textarea value={orderNotes} onChange={(e) => setOrderNotes(e.target.value)} className="col-span-3 min-h-[100px]" />
+
+                <div className="grid grid-cols-2 gap-4">
+                   <div className="space-y-2">
+                     <Label className="text-xs font-black uppercase tracking-widest text-slate-400 ml-1">Quantity</Label>
+                     <Input 
+                       type="number" 
+                       min="1" 
+                       value={orderQuantity} 
+                       onChange={(e) => setOrderQuantity(e.target.value)} 
+                       className="h-14 text-center font-bold rounded-xl bg-slate-50 border-slate-100" 
+                     />
+                   </div>
+                   <div className="space-y-2">
+                     <Label className="text-xs font-black uppercase tracking-widest text-slate-400 ml-1">Total Cost</Label>
+                     <div className="h-14 flex items-center justify-center bg-primary/5 text-primary font-black rounded-xl border border-primary/10">
+                        ${(parseFloat(orderQuantity || "0") * (selectedProduct.price || 0)).toFixed(2)}
+                     </div>
+                   </div>
+                </div>
+
+                <div className="space-y-2">
+                  <Label className="text-xs font-black uppercase tracking-widest text-slate-400 ml-1">Order Notes (Optional)</Label>
+                  <Textarea 
+                    value={orderNotes} 
+                    onChange={(e) => setOrderNotes(e.target.value)} 
+                    className="min-h-[100px] rounded-xl bg-slate-50 border-slate-100" 
+                    placeholder="Specific delivery instructions..."
+                  />
                 </div>
               </div>
             </div>
           )}
-          <DialogFooter>
-            <Button variant="ghost" onClick={() => setOrderDialogOpen(false)}>Cancel</Button>
-            <Button onClick={handleSubmitOrder} className="bg-accent text-accent-foreground font-bold px-10" disabled={isSubmitting}>Confirm Request</Button>
+          <DialogFooter className="p-8 pt-0 flex gap-3">
+            <Button variant="ghost" onClick={() => setOrderDialogOpen(false)} className="flex-1 h-12 rounded-xl font-bold">Cancel</Button>
+            <Button onClick={handleSubmitOrder} className="flex-[2] bg-accent text-primary hover:bg-primary hover:text-white h-12 rounded-xl font-black shadow-lg" disabled={isSubmitting}>
+              {isSubmitting ? <Loader2 className="h-5 w-5 animate-spin" /> : "Confirm & Send"}
+            </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>

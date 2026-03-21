@@ -1,3 +1,4 @@
+
 {
   "entities": {
     "UserProfile": {
@@ -37,9 +38,10 @@
         "total": { "type": "number" },
         "status": { "type": "string", "enum": ["pending", "processing", "shipped", "delivered", "cancelled"] },
         "storeName": { "type": "string" },
+        "phoneNumber": { "type": "string" },
         "createdAt": { "type": "string", "format": "date-time" }
       },
-      "required": ["id", "userId", "total", "status"]
+      "required": ["id", "userId", "total", "status", "phoneNumber"]
     },
     "Store": {
       "title": "Store",
