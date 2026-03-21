@@ -4,35 +4,36 @@
 
 @layer base {
   :root {
-    --background: 222 47% 4%;
-    --foreground: 210 40% 98%;
-    --card: 222 47% 6%;
-    --card-foreground: 210 40% 98%;
-    --popover: 222 47% 4%;
-    --popover-foreground: 210 40% 98%;
-    --primary: 217 91% 60%;
-    --primary-foreground: 222 47% 11%;
-    --secondary: 217 33% 12%;
-    --secondary-foreground: 210 40% 98%;
-    --muted: 217 33% 12%;
-    --muted-foreground: 215 20% 65%;
-    --accent: 199 89% 48%;
+    /* PRD Colors: Background #ECF0F5, Primary #2260B5, Accent #26CDF2 */
+    --background: 210 25% 94%; 
+    --foreground: 222 47% 11%;
+    --card: 0 0% 100%;
+    --card-foreground: 222 47% 11%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 222 47% 11%;
+    --primary: 215 68% 42%;
+    --primary-foreground: 210 40% 98%;
+    --secondary: 210 40% 96%;
+    --secondary-foreground: 222 47% 11%;
+    --muted: 210 40% 96%;
+    --muted-foreground: 215 16% 47%;
+    --accent: 191 88% 55%;
     --accent-foreground: 222 47% 11%;
-    --destructive: 0 62.8% 30.6%;
+    --destructive: 0 84% 60%;
     --destructive-foreground: 210 40% 98%;
-    --border: 217 33% 14%;
-    --input: 217 33% 14%;
-    --ring: 217 91% 60%;
+    --border: 214 32% 91%;
+    --input: 214 32% 91%;
+    --ring: 215 68% 42%;
     --radius: 1rem;
 
-    --sidebar-background: 222 47% 3%;
+    --sidebar-background: 215 68% 42%;
     --sidebar-foreground: 210 40% 98%;
-    --sidebar-primary: 217 91% 60%;
-    --sidebar-primary-foreground: 210 40% 98%;
-    --sidebar-accent: 217 33% 10%;
-    --sidebar-accent-foreground: 210 40% 98%;
-    --sidebar-border: 217 33% 10%;
-    --sidebar-ring: 217 91% 60%;
+    --sidebar-primary: 0 0% 100%;
+    --sidebar-primary-foreground: 215 68% 42%;
+    --sidebar-accent: 191 88% 55%;
+    --sidebar-accent-foreground: 222 47% 11%;
+    --sidebar-border: 215 68% 35%;
+    --sidebar-ring: 191 88% 55%;
   }
 }
 
@@ -41,7 +42,7 @@
     @apply border-border;
   }
   body {
-    @apply bg-background text-foreground font-body antialiased selection:bg-primary/30;
+    @apply bg-background text-foreground font-body antialiased selection:bg-primary/20;
   }
 }
 
@@ -55,9 +56,14 @@
 }
 
 .glass-card {
-  @apply bg-white/[0.02] border-white/5 backdrop-blur-3xl;
+  @apply bg-white/70 backdrop-blur-xl border-white/40 shadow-[0_8px_32px_rgba(0,0,0,0.05)];
 }
 
 .text-glow {
-  text-shadow: 0 0 15px rgba(59, 130, 246, 0.5);
+  text-shadow: 0 0 10px rgba(34, 96, 181, 0.2);
+}
+
+.ne-gradient-bg {
+  background: radial-gradient(circle at top right, rgba(38, 205, 242, 0.1), transparent),
+              radial-gradient(circle at bottom left, rgba(34, 96, 181, 0.05), transparent);
 }

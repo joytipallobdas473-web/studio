@@ -4,7 +4,7 @@ import { useState, useMemo } from "react";
 import { useFirestore, useCollection, useUser, useMemoFirebase } from "@/firebase";
 import { collection, query, orderBy, limit } from "firebase/firestore";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { Store, Package, ShoppingCart, AlertCircle, Activity, Loader2, BrainCircuit, ShieldAlert, Key, BarChart3, Globe, Zap, ArrowUpRight, Network, Map, Mountain } from "lucide-react";
+import { Store, Package, ShoppingCart, AlertCircle, Activity, Loader2, BrainCircuit, ShieldAlert, BarChart3, Globe, Zap, Network, Mountain, TrendingUp } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { analyzeInventory, type InventoryAnalysisOutput } from "@/ai/flows/inventory-analyst";
@@ -43,10 +43,10 @@ export default function AdminOverview() {
     const lowStockCount = products?.filter(p => (p.stockQuantity || 0) < 10)?.length || 0;
 
     return [
-      { label: "Branch Requests", value: pendingStoresCount.toString(), icon: Store, color: "text-amber-400", bg: "bg-amber-400/10", border: "border-amber-400/20" },
-      { label: "Regional SKUs", value: (products?.length || 0).toString(), icon: Package, color: "text-emerald-400", bg: "bg-emerald-400/10", border: "border-emerald-400/20" },
-      { label: "Transit Flows", value: activeOrdersCount.toString(), icon: ShoppingCart, color: "text-blue-400", bg: "bg-blue-400/10", border: "border-blue-400/20" },
-      { label: "Stock Alerts", value: lowStockCount.toString(), icon: AlertCircle, color: "text-rose-400", bg: "bg-rose-400/10", border: "border-rose-400/20" },
+      { label: "Pending Nodes", value: pendingStoresCount.toString(), icon: Store, color: "text-primary", bg: "bg-primary/5", border: "border-primary/10" },
+      { label: "Active SKUs", value: (products?.length || 0).toString(), icon: Package, color: "text-accent", bg: "bg-accent/5", border: "border-accent/10" },
+      { label: "Transit Units", value: activeOrdersCount.toString(), icon: ShoppingCart, color: "text-blue-600", bg: "bg-blue-600/5", border: "border-blue-600/10" },
+      { label: "Risk Nodes", value: lowStockCount.toString(), icon: AlertCircle, color: "text-rose-500", bg: "bg-rose-500/5", border: "border-rose-500/10" },
     ];
   }, [stores, orders, products]);
 
@@ -80,162 +80,158 @@ export default function AdminOverview() {
 
   if (hasPermissionError) {
     return (
-      <div className="flex flex-col items-center justify-center min-h-[65vh] text-center p-20 glass-card rounded-[3rem] border border-white/5 space-y-12 animate-in fade-in duration-1000">
+      <div className="flex flex-col items-center justify-center min-h-[60vh] text-center p-16 glass-card rounded-[3rem] border border-white space-y-10 animate-in fade-in duration-700">
         <div className="relative">
-          <div className="absolute inset-0 bg-rose-500/20 blur-[100px] rounded-full" />
-          <div className="relative bg-rose-500/10 p-12 rounded-[2.5rem] border border-rose-500/20 shadow-2xl">
-            <ShieldAlert className="h-24 w-24 text-rose-500" />
+          <div className="absolute inset-0 bg-primary/20 blur-3xl rounded-full" />
+          <div className="relative bg-white p-10 rounded-[2.5rem] border border-primary/20 shadow-xl">
+            <ShieldAlert className="h-16 w-16 text-primary" />
           </div>
         </div>
-        <div className="space-y-6">
-          <h2 className="text-5xl font-black text-white tracking-tighter uppercase italic text-glow">Identity Refused</h2>
-          <p className="text-slate-500 max-w-lg mx-auto leading-relaxed text-sm font-medium">
-            Administrative credentials required for regional terminal access. Please verify your UID in the root security registry.
+        <div className="space-y-4">
+          <h2 className="text-4xl font-black text-primary tracking-tighter uppercase italic">Bypass Required</h2>
+          <p className="text-muted-foreground max-w-lg mx-auto leading-relaxed text-sm font-medium">
+            Administrative terminal access is restricted to the root grid registry. Ensure your Node ID is authorized.
           </p>
         </div>
         {user && (
-          <div className="p-10 bg-black/60 rounded-[2.5rem] border border-white/5 w-full max-w-lg shadow-2xl">
-            <div className="flex items-center justify-between text-[10px] font-black uppercase mb-6 tracking-[0.4em] text-slate-600">
-              <span className="flex items-center gap-3"><Network className="h-4 w-4 text-emerald-400" /> Root Security Key</span>
-              <Badge className="bg-emerald-500/20 text-emerald-400 border-none text-[9px]">RESTRICTED</Badge>
+          <div className="p-8 bg-secondary/50 rounded-[2rem] border w-full max-w-lg shadow-inner">
+            <div className="flex items-center justify-between text-[9px] font-black uppercase mb-4 tracking-[0.3em] text-muted-foreground">
+              <span className="flex items-center gap-2"><Network className="h-3 w-3 text-primary" /> Authority Key</span>
+              <Badge variant="outline" className="border-primary/20 text-primary text-[8px]">RESTRICTED</Badge>
             </div>
-            <code className="text-sm font-mono break-all block p-6 bg-slate-950 rounded-2xl border border-white/5 text-emerald-400 select-all shadow-inner leading-loose">{user.uid}</code>
+            <code className="text-xs font-mono break-all block p-5 bg-white rounded-xl border text-primary select-all leading-relaxed shadow-sm">{user.uid}</code>
           </div>
         )}
-        <Button onClick={() => window.location.reload()} variant="outline" className="h-16 px-12 rounded-2xl border-white/10 hover:bg-white/5 text-slate-400 font-black uppercase tracking-widest transition-all hover:scale-105">Re-Authenticate Node</Button>
+        <Button onClick={() => window.location.reload()} className="h-14 px-10 rounded-2xl bg-primary text-white font-black uppercase tracking-widest transition-all hover:scale-105">Re-Authorize Node</Button>
       </div>
     );
   }
 
   if (storesLoading || ordersLoading || productsLoading) {
     return (
-      <div className="flex h-[75vh] items-center justify-center">
-        <Loader2 className="h-14 w-14 animate-spin text-emerald-400 opacity-50" />
+      <div className="flex h-[60vh] items-center justify-center">
+        <Loader2 className="h-10 w-10 animate-spin text-primary opacity-50" />
       </div>
     );
   }
 
   return (
-    <div className="space-y-16 animate-in fade-in duration-1000 slide-in-from-bottom-8">
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-10">
-        <div className="space-y-4">
-          <div className="flex items-center gap-4">
-            <div className="h-2.5 w-2.5 rounded-full bg-emerald-500 shadow-[0_0_15px_#10b981] animate-pulse" />
-            <span className="text-[10px] font-black tracking-[0.5em] text-emerald-400 uppercase">NE Regional Feed</span>
+    <div className="space-y-12 animate-in fade-in duration-700">
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-8">
+        <div className="space-y-3">
+          <div className="flex items-center gap-3">
+            <div className="h-2.5 w-2.5 rounded-full bg-accent shadow-[0_0_10px_var(--accent)] animate-pulse" />
+            <span className="text-[10px] font-black tracking-[0.4em] text-primary uppercase">NE Regional Hub</span>
           </div>
-          <h1 className="text-6xl font-black tracking-tighter text-white uppercase italic text-glow">Network Command</h1>
-          <p className="text-slate-500 text-sm font-medium tracking-wide">Monitoring {stores?.length || 0} active North East branch nodes across the regional grid.</p>
+          <h1 className="text-5xl font-black tracking-tighter text-primary uppercase italic text-glow">Grid Command</h1>
+          <p className="text-muted-foreground text-sm font-medium tracking-wide">Orchestrating {stores?.length || 0} regional nodes across the NE Sector network.</p>
         </div>
-        <div className="flex gap-6">
-          <Button variant="outline" className="h-16 px-10 rounded-[1.5rem] glass-card text-slate-300 hover:text-white transition-all font-black uppercase tracking-widest text-xs">
-            <BarChart3 className="mr-3 h-5 w-5" /> Hub Analytics
+        <div className="flex gap-4">
+          <Button variant="outline" className="h-14 px-8 rounded-2xl border-primary/20 bg-white text-primary font-black uppercase tracking-widest text-[10px] hover:bg-secondary">
+            <BarChart3 className="mr-3 h-4 w-4" /> Global Logs
           </Button>
-          <Button className="h-16 px-10 rounded-[1.5rem] bg-emerald-600 text-white font-black shadow-[0_15px_30px_rgba(16,185,129,0.3)] hover:scale-105 transition-all uppercase tracking-widest text-xs">
-            <Zap className="mr-3 h-5 w-5" /> Sync Mesh
+          <Button className="h-14 px-8 rounded-2xl bg-primary text-white font-black shadow-lg hover:scale-105 transition-all uppercase tracking-widest text-[10px]">
+            <Zap className="mr-3 h-4 w-4" /> Force Sync
           </Button>
         </div>
       </div>
       
-      <div className="grid grid-cols-1 gap-8 sm:grid-cols-2 lg:grid-cols-4">
+      <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
         {stats.map((stat, i) => (
           <Card key={i} className={cn(
-            "relative overflow-hidden border glass-card group hover:bg-white/[0.04] transition-all duration-700 rounded-[2.5rem] p-6 shadow-2xl",
+            "relative overflow-hidden border glass-card group hover:scale-[1.02] transition-all duration-300 rounded-[2rem] p-6",
             stat.border
           )}>
-            <div className="absolute -right-8 -top-8 h-24 w-24 bg-white/5 rounded-full blur-3xl opacity-0 group-hover:opacity-100 transition-opacity" />
-            <CardHeader className="flex flex-row items-center justify-between pb-6 space-y-0">
-              <CardTitle className="text-[10px] font-black uppercase tracking-[0.4em] text-slate-500">{stat.label}</CardTitle>
-              <div className={cn(stat.bg, stat.color, "p-4 rounded-2xl group-hover:scale-110 transition-transform duration-700 shadow-xl")}>
-                <stat.icon className="h-7 w-7" />
+            <CardHeader className="flex flex-row items-center justify-between pb-4 space-y-0">
+              <CardTitle className="text-[9px] font-black uppercase tracking-[0.3em] text-muted-foreground">{stat.label}</CardTitle>
+              <div className={cn(stat.bg, stat.color, "p-3 rounded-xl transition-transform group-hover:scale-110 shadow-sm")}>
+                <stat.icon className="h-5 w-5" />
               </div>
             </CardHeader>
             <CardContent>
-              <div className="text-6xl font-black text-white tracking-tighter mb-3">{stat.value}</div>
-              <div className="flex items-center gap-2 text-[10px] font-black text-slate-600 uppercase tracking-widest">
-                <Mountain className="h-3.5 w-3.5" /> Regional Nominal
+              <div className="text-4xl font-black text-primary tracking-tighter mb-2">{stat.value}</div>
+              <div className="flex items-center gap-2 text-[9px] font-bold text-muted-foreground uppercase tracking-widest">
+                <TrendingUp className="h-3 w-3 text-accent" /> Nominal Flow
               </div>
             </CardContent>
           </Card>
         ))}
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-12">
-        <Card className="lg:col-span-2 shadow-2xl glass-card rounded-[3rem] overflow-hidden">
-          <CardHeader className="flex flex-row items-center justify-between border-b border-white/5 pb-10 px-12 pt-12">
-            <div className="flex items-center gap-6">
-              <div className="bg-emerald-500/10 p-4 rounded-2xl border border-emerald-500/20 shadow-inner">
-                <Activity className="h-7 w-7 text-emerald-400" />
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-10">
+        <Card className="lg:col-span-2 shadow-xl glass-card rounded-[2.5rem] overflow-hidden border-none">
+          <CardHeader className="flex flex-row items-center justify-between border-b bg-white/50 pb-8 px-10 pt-10">
+            <div className="flex items-center gap-5">
+              <div className="bg-primary/5 p-3 rounded-xl border border-primary/10">
+                <Activity className="h-6 w-6 text-primary" />
               </div>
               <div>
-                <CardTitle className="text-3xl font-black text-white tracking-tighter uppercase italic">Transit Telemetry</CardTitle>
-                <CardDescription className="text-slate-500 text-[10px] font-black uppercase tracking-[0.4em] mt-1">Real-time packet stream from NE regional nodes</CardDescription>
+                <CardTitle className="text-2xl font-black text-primary tracking-tight uppercase italic">Transit Stream</CardTitle>
+                <CardDescription className="text-muted-foreground text-[9px] font-black uppercase tracking-[0.2em] mt-1">Real-time packet telemetry</CardDescription>
               </div>
             </div>
-            <Badge variant="outline" className="border-emerald-500/20 text-emerald-400 text-[9px] font-black px-4 py-1.5 rounded-full shadow-[0_0_10px_rgba(16,185,129,0.2)]">HUB SYNC</Badge>
+            <Badge variant="outline" className="border-primary/20 text-primary text-[8px] font-black px-3 py-1 rounded-full uppercase">Live Sync</Badge>
           </CardHeader>
           <CardContent className="p-0">
-            <div className="divide-y divide-white/5">
-              {orders && orders.length > 0 ? orders.slice(0, 8).map((order, i) => (
-                <div key={i} className="flex items-center justify-between px-12 py-8 hover:bg-white/[0.03] transition-all group cursor-pointer">
-                  <div className="flex gap-8 items-center">
-                    <div className="relative">
-                      <div className={cn(
-                        "h-3.5 w-3.5 rounded-full shadow-[0_0_12px_currentColor] transition-all duration-500",
-                        order.status === 'delivered' ? 'text-emerald-500 bg-emerald-500' : 'text-emerald-400 bg-emerald-400'
-                      )} />
-                    </div>
-                    <div className="space-y-1.5">
-                      <p className="text-base font-black text-white flex items-center gap-4 uppercase italic">
-                        {order.storeName || 'Local Node'}
-                        <span className="text-[10px] font-mono text-slate-600 border border-white/5 px-3 py-1 rounded-xl bg-black/60 shadow-inner">NE-{order.id.substring(0, 6).toUpperCase()}</span>
+            <div className="divide-y divide-secondary/50">
+              {orders && orders.length > 0 ? orders.slice(0, 6).map((order, i) => (
+                <div key={i} className="flex items-center justify-between px-10 py-6 hover:bg-secondary/30 transition-all group cursor-pointer">
+                  <div className="flex gap-6 items-center">
+                    <div className={cn(
+                      "h-2.5 w-2.5 rounded-full shadow-[0_0_8px_currentColor]",
+                      order.status === 'delivered' ? 'text-accent bg-accent' : 'text-primary bg-primary'
+                    )} />
+                    <div className="space-y-1">
+                      <p className="text-sm font-black text-primary flex items-center gap-3 uppercase italic">
+                        {order.storeName || 'Branch Node'}
+                        <span className="text-[9px] font-mono text-muted-foreground bg-secondary px-2 py-0.5 rounded-lg border">NE-{order.id.substring(0, 6).toUpperCase()}</span>
                       </p>
-                      <p className="text-xs text-slate-500 font-medium tracking-tight">Payload: <span className="text-slate-300 font-black uppercase italic">{order.items || 'Standard Logistics'}</span></p>
+                      <p className="text-[10px] text-muted-foreground font-medium">Payload: <span className="text-primary font-bold uppercase">{order.items || 'Standard SKU'}</span></p>
                     </div>
                   </div>
-                  <div className="text-right flex flex-col items-end gap-2">
-                    <p className="text-xl font-black text-white tracking-tighter text-glow">₹{(order.total || 0).toFixed(2)}</p>
-                    <Badge className={cn(
-                      "text-[9px] font-black tracking-[0.2em] uppercase px-3 py-1 rounded-xl shadow-lg border-none",
-                      order.status === 'delivered' ? 'bg-emerald-500 text-white shadow-emerald-500/20' : 'bg-emerald-600 text-white shadow-emerald-600/20'
+                  <div className="text-right space-y-1">
+                    <p className="text-base font-black text-primary tracking-tight">₹{(order.total || 0).toFixed(2)}</p>
+                    <Badge variant="outline" className={cn(
+                      "text-[8px] font-black tracking-widest uppercase px-2 py-0.5 rounded-lg border-none",
+                      order.status === 'delivered' ? 'bg-accent text-primary' : 'bg-primary text-white'
                     )}>
                       {order.status}
                     </Badge>
                   </div>
                 </div>
               )) : (
-                <div className="py-48 text-center">
-                  <Map className="h-24 w-24 text-slate-900 mx-auto mb-8 animate-pulse opacity-20" />
-                  <p className="text-slate-700 font-black uppercase tracking-[0.5em] text-sm italic">Awaiting Regional Sync...</p>
+                <div className="py-32 text-center opacity-30">
+                  <Globe className="h-16 w-16 mx-auto mb-4 animate-spin-slow" />
+                  <p className="font-black uppercase tracking-[0.4em] text-[10px]">Searching for Transit Packets...</p>
                 </div>
               )}
             </div>
           </CardContent>
         </Card>
 
-        <div className="space-y-12">
-          <Card className="bg-gradient-to-br from-emerald-600 via-emerald-700 to-slate-950 text-emerald-50 shadow-[0_40px_80px_rgba(16,185,129,0.3)] border-none rounded-[3rem] overflow-hidden relative group transition-all duration-700 hover:scale-[1.02]">
-            <div className="absolute inset-0 bg-[url('https://picsum.photos/seed/ne-grain/500/500')] opacity-10 mix-blend-overlay pointer-events-none" />
-            <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(255,255,255,0.2),transparent)]" />
-            <CardHeader className="relative z-10 pb-6 pt-12 px-10">
-              <div className="flex items-center justify-between mb-8">
-                <div className="bg-white/20 p-4 rounded-2xl backdrop-blur-2xl shadow-xl">
-                  <BrainCircuit className="h-8 w-8 text-white" />
+        <div className="space-y-8">
+          <Card className="bg-primary text-white shadow-2xl border-none rounded-[2.5rem] overflow-hidden relative group">
+            <div className="absolute inset-0 bg-gradient-to-br from-white/10 to-transparent pointer-events-none" />
+            <CardHeader className="relative z-10 pb-4 pt-10 px-8">
+              <div className="flex items-center justify-between mb-6">
+                <div className="bg-white/10 p-3 rounded-xl backdrop-blur-md">
+                  <BrainCircuit className="h-7 w-7 text-accent" />
                 </div>
-                <Badge className="bg-white/20 text-white border-none text-[9px] font-black tracking-[0.4em] px-4 py-1.5">NE AI v5.0</Badge>
+                <Badge className="bg-accent text-primary border-none text-[8px] font-black tracking-widest px-3 py-1">NE AI v2</Badge>
               </div>
-              <CardTitle className="text-4xl font-black tracking-tighter uppercase italic text-glow">Regional Synthesis</CardTitle>
+              <CardTitle className="text-3xl font-black tracking-tighter uppercase italic">Regional Intel</CardTitle>
             </CardHeader>
-            <CardContent className="space-y-10 relative z-10 px-10 pb-12">
+            <CardContent className="space-y-8 relative z-10 px-8 pb-10">
               {aiAnalysis ? (
-                <div className="space-y-10 animate-in slide-in-from-bottom-12 duration-700">
-                  <div className="bg-black/30 backdrop-blur-2xl rounded-[2.5rem] p-8 border border-white/10 shadow-2xl">
-                    <p className="text-sm leading-relaxed font-bold italic opacity-95 tracking-wide text-emerald-100">
+                <div className="space-y-6 animate-in slide-in-from-bottom-8 duration-500">
+                  <div className="bg-black/20 backdrop-blur-md rounded-2xl p-6 border border-white/10">
+                    <p className="text-xs leading-relaxed font-bold italic text-white/90">
                       "{aiAnalysis.summary}"
                     </p>
                   </div>
                   <Button 
                     variant="secondary" 
-                    className="w-full h-16 text-xs font-black uppercase tracking-[0.3em] bg-white text-emerald-700 hover:bg-slate-100 rounded-2xl shadow-3xl transition-all"
+                    className="w-full h-14 text-[9px] font-black uppercase tracking-widest bg-white text-primary hover:bg-accent rounded-xl"
                     onClick={handleRunAIAnalysis}
                     disabled={isAnalyzing}
                   >
@@ -244,33 +240,33 @@ export default function AdminOverview() {
                 </div>
               ) : (
                 <Button 
-                  className="w-full h-20 bg-white text-emerald-700 hover:bg-slate-50 font-black rounded-[1.8rem] shadow-3xl text-sm uppercase tracking-[0.4em] transition-all group-hover:scale-[1.03] shadow-[0_20px_40px_rgba(0,0,0,0.3)]"
+                  className="w-full h-16 bg-accent text-primary hover:bg-white font-black rounded-2xl shadow-lg text-[10px] uppercase tracking-widest transition-all group-hover:scale-[1.03]"
                   onClick={handleRunAIAnalysis}
                   disabled={isAnalyzing}
                 >
                   {isAnalyzing ? (
-                    <Loader2 className="h-8 w-8 animate-spin" />
+                    <Loader2 className="h-6 w-6 animate-spin" />
                   ) : (
-                    "Initialize Synthesis"
+                    "Init NE Synthesis"
                   )}
                 </Button>
               )}
             </CardContent>
           </Card>
 
-          <Card className="glass-card rounded-[3rem] p-6 shadow-2xl">
-             <CardHeader className="pb-8">
-               <CardTitle className="text-xs font-black uppercase tracking-[0.4em] text-slate-600">Integrity Protocol</CardTitle>
+          <Card className="glass-card rounded-[2.5rem] p-6 border-none">
+             <CardHeader className="pb-6">
+               <CardTitle className="text-[9px] font-black uppercase tracking-[0.3em] text-muted-foreground">Grid Integrity</CardTitle>
              </CardHeader>
-             <CardContent className="space-y-5">
+             <CardContent className="space-y-4">
                {[
-                 { label: "Hub Services", status: "Nominal", color: "text-emerald-500" },
-                 { label: "Transit Latency", status: "42ms", color: "text-emerald-400" },
-                 { label: "Regional Mesh", status: "Active", color: "text-blue-400" }
+                 { label: "Mesh Services", status: "Nominal", color: "text-accent" },
+                 { label: "Transit Latency", status: "28ms", color: "text-primary" },
+                 { label: "Sector Health", status: "99.4%", color: "text-accent" }
                ].map((item, i) => (
-                 <div key={i} className="flex justify-between items-center p-6 bg-black/40 rounded-3xl border border-white/5 shadow-inner">
-                   <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest">{item.label}</span>
-                   <span className={cn("text-[10px] font-black uppercase tracking-widest text-glow", item.color)}>{item.status}</span>
+                 <div key={i} className="flex justify-between items-center p-4 bg-secondary rounded-xl border border-primary/5">
+                   <span className="text-[9px] font-bold text-muted-foreground uppercase tracking-widest">{item.label}</span>
+                   <span className={cn("text-[9px] font-black uppercase tracking-widest", item.color)}>{item.status}</span>
                  </div>
                ))}
              </CardContent>
