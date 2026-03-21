@@ -1,15 +1,14 @@
-
 "use client";
 
 import { useState, useMemo } from "react";
 import { useFirestore, useCollection } from "@/firebase";
-import { collection, doc, addDoc, updateDoc, deleteDoc, query, orderBy, serverTimestamp } from "firebase/firestore";
+import { collection, doc, addDoc, updateDoc, deleteDoc, serverTimestamp } from "firebase/firestore";
 import { useMemoFirebase } from "@/firebase/use-memo-firebase";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Plus, Search, Edit2, Trash2, Loader2, Package, AlertCircle, CheckCircle2 } from "lucide-react";
+import { Plus, Search, Edit2, Trash2, Loader2, Package, AlertCircle, CheckCircle2, X } from "lucide-react";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -24,7 +23,8 @@ export default function InventoryControl() {
   
   const productsQuery = useMemoFirebase(() => {
     if (!db) return null;
-    return query(collection(db, "inventory"), orderBy("name"));
+    // Simple collection reference to ensure standard behavior
+    return collection(db, "inventory");
   }, [db]);
 
   const { data: products, loading } = useCollection(productsQuery);
@@ -62,7 +62,10 @@ export default function InventoryControl() {
   };
 
   const handleSave = () => {
-    if (!db) return;
+    if (!db) {
+      toast({ title: "Error", description: "Database connection lost. Please refresh.", variant: "destructive" });
+      return;
+    }
 
     const mrp = parseFloat(formData.mrp);
     const stock = parseInt(formData.currentStock);
@@ -95,10 +98,11 @@ export default function InventoryControl() {
             title: "Updated Successfully", 
             description: `${productData.name} has been updated.`,
           });
-          setIsDialogOpen(false);
           setIsSaving(false);
+          setIsDialogOpen(false);
         })
-        .catch(async () => {
+        .catch(async (err) => {
+          console.error("Stock update error:", err);
           setIsSaving(false);
           errorEmitter.emit('permission-error', new FirestorePermissionError({
             path: docRef.path,
@@ -114,11 +118,12 @@ export default function InventoryControl() {
             title: "Saved Successfully", 
             description: `${productData.name} has been added to the catalog.`,
           });
-          setIsDialogOpen(false);
           setIsSaving(false);
+          setIsDialogOpen(false);
           setFormData(initialFormState);
         })
-        .catch(async () => {
+        .catch(async (err) => {
+          console.error("Stock save error:", err);
           setIsSaving(false);
           errorEmitter.emit('permission-error', new FirestorePermissionError({
             path: colRef.path,
@@ -150,8 +155,14 @@ export default function InventoryControl() {
 
   const filteredProducts = useMemo(() => {
     if (!products) return [];
+    
+    // Sort products locally to avoid complex composite index requirements
+    const sorted = [...products].sort((a, b) => (a.name || "").localeCompare(b.name || ""));
+    
     const lowerQuery = searchQuery.toLowerCase();
-    return products.filter(p => 
+    if (!lowerQuery) return sorted;
+    
+    return sorted.filter(p => 
       (p.name || "").toLowerCase().includes(lowerQuery) ||
       (p.sku || "").toLowerCase().includes(lowerQuery) ||
       (p.category || "").toLowerCase().includes(lowerQuery)
@@ -189,6 +200,14 @@ export default function InventoryControl() {
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
         />
+        {searchQuery && (
+          <button 
+            onClick={() => setSearchQuery("")}
+            className="absolute right-3 top-3.5 text-muted-foreground hover:text-foreground"
+          >
+            <X className="h-4 w-4" />
+          </button>
+        )}
       </div>
 
       <Card className="border-none shadow-md overflow-hidden">
