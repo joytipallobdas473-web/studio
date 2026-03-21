@@ -12,6 +12,8 @@ import { Plus, Search, Edit2, Trash2, Loader2 } from "lucide-react";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { toast } from "@/hooks/use-toast";
+import { errorEmitter } from "@/firebase/error-emitter";
+import { FirestorePermissionError } from "@/firebase/errors";
 
 export default function InventoryControl() {
   const db = useFirestore();
@@ -46,7 +48,7 @@ export default function InventoryControl() {
     setIsDialogOpen(true);
   };
 
-  const handleSave = async () => {
+  const handleSave = () => {
     if (!db) return;
     if (!formData.name || !formData.sku || !formData.mrp || !formData.currentStock) {
       toast({
@@ -66,28 +68,50 @@ export default function InventoryControl() {
       updatedAt: serverTimestamp()
     };
 
-    try {
-      if (editingProduct) {
-        await updateDoc(doc(db, "inventory", editingProduct.id), productData);
-        toast({ title: "Product Updated", description: `${formData.name} updated successfully.` });
-      } else {
-        await addDoc(collection(db, "inventory"), productData);
-        toast({ title: "Product Added", description: `${formData.name} added to global inventory.` });
-      }
-      setIsDialogOpen(false);
-    } catch (error) {
-      toast({ variant: "destructive", title: "Error", description: "Failed to save product." });
+    if (editingProduct) {
+      const docRef = doc(db, "inventory", editingProduct.id);
+      updateDoc(docRef, productData)
+        .then(() => {
+          toast({ title: "Product Updated", description: `${formData.name} updated successfully.` });
+          setIsDialogOpen(false);
+        })
+        .catch(async () => {
+          errorEmitter.emit('permission-error', new FirestorePermissionError({
+            path: docRef.path,
+            operation: 'update',
+            requestResourceData: productData
+          }));
+        });
+    } else {
+      const colRef = collection(db, "inventory");
+      addDoc(colRef, productData)
+        .then(() => {
+          toast({ title: "Product Added", description: `${formData.name} added to global inventory.` });
+          setIsDialogOpen(false);
+        })
+        .catch(async () => {
+          errorEmitter.emit('permission-error', new FirestorePermissionError({
+            path: colRef.path,
+            operation: 'create',
+            requestResourceData: productData
+          }));
+        });
     }
   };
 
-  const handleDelete = async (id: string, name: string) => {
+  const handleDelete = (id: string, name: string) => {
     if (!db) return;
-    try {
-      await deleteDoc(doc(db, "inventory", id));
-      toast({ title: "Item Removed", description: `${name} deleted from stock.`, variant: "destructive" });
-    } catch (error) {
-      toast({ variant: "destructive", title: "Error", description: "Failed to delete product." });
-    }
+    const docRef = doc(db, "inventory", id);
+    deleteDoc(docRef)
+      .then(() => {
+        toast({ title: "Item Removed", description: `${name} deleted from stock.`, variant: "destructive" });
+      })
+      .catch(async () => {
+        errorEmitter.emit('permission-error', new FirestorePermissionError({
+          path: docRef.path,
+          operation: 'delete'
+        }));
+      });
   };
 
   const filteredProducts = products?.filter(p => 
