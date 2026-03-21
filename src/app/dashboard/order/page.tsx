@@ -9,18 +9,55 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
-import { Package, ShoppingBag, CheckCircle } from "lucide-react";
+import { Package, ShoppingBag, CheckCircle, Loader2 } from "lucide-react";
+import { useFirestore } from "@/firebase";
+import { collection, addDoc, serverTimestamp } from "firebase/firestore";
+import { toast } from "@/hooks/use-toast";
 
 export default function NewOrderPage() {
   const router = useRouter();
+  const db = useFirestore();
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
+  const [formData, setFormData] = useState({
+    category: "",
+    item: "",
+    quantity: "",
+    priority: "normal",
+    notes: ""
+  });
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setSubmitted(true);
-    setTimeout(() => {
-      router.push("/dashboard");
-    }, 2000);
+    if (!db) return;
+
+    setIsSubmitting(true);
+    try {
+      await addDoc(collection(db, "orders"), {
+        category: formData.category,
+        items: formData.item, // Simplified for MVP
+        quantity: parseInt(formData.quantity),
+        total: Math.floor(Math.random() * 500) + 100, // Dummy price for demo
+        priority: formData.priority,
+        notes: formData.notes,
+        status: "pending",
+        storeName: "Downtown Brooklyn", // Hardcoded for simulated user
+        createdAt: serverTimestamp()
+      });
+
+      setSubmitted(true);
+      setTimeout(() => {
+        router.push("/dashboard");
+      }, 2000);
+    } catch (error) {
+      toast({
+        variant: "destructive",
+        title: "Order Failed",
+        description: "Could not submit your order request.",
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   if (submitted) {
@@ -56,7 +93,10 @@ export default function NewOrderPage() {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div className="space-y-2">
                 <Label htmlFor="category">Category</Label>
-                <Select required>
+                <Select 
+                  required 
+                  onValueChange={(val) => setFormData({...formData, category: val})}
+                >
                   <SelectTrigger id="category">
                     <SelectValue placeholder="Select Category" />
                   </SelectTrigger>
@@ -72,7 +112,14 @@ export default function NewOrderPage() {
                 <Label htmlFor="item">Specific Item</Label>
                 <div className="relative">
                   <Package className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-                  <Input id="item" placeholder="e.g. Wireless Keyboard" className="pl-9" required />
+                  <Input 
+                    id="item" 
+                    placeholder="e.g. Wireless Keyboard" 
+                    className="pl-9" 
+                    required 
+                    value={formData.item}
+                    onChange={(e) => setFormData({...formData, item: e.target.value})}
+                  />
                 </div>
               </div>
             </div>
@@ -80,11 +127,22 @@ export default function NewOrderPage() {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div className="space-y-2">
                 <Label htmlFor="quantity">Quantity</Label>
-                <Input id="quantity" type="number" min="1" placeholder="Quantity" required />
+                <Input 
+                  id="quantity" 
+                  type="number" 
+                  min="1" 
+                  placeholder="Quantity" 
+                  required 
+                  value={formData.quantity}
+                  onChange={(e) => setFormData({...formData, quantity: e.target.value})}
+                />
               </div>
               <div className="space-y-2">
                 <Label htmlFor="priority">Priority</Label>
-                <Select defaultValue="normal">
+                <Select 
+                  defaultValue="normal"
+                  onValueChange={(val) => setFormData({...formData, priority: val})}
+                >
                   <SelectTrigger id="priority">
                     <SelectValue placeholder="Select Priority" />
                   </SelectTrigger>
@@ -99,14 +157,21 @@ export default function NewOrderPage() {
 
             <div className="space-y-2">
               <Label htmlFor="notes">Additional Notes</Label>
-              <Textarea id="notes" placeholder="Any special instructions or delivery details..." className="min-h-[100px]" />
+              <Textarea 
+                id="notes" 
+                placeholder="Any special instructions or delivery details..." 
+                className="min-h-[100px]" 
+                value={formData.notes}
+                onChange={(e) => setFormData({...formData, notes: e.target.value})}
+              />
             </div>
 
             <div className="flex gap-4 pt-4">
-              <Button type="submit" className="flex-1 bg-accent text-accent-foreground font-bold hover:bg-accent/90">
+              <Button type="submit" className="flex-1 bg-accent text-accent-foreground font-bold hover:bg-accent/90" disabled={isSubmitting}>
+                {isSubmitting ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}
                 Submit Order
               </Button>
-              <Button type="button" variant="outline" onClick={() => router.back()}>
+              <Button type="button" variant="outline" onClick={() => router.back()} disabled={isSubmitting}>
                 Cancel
               </Button>
             </div>

@@ -1,54 +1,62 @@
+
 "use client";
 
 import { useState } from "react";
+import { useFirestore, useCollection } from "@/firebase";
+import { collection, doc, updateDoc, query, orderBy } from "firebase/firestore";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Download, Search, FileText, Filter, CheckCircle2, Clock, Truck, PackageCheck, XCircle } from "lucide-react";
+import { Download, Search, FileText, Filter, CheckCircle2, Clock, Truck, PackageCheck, XCircle, Loader2 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "@/hooks/use-toast";
+import { format } from "date-fns";
 
 export default function AdminOrdersPage() {
+  const db = useFirestore();
   const [storeFilter, setStoreFilter] = useState("all");
   const [searchQuery, setSearchQuery] = useState("");
 
-  const [orders, setOrders] = useState([
-    { id: "ORD-9901", store: "Downtown Brooklyn", date: "2024-05-15", items: "Logitech MX Master 3 (x5)", total: 495.00, status: "pending" },
-    { id: "ORD-9902", store: "Jersey City Hub", date: "2024-05-14", items: "Dell 27 Monitor (x2)", total: 579.00, status: "processing" },
-    { id: "ORD-9903", store: "Downtown Brooklyn", date: "2024-05-14", items: "USB-C Hubs (x10)", total: 350.00, status: "shipped" },
-    { id: "ORD-9904", store: "Main St Boutique", date: "2024-05-13", items: "Office Chairs (x4)", total: 1200.00, status: "delivered" },
-  ]);
+  const ordersQuery = db ? query(collection(db, "orders"), orderBy("createdAt", "desc")) : null;
+  const { data: orders, loading } = useCollection(ordersQuery);
 
-  const handleStatusUpdate = (orderId: string, newStatus: string) => {
-    setOrders(prev => prev.map(order => 
-      order.id === orderId ? { ...order, status: newStatus } : order
-    ));
-    
-    toast({
-      title: "Status Updated",
-      description: `Order ${orderId} is now ${newStatus}.`,
-    });
+  const handleStatusUpdate = async (orderId: string, newStatus: string) => {
+    if (!db) return;
+    try {
+      const orderRef = doc(db, "orders", orderId);
+      await updateDoc(orderRef, { status: newStatus });
+      toast({
+        title: "Status Updated",
+        description: `Order ${orderId.substring(0, 5)} is now ${newStatus}.`,
+      });
+    } catch (error) {
+      toast({
+        variant: "destructive",
+        title: "Update Failed",
+        description: "Could not update order status.",
+      });
+    }
   };
 
-  const filteredOrders = orders.filter(order => {
-    const matchesStore = storeFilter === "all" || order.store === storeFilter;
+  const filteredOrders = orders?.filter(order => {
+    const matchesStore = storeFilter === "all" || order.storeName === storeFilter;
     const matchesSearch = order.id.toLowerCase().includes(searchQuery.toLowerCase()) || 
-                         order.store.toLowerCase().includes(searchQuery.toLowerCase());
+                         order.storeName.toLowerCase().includes(searchQuery.toLowerCase());
     return matchesStore && matchesSearch;
   });
 
   const downloadPO = (orderId?: string) => {
-    const ordersToExport = orderId ? orders.filter(o => o.id === orderId) : filteredOrders;
+    const ordersToExport = orderId ? orders?.filter(o => o.id === orderId) : filteredOrders;
     
-    if (ordersToExport.length === 0) return;
+    if (!ordersToExport || ordersToExport.length === 0) return;
 
     const headers = ["Order ID", "Store", "Date", "Items", "Total Amount ($)", "Status"];
     const csvData = ordersToExport.map(o => [
       o.id,
-      o.store,
-      o.date,
+      o.storeName,
+      o.createdAt?.toDate ? format(o.createdAt.toDate(), 'yyyy-MM-dd') : 'N/A',
       `"${o.items}"`,
       o.total.toFixed(2),
       o.status
@@ -91,6 +99,14 @@ export default function AdminOrdersPage() {
     }
   };
 
+  if (loading) {
+    return (
+      <div className="flex h-[400px] items-center justify-center">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-6">
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
@@ -123,9 +139,9 @@ export default function AdminOrdersPage() {
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="all">All Stores</SelectItem>
-              <SelectItem value="Downtown Brooklyn">Downtown Brooklyn</SelectItem>
-              <SelectItem value="Jersey City Hub">Jersey City Hub</SelectItem>
-              <SelectItem value="Main St Boutique">Main St Boutique</SelectItem>
+              {Array.from(new Set(orders?.map(o => o.storeName) || [])).map(store => (
+                <SelectItem key={store} value={store}>{store}</SelectItem>
+              ))}
             </SelectContent>
           </Select>
         </div>
@@ -145,14 +161,16 @@ export default function AdminOrdersPage() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {filteredOrders.length > 0 ? (
+              {filteredOrders?.length ? (
                 filteredOrders.map((order) => (
                   <TableRow key={order.id}>
-                    <TableCell className="font-code font-bold text-primary">{order.id}</TableCell>
+                    <TableCell className="font-code font-bold text-primary text-xs">{order.id.substring(0, 8)}</TableCell>
                     <TableCell>
                       <div className="flex flex-col">
-                        <span className="font-medium">{order.store}</span>
-                        <span className="text-[10px] text-muted-foreground">{order.date}</span>
+                        <span className="font-medium">{order.storeName}</span>
+                        <span className="text-[10px] text-muted-foreground">
+                          {order.createdAt?.toDate ? format(order.createdAt.toDate(), 'MMM dd, h:mm a') : 'N/A'}
+                        </span>
                       </div>
                     </TableCell>
                     <TableCell className="max-w-[200px] truncate">{order.items}</TableCell>

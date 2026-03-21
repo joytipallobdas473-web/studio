@@ -9,18 +9,52 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Package, Lock, User, Mail, MapPin, Building } from "lucide-react";
+import { useFirestore } from "@/firebase";
+import { collection, addDoc, serverTimestamp } from "firebase/firestore";
+import { toast } from "@/hooks/use-toast";
 
 export default function RegisterPage() {
   const router = useRouter();
+  const db = useFirestore();
   const [isLoading, setIsLoading] = useState(false);
+  const [formData, setFormData] = useState({
+    managerName: "",
+    email: "",
+    storeName: "",
+    location: "",
+    password: ""
+  });
 
-  const handleRegister = (e: React.FormEvent) => {
+  const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!db) return;
+    
     setIsLoading(true);
-    // Simulate store registration request
-    setTimeout(() => {
+    try {
+      await addDoc(collection(db, "stores"), {
+        name: formData.storeName,
+        managerName: formData.managerName,
+        email: formData.email,
+        location: formData.location,
+        status: "pending",
+        createdAt: serverTimestamp()
+      });
+      
+      toast({
+        title: "Registration Submitted",
+        description: "Your store registration is pending admin approval.",
+      });
+      
       router.push("/");
-    }, 1500);
+    } catch (error) {
+      toast({
+        variant: "destructive",
+        title: "Registration Failed",
+        description: "There was an error submitting your request.",
+      });
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -40,14 +74,29 @@ export default function RegisterPage() {
               <Label htmlFor="manager">Full Name</Label>
               <div className="relative">
                 <User className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-                <Input id="manager" placeholder="John Doe" className="pl-9" required />
+                <Input 
+                  id="manager" 
+                  placeholder="John Doe" 
+                  className="pl-9" 
+                  required 
+                  value={formData.managerName}
+                  onChange={(e) => setFormData({...formData, managerName: e.target.value})}
+                />
               </div>
             </div>
             <div className="space-y-2">
               <Label htmlFor="email">Work Email</Label>
               <div className="relative">
                 <Mail className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-                <Input id="email" type="email" placeholder="john@store.com" className="pl-9" required />
+                <Input 
+                  id="email" 
+                  type="email" 
+                  placeholder="john@store.com" 
+                  className="pl-9" 
+                  required 
+                  value={formData.email}
+                  onChange={(e) => setFormData({...formData, email: e.target.value})}
+                />
               </div>
             </div>
           </div>
@@ -56,7 +105,14 @@ export default function RegisterPage() {
             <Label htmlFor="storeName">Store Name</Label>
             <div className="relative">
               <Building className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-              <Input id="storeName" placeholder="Downtown BK Branch" className="pl-9" required />
+              <Input 
+                id="storeName" 
+                placeholder="Downtown BK Branch" 
+                className="pl-9" 
+                required 
+                value={formData.storeName}
+                onChange={(e) => setFormData({...formData, storeName: e.target.value})}
+              />
             </div>
           </div>
 
@@ -64,7 +120,14 @@ export default function RegisterPage() {
             <Label htmlFor="location">Store Location</Label>
             <div className="relative">
               <MapPin className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-              <Input id="location" placeholder="City, State" className="pl-9" required />
+              <Input 
+                id="location" 
+                placeholder="City, State" 
+                className="pl-9" 
+                required 
+                value={formData.location}
+                onChange={(e) => setFormData({...formData, location: e.target.value})}
+              />
             </div>
           </div>
 
@@ -72,7 +135,15 @@ export default function RegisterPage() {
             <Label htmlFor="password">Set Password</Label>
             <div className="relative">
               <Lock className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-              <Input id="password" type="password" placeholder="••••••••" className="pl-9" required />
+              <Input 
+                id="password" 
+                type="password" 
+                placeholder="••••••••" 
+                className="pl-9" 
+                required 
+                value={formData.password}
+                onChange={(e) => setFormData({...formData, password: e.target.value})}
+              />
             </div>
           </div>
 

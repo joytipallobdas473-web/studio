@@ -1,24 +1,57 @@
 
 "use client";
 
+import { useFirestore, useCollection } from "@/firebase";
+import { collection, query, orderBy, limit } from "firebase/firestore";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Store, Package, ShoppingCart, AlertCircle, ArrowUpRight, Activity } from "lucide-react";
+import { Store, Package, ShoppingCart, AlertCircle, ArrowUpRight, Activity, Loader2 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
+import { format } from "date-fns";
 
 export default function AdminOverview() {
+  const db = useFirestore();
+
+  // Fetch data for real-time overview
+  const { data: stores, loading: storesLoading } = useCollection(db ? collection(db, "stores") : null);
+  const { data: orders, loading: ordersLoading } = useCollection(db ? collection(db, "orders") : null);
+  const { data: products } = useCollection(db ? collection(db, "inventory") : null);
+
+  const pendingStoresCount = stores?.filter(s => s.status === 'pending').length || 0;
+  const activeOrdersCount = orders?.filter(o => !['delivered', 'cancelled'].includes(o.status)).length || 0;
+  const lowStockCount = products?.filter(p => p.currentStock < 10).length || 0;
+
   const stats = [
-    { label: "Pending Registrations", value: "3", icon: Store, color: "text-orange-600", bg: "bg-orange-50", trend: "+1 today" },
-    { label: "Total Products", value: "142", icon: Package, color: "text-blue-600", bg: "bg-blue-50", trend: "Stable" },
-    { label: "Active Orders", value: "28", icon: ShoppingCart, color: "text-green-600", bg: "bg-green-50", trend: "+5 this week" },
-    { label: "Low Stock Alerts", value: "5", icon: AlertCircle, color: "text-red-600", bg: "bg-red-50", trend: "Action required" },
+    { label: "Pending Registrations", value: pendingStoresCount.toString(), icon: Store, color: "text-orange-600", bg: "bg-orange-50", trend: "Approval needed" },
+    { label: "Total Products", value: products?.length.toString() || "0", icon: Package, color: "text-blue-600", bg: "bg-blue-50", trend: "Global catalog" },
+    { label: "Active Orders", value: activeOrdersCount.toString(), icon: ShoppingCart, color: "text-green-600", bg: "bg-green-50", trend: "Ongoing requests" },
+    { label: "Low Stock Alerts", value: lowStockCount.toString(), icon: AlertCircle, color: "text-red-600", bg: "bg-red-50", trend: lowStockCount > 0 ? "Action required" : "Healthy" },
   ];
 
-  const activities = [
-    { title: "New store registration", target: "Downtown BK", time: "2 hours ago", status: "pending" },
-    { title: "Stock adjustment", target: "USB-C Hubs", time: "5 hours ago", status: "completed" },
-    { title: "Order shipped", target: "ORD-9903", time: "1 day ago", status: "completed" },
-    { title: "Price update", target: "Dell 27 Monitor", time: "2 days ago", status: "completed" },
-  ];
+  // Combined activity feed
+  const recentActivities = [
+    ...(stores?.map(s => ({
+      title: "New store registration",
+      target: s.name,
+      time: s.createdAt?.toDate ? format(s.createdAt.toDate(), 'MMM dd, h:mm a') : 'Recently',
+      status: s.status,
+      timestamp: s.createdAt?.toMillis() || 0
+    })) || []),
+    ...(orders?.map(o => ({
+      title: "New order placed",
+      target: `${o.storeName} (${o.items})`,
+      time: o.createdAt?.toDate ? format(o.createdAt.toDate(), 'MMM dd, h:mm a') : 'Recently',
+      status: o.status,
+      timestamp: o.createdAt?.toMillis() || 0
+    })) || [])
+  ].sort((a, b) => b.timestamp - a.timestamp).slice(0, 5);
+
+  if (storesLoading || ordersLoading) {
+    return (
+      <div className="flex h-[400px] items-center justify-center">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-8">
@@ -55,7 +88,7 @@ export default function AdminOverview() {
           </CardHeader>
           <CardContent className="p-0">
             <div className="divide-y">
-              {activities.map((item, i) => (
+              {recentActivities.length > 0 ? recentActivities.map((item, i) => (
                 <div key={i} className="flex items-center justify-between p-4 hover:bg-muted/30 transition-colors">
                   <div className="flex gap-3 items-start">
                     <div className="mt-1 h-2 w-2 rounded-full bg-accent shrink-0" />
@@ -68,7 +101,9 @@ export default function AdminOverview() {
                     {item.status}
                   </Badge>
                 </div>
-              ))}
+              )) : (
+                <div className="p-8 text-center text-muted-foreground">No recent system activity.</div>
+              )}
             </div>
           </CardContent>
         </Card>
