@@ -95,7 +95,7 @@ export default function AdminOverview() {
     }
   };
 
-  if (storesError || ordersError) {
+  if (storesError || ordersError || productsError) {
     return (
       <div className="flex flex-col items-center justify-center min-h-[60vh] text-center p-6 bg-white rounded-3xl shadow-sm border space-y-6">
         <div className="bg-red-50 p-6 rounded-full">
@@ -162,7 +162,7 @@ export default function AdminOverview() {
           <CardHeader className="flex flex-row items-center gap-2 border-b">
             <Activity className="h-5 w-5 text-primary" />
             <CardTitle className="text-lg font-bold">Recent System Activity</CardTitle>
-          </header>
+          </CardHeader>
           <CardContent className="p-0">
             <div className="divide-y">
               {recentActivities.length > 0 ? recentActivities.map((item, i) => (
