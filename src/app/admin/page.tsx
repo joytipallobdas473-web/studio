@@ -77,10 +77,13 @@ export default function AdminOverview() {
   };
 
   const isExplicitAdmin = user && ADMIN_OVERRIDES.includes(user.uid);
-  const hasPermissionError = !!(storesError || ordersError || (productsError && productsError.message.includes('permission')));
+  
+  // Only consider it a fatal permission error if the user IS NOT one of our explicit overrides
+  const hasPermissionError = !isExplicitAdmin && (
+    !!storesError || !!ordersError || (!!productsError && productsError.message.includes('permission'))
+  );
 
-  // Show Restricted screen only if there's an error AND the user isn't one of the known overrides
-  if (hasPermissionError && !isExplicitAdmin) {
+  if (hasPermissionError) {
     return (
       <div className="flex flex-col items-center justify-center min-h-[60vh] text-center p-12 bg-slate-900/50 rounded-[2rem] border border-slate-800 space-y-8 animate-in fade-in duration-700">
         <div className="relative">

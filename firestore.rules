@@ -5,11 +5,10 @@ service cloud.firestore {
     /**
      * CORE SECURITY PROTOCOL
      * 
-     * Admins (Explicit UIDs + roles_admin registry) have full access.
-     * Retailers have ownership-based access.
+     * Hardcoded Admin Overrides for Prototype:
+     * - AEGmDwRin2c5sDZdx1Jhk87yF9L2
+     * - cKRTD1vPTOfID6XADH31VVpGYAU2
      */
-
-    // --- Helper Functions ---
 
     function isSignedIn() {
       return request.auth != null;
@@ -43,7 +42,7 @@ service cloud.firestore {
 
     // Consolidated Orders: Admins see all; Users see their own
     match /orders/{orderId} {
-      allow get, list: if isAdmin() || (isSignedIn() && (resource == null || resource.data.userId == request.auth.uid));
+      allow read: if isAdmin() || (isSignedIn() && (resource == null || resource.data.userId == request.auth.uid));
       allow create: if isSignedIn();
       allow update: if isAdmin() || (isSignedIn() && resource.data.userId == request.auth.uid);
       allow delete: if isAdmin();
@@ -51,7 +50,7 @@ service cloud.firestore {
 
     // Store Registration: Anyone can apply; Admins manage
     match /stores/{storeId} {
-      allow get, list: if isAdmin();
+      allow read: if isAdmin() || (isSignedIn() && (resource == null || resource.data.userId == request.auth.uid));
       allow create: if true; 
       allow update, delete: if isAdmin();
     }
