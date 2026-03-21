@@ -15,10 +15,10 @@ function AdminSidebar() {
   const pathname = usePathname();
 
   const menuItems = [
-    { title: "Network Overview", icon: LayoutDashboard, href: "/admin" },
-    { title: "Retail Partners", icon: Store, href: "/admin/stores" },
-    { title: "Stock Registry", icon: Package, href: "/admin/inventory" },
-    { title: "Transit Flows", icon: ShoppingCart, href: "/admin/orders" },
+    { title: "Dashboard", icon: LayoutDashboard, href: "/admin" },
+    { title: "Retailers", icon: Store, href: "/admin/stores" },
+    { title: "Inventory", icon: Package, href: "/admin/inventory" },
+    { title: "Orders", icon: ShoppingCart, href: "/admin/orders" },
   ];
 
   return (
@@ -34,7 +34,7 @@ function AdminSidebar() {
       
       <SidebarContent className="px-3 pt-6">
         <SidebarGroup>
-          <SidebarGroupLabel className="px-4 text-[10px] uppercase font-bold tracking-widest text-white/50 mb-4">Control Plane</SidebarGroupLabel>
+          <SidebarGroupLabel className="px-4 text-[10px] uppercase font-bold tracking-widest text-white/50 mb-4">Operations</SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu className="gap-1">
               {menuItems.map((item) => (
@@ -45,7 +45,7 @@ function AdminSidebar() {
                     className={cn(
                       "h-11 rounded-xl transition-colors",
                       pathname === item.href 
-                        ? "bg-white text-primary font-bold" 
+                        ? "bg-white text-primary font-bold shadow-lg" 
                         : "text-white/70 hover:bg-white/10 hover:text-white"
                     )}
                   >
@@ -63,8 +63,8 @@ function AdminSidebar() {
 
       <SidebarFooter className="p-6">
         <div className="p-4 bg-white/5 rounded-2xl border border-white/10">
-          <p className="text-[10px] font-bold text-white/40 uppercase tracking-widest mb-1">System Node</p>
-          <p className="text-[10px] font-mono text-accent truncate">NE-REGION-PROD</p>
+          <p className="text-[10px] font-bold text-white/40 uppercase tracking-widest mb-1">Regional Node</p>
+          <p className="text-[10px] font-mono text-accent">NE-PROD-01</p>
         </div>
       </SidebarFooter>
     </Sidebar>
@@ -78,7 +78,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   const handleLogout = async () => {
     try {
       await signOut(auth);
-      toast({ title: "Logged Out", description: "Your session has ended." });
+      toast({ title: "Logged Out", description: "Session terminated." });
       router.push("/");
     } catch (e) {
       console.error(e);
@@ -94,13 +94,13 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
             <SidebarTrigger className="text-primary" />
             <Separator orientation="vertical" className="h-6" />
             <div className="flex flex-col">
-              <span className="text-sm font-bold text-slate-800">Regional Hub Console</span>
+              <span className="text-sm font-bold text-slate-800">Regional Console</span>
               <div className="flex items-center gap-1 text-[10px] text-slate-400 font-bold uppercase tracking-widest">
-                <MapPin className="h-3 w-3 text-accent" /> Sector 7
+                <MapPin className="h-3 w-3 text-accent" /> North East
               </div>
             </div>
             <div className="ml-auto flex items-center gap-4">
-              <Button variant="ghost" size="icon" className="rounded-full text-slate-400 hover:text-white" onClick={handleLogout}>
+              <Button variant="ghost" size="icon" className="rounded-full text-slate-400 hover:text-primary" onClick={handleLogout}>
                 <LogOut className="h-5 w-5" />
               </Button>
               <div className="h-10 w-10 rounded-full bg-slate-100 border flex items-center justify-center">

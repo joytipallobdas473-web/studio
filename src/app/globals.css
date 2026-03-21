@@ -11,20 +11,20 @@
     --card-foreground: 222 47% 11%;
     --popover: 0 0% 100%;
     --popover-foreground: 222 47% 11%;
-    --primary: 215 68% 42%;
+    --primary: 215 68% 42%; /* #2260B5 */
     --primary-foreground: 210 40% 98%;
     --secondary: 210 40% 96%;
     --secondary-foreground: 222 47% 11%;
     --muted: 210 40% 96%;
     --muted-foreground: 215 16% 47%;
-    --accent: 191 88% 55%;
+    --accent: 191 88% 55%; /* #26CDF2 */
     --accent-foreground: 222 47% 11%;
     --destructive: 0 84% 60%;
     --destructive-foreground: 210 40% 98%;
     --border: 214 32% 91%;
     --input: 214 32% 91%;
     --ring: 215 68% 42%;
-    --radius: 0.75rem;
+    --radius: 1rem;
 
     --sidebar-background: 215 68% 42%;
     --sidebar-foreground: 210 40% 98%;
@@ -46,8 +46,8 @@
   }
 }
 
-.simple-card {
-  @apply bg-white rounded-2xl shadow-sm border border-slate-200 transition-all hover:shadow-md;
+.ne-card {
+  @apply bg-white rounded-3xl shadow-sm border border-slate-100 transition-all hover:shadow-md;
 }
 
 .ne-gradient {
