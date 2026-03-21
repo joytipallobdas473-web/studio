@@ -12,6 +12,8 @@ import { errorEmitter } from "@/firebase/error-emitter";
 import { FirestorePermissionError } from "@/firebase/errors";
 import { cn } from "@/lib/utils";
 
+const ADMIN_OVERRIDES = ["AEGmDwRin2c5sDZdx1Jhk87yF9L2", "cKRTD1vPTOfID6XADH31VVpGYAU2"];
+
 export default function StoreManagement() {
   const db = useFirestore();
   const { user } = useUser();
@@ -41,7 +43,9 @@ export default function StoreManagement() {
       });
   };
 
-  if (error) {
+  const isExplicitAdmin = user && ADMIN_OVERRIDES.includes(user.uid);
+
+  if (error && !isExplicitAdmin) {
     return (
       <div className="flex flex-col items-center justify-center min-h-[60vh] text-center p-12 bg-slate-900/40 rounded-[2rem] border border-slate-800 border-dashed animate-in zoom-in duration-500">
         <ShieldAlert className="h-16 w-16 text-rose-500 mb-6" />
