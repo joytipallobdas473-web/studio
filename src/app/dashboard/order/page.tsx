@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState, useMemo } from "react";
@@ -22,7 +21,7 @@ import {
   Info,
   AlertCircle
 } from "lucide-react";
-import { useFirestore, useCollection } from "@/firebase";
+import { useFirestore, useCollection, useUser } from "@/firebase";
 import { collection, serverTimestamp, query, orderBy } from "firebase/firestore";
 import { useMemoFirebase } from "@/firebase/use-memo-firebase";
 import { toast } from "@/hooks/use-toast";
@@ -40,6 +39,7 @@ const CATEGORIES = [
 export default function NewOrderPage() {
   const router = useRouter();
   const db = useFirestore();
+  const { user } = useUser();
   
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("all");
@@ -80,13 +80,17 @@ export default function NewOrderPage() {
   };
 
   const handleSubmitOrder = () => {
-    if (!db || !selectedProduct) return;
+    if (!db || !selectedProduct || !user) {
+      toast({ title: "Auth Required", description: "You must be signed in to place an order.", variant: "destructive" });
+      return;
+    }
 
     setIsSubmitting(true);
     const qty = parseInt(orderQuantity) || 1;
     const orderData = {
       items: selectedProduct.name,
       productId: selectedProduct.id,
+      userId: user.uid, // Required for security rules ownership check
       quantity: qty,
       total: (selectedProduct.price || 0) * qty,
       notes: orderNotes,
@@ -185,15 +189,15 @@ export default function NewOrderPage() {
                     <h3 className="font-bold text-base leading-tight">{product.name}</h3>
                     <p className="text-[10px] text-muted-foreground font-code bg-muted px-2 py-0.5 rounded w-fit">SKU: {product.sku}</p>
                     <p className="text-2xl font-bold text-primary">${(product.price || 0).toFixed(2)}</p>
-                    {product.stockQuantity < 10 ? (
-                      <p className="text-[10px] text-red-500 font-bold uppercase flex items-center gap-1"><AlertCircle className="h-3 w-3" /> Low Stock: {product.stockQuantity}</p>
+                    {(product.stockQuantity || 0) < 10 ? (
+                      <p className="text-[10px] text-red-500 font-bold uppercase flex items-center gap-1"><AlertCircle className="h-3 w-3" /> Low Stock: {product.stockQuantity || 0}</p>
                     ) : (
-                      <p className="text-[10px] text-green-600 font-bold uppercase">Available: {product.stockQuantity}</p>
+                      <p className="text-[10px] text-green-600 font-bold uppercase">Available: {product.stockQuantity || 0}</p>
                     )}
                   </CardContent>
                   <CardFooter className="p-4 border-t bg-muted/5">
-                    <Button className="w-full bg-accent text-accent-foreground font-bold" onClick={() => handleOpenOrderDialog(product)} disabled={product.stockQuantity <= 0}>
-                      {product.stockQuantity <= 0 ? "Out of Stock" : "Request Reorder"}
+                    <Button className="w-full bg-accent text-accent-foreground font-bold" onClick={() => handleOpenOrderDialog(product)} disabled={!product.stockQuantity || product.stockQuantity <= 0}>
+                      {!product.stockQuantity || product.stockQuantity <= 0 ? "Out of Stock" : "Request Reorder"}
                     </Button>
                   </CardFooter>
                 </Card>
