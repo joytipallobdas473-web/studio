@@ -59,17 +59,35 @@ export default function AdminOrdersPage() {
   const downloadPO = (orderId?: string) => {
     const ordersToExport = orderId ? orders?.filter(o => o.id === orderId) : filteredOrders;
     if (!ordersToExport || ordersToExport.length === 0) return;
+
     const headers = ["Packet ID", "Node", "Email", "Contact", "Address", "Timestamp", "Payload", "Value ($)", "Status"];
-    const csvContent = [headers, ...ordersToExport.map(o => [
-      o.id, o.storeName || 'SYSTEM', o.email || 'N/A', o.phoneNumber || 'N/A', o.deliveryAddress || 'N/A',
-      o.createdAt?.toDate ? format(o.createdAt.toDate(), 'yyyy-MM-dd HH:mm') : 'PENDING',
-      `"${o.items || 'Restock'}"`, (o.total || 0).toFixed(2), o.status
-    ])].map(e => e.join(",")).join("\n");
+    const csvContent = [
+      headers,
+      ...ordersToExport.map(o => [
+        o.id,
+        o.storeName || 'SYSTEM',
+        o.email || 'N/A',
+        o.phoneNumber || 'N/A',
+        o.deliveryAddress?.replace(/,/g, ' ') || 'N/A',
+        o.createdAt?.toDate ? format(o.createdAt.toDate(), 'yyyy-MM-dd HH:mm') : 'PENDING',
+        `"${o.items || 'Restock'}"`,
+        (o.total || 0).toFixed(2),
+        o.status
+      ])
+    ].map(e => e.join(",")).join("\n");
+
     const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
     const link = document.createElement("a");
     link.href = URL.createObjectURL(blob);
-    link.setAttribute("download", `PROTOCOL_LOG_${Date.now()}.csv`);
+    link.setAttribute("download", `PROTOCOL_LOG_${orderId ? orderId.substring(0, 8) : 'BATCH'}_${Date.now()}.csv`);
+    document.body.appendChild(link);
     link.click();
+    document.body.removeChild(link);
+    
+    toast({ 
+      title: "Data Log Exported", 
+      description: orderId ? `Packet PO for ${orderId.substring(0, 6)} saved.` : "Batch logs exported."
+    });
   };
 
   if (loading) {
@@ -91,8 +109,8 @@ export default function AdminOrdersPage() {
           <h1 className="text-5xl font-black tracking-tighter text-slate-900 uppercase italic">Global Orders</h1>
           <p className="text-slate-500 font-medium text-sm tracking-wide">Real-time restock orchestration across the retail infrastructure.</p>
         </div>
-        <Button onClick={() => downloadPO()} className="h-16 px-8 rounded-2xl bg-white border border-slate-200 text-slate-600 hover:text-primary transition-all font-black uppercase tracking-widest text-xs">
-          <Download className="mr-3 h-5 w-5" /> Export Data Logs
+        <Button onClick={() => downloadPO()} className="h-16 px-8 rounded-2xl bg-white border border-slate-200 text-slate-600 hover:text-primary transition-all font-black uppercase tracking-widest text-xs shadow-sm">
+          <Download className="mr-3 h-5 w-5" /> Export All Logs
         </Button>
       </div>
 
