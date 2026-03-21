@@ -4,13 +4,12 @@ import { useState, useMemo } from "react";
 import { useFirestore, useCollection, useUser, useMemoFirebase } from "@/firebase";
 import { collection, query, orderBy, limit } from "firebase/firestore";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { Store, Package, ShoppingCart, AlertCircle, Activity, Loader2, BrainCircuit, ShieldAlert, Key, BarChart3, Globe, Zap } from "lucide-react";
+import { Store, Package, ShoppingCart, AlertCircle, Activity, Loader2, BrainCircuit, ShieldAlert, Key, BarChart3, Globe, Zap, ArrowUpRight } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { analyzeInventory, type InventoryAnalysisOutput } from "@/ai/flows/inventory-analyst";
 import { cn } from "@/lib/utils";
 
-// List of hardcoded admin UIDs to bypass the restricted screen if rules are still propagating
 const ADMIN_OVERRIDES = ["AEGmDwRin2c5sDZdx1Jhk87yF9L2", "cKRTD1vPTOfID6XADH31VVpGYAU2"];
 
 export default function AdminOverview() {
@@ -77,63 +76,62 @@ export default function AdminOverview() {
   };
 
   const isExplicitAdmin = user && ADMIN_OVERRIDES.includes(user.uid);
-  
-  // Only consider it a fatal permission error if the user IS NOT one of our explicit overrides
-  const hasPermissionError = !isExplicitAdmin && (
-    !!storesError || !!ordersError || (!!productsError && productsError.message.includes('permission'))
-  );
+  const hasPermissionError = !isExplicitAdmin && (!!storesError || !!ordersError || !!productsError);
 
   if (hasPermissionError) {
     return (
-      <div className="flex flex-col items-center justify-center min-h-[60vh] text-center p-12 bg-slate-900/50 rounded-[2rem] border border-slate-800 space-y-8 animate-in fade-in duration-700">
+      <div className="flex flex-col items-center justify-center min-h-[60vh] text-center p-16 bg-slate-950/50 rounded-[2.5rem] border border-white/5 space-y-10 animate-in fade-in duration-1000">
         <div className="relative">
-          <div className="absolute inset-0 bg-rose-500/20 blur-[50px] rounded-full" />
-          <div className="relative bg-rose-500/10 p-8 rounded-full border border-rose-500/20">
-            <ShieldAlert className="h-16 w-16 text-rose-500" />
+          <div className="absolute inset-0 bg-rose-500/20 blur-[80px] rounded-full" />
+          <div className="relative bg-rose-500/10 p-10 rounded-full border border-rose-500/20">
+            <ShieldAlert className="h-20 w-20 text-rose-500" />
           </div>
         </div>
-        <div className="space-y-3">
-          <h2 className="text-3xl font-bold text-white tracking-tight">Access Restricted</h2>
-          <p className="text-slate-400 max-w-md mx-auto leading-relaxed">
-            Your identity is verified, but root privileges are not yet active for this node. Register your UID in the <code className="text-rose-400 font-mono">roles_admin</code> registry.
+        <div className="space-y-4">
+          <h2 className="text-4xl font-black text-white tracking-tighter uppercase italic">Access Refused</h2>
+          <p className="text-slate-500 max-w-lg mx-auto leading-relaxed text-sm font-medium">
+            Root privileges required. Please register your administrative UID in the secure registry collection.
           </p>
         </div>
         {user && (
-          <div className="p-6 bg-black/40 rounded-2xl border border-slate-800 w-full max-w-sm">
-            <div className="flex items-center justify-between text-[10px] font-bold uppercase mb-4 tracking-widest text-slate-500">
-              <span className="flex items-center gap-2"><Key className="h-3 w-3" /> Root Identity</span>
-              <Badge variant="outline" className="bg-slate-900 border-slate-700 text-slate-300">ACTIVE</Badge>
+          <div className="p-8 bg-black/40 rounded-3xl border border-white/5 w-full max-w-md shadow-2xl">
+            <div className="flex items-center justify-between text-[10px] font-bold uppercase mb-4 tracking-[0.3em] text-slate-600">
+              <span className="flex items-center gap-2"><Key className="h-3 w-3" /> System Identity</span>
+              <Badge className="bg-primary/20 text-primary border-primary/20">PROTECTED</Badge>
             </div>
-            <code className="text-xs font-mono break-all block p-3 bg-slate-950 rounded-lg border border-slate-800 text-primary select-all">{user.uid}</code>
+            <code className="text-sm font-mono break-all block p-4 bg-slate-950 rounded-2xl border border-white/5 text-primary select-all">{user.uid}</code>
           </div>
         )}
-        <Button onClick={() => window.location.reload()} variant="outline" className="h-12 px-8 rounded-full border-slate-700 hover:bg-slate-800">Re-verify Session</Button>
+        <Button onClick={() => window.location.reload()} variant="outline" className="h-14 px-10 rounded-2xl border-white/10 hover:bg-white/5 text-slate-400">Restart Session</Button>
       </div>
     );
   }
 
   if (storesLoading || ordersLoading || productsLoading) {
     return (
-      <div className="flex h-[60vh] items-center justify-center">
-        <Loader2 className="h-10 w-10 animate-spin text-primary" />
+      <div className="flex h-[70vh] items-center justify-center">
+        <Loader2 className="h-12 w-12 animate-spin text-primary opacity-50" />
       </div>
     );
   }
 
   return (
-    <div className="space-y-10 animate-in fade-in duration-700">
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-6">
-        <div className="space-y-2">
-          <Badge className="bg-primary/10 text-primary border-primary/20 hover:bg-primary/20 px-3 py-1 rounded-full text-[10px] font-bold tracking-widest uppercase">Command Center</Badge>
-          <h1 className="text-4xl font-black tracking-tighter text-white">SYSTEM STATUS</h1>
-          <p className="text-slate-500 text-sm font-medium">Monitoring {stores?.length || 0} nodes across the retail network.</p>
+    <div className="space-y-12 animate-in fade-in duration-1000 slide-in-from-bottom-4">
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-8">
+        <div className="space-y-3">
+          <div className="flex items-center gap-3">
+            <div className="h-2 w-2 rounded-full bg-primary shadow-[0_0_10px_#3b82f6]" />
+            <span className="text-[10px] font-black tracking-[0.4em] text-primary uppercase">Global Monitoring</span>
+          </div>
+          <h1 className="text-5xl font-black tracking-tighter text-white uppercase italic">Command Center</h1>
+          <p className="text-slate-500 text-sm font-medium tracking-wide">Monitoring {stores?.length || 0} active retail nodes across the infrastructure.</p>
         </div>
-        <div className="flex gap-3">
-          <Button variant="outline" className="bg-slate-900/50 border-slate-800 text-slate-300 hover:text-white hover:bg-slate-800">
-            <BarChart3 className="mr-2 h-4 w-4" /> Reports
+        <div className="flex gap-4">
+          <Button variant="outline" className="h-14 px-8 rounded-2xl bg-white/5 border-white/5 text-slate-300 hover:text-white hover:bg-white/10 transition-all">
+            <BarChart3 className="mr-2 h-5 w-5" /> Analytics
           </Button>
-          <Button className="bg-primary text-primary-foreground font-bold shadow-[0_0_20px_rgba(var(--primary),0.2)]">
-            <Zap className="mr-2 h-4 w-4" /> Live Actions
+          <Button className="h-14 px-8 rounded-2xl bg-primary text-white font-black shadow-[0_10px_30px_rgba(var(--primary),0.3)] hover:scale-105 transition-all uppercase tracking-widest">
+            <Zap className="mr-2 h-5 w-5" /> Deploy Actions
           </Button>
         </div>
       </div>
@@ -141,105 +139,139 @@ export default function AdminOverview() {
       <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
         {stats.map((stat, i) => (
           <Card key={i} className={cn(
-            "relative overflow-hidden border bg-slate-900/40 backdrop-blur-sm group hover:bg-slate-900/60 transition-all duration-300 shadow-xl",
+            "relative overflow-hidden border bg-slate-950/40 backdrop-blur-3xl group hover:bg-slate-900/60 transition-all duration-500 rounded-[2rem] p-4",
             stat.border
           )}>
-            <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
-              <CardTitle className="text-[10px] font-bold uppercase tracking-[0.2em] text-slate-500">{stat.label}</CardTitle>
-              <div className={cn(stat.bg, stat.color, "p-3 rounded-2xl group-hover:scale-110 transition-transform")}>
-                <stat.icon className="h-5 w-5" />
+            <CardHeader className="flex flex-row items-center justify-between pb-4 space-y-0">
+              <CardTitle className="text-[10px] font-black uppercase tracking-[0.3em] text-slate-500">{stat.label}</CardTitle>
+              <div className={cn(stat.bg, stat.color, "p-3.5 rounded-2xl group-hover:scale-110 transition-transform duration-500")}>
+                <stat.icon className="h-6 w-6" />
               </div>
             </CardHeader>
             <CardContent>
-              <div className="text-4xl font-black text-white tracking-tighter">{stat.value}</div>
+              <div className="text-5xl font-black text-white tracking-tighter mb-2">{stat.value}</div>
+              <div className="flex items-center gap-1.5 text-[10px] font-bold text-slate-600 uppercase">
+                <ArrowUpRight className="h-3 w-3" /> System Synchronized
+              </div>
             </CardContent>
           </Card>
         ))}
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        <Card className="lg:col-span-2 shadow-2xl border-slate-800 bg-slate-900/30 backdrop-blur-xl">
-          <CardHeader className="flex flex-row items-center justify-between border-b border-slate-800/50 pb-6 px-8">
-            <div className="flex items-center gap-3">
-              <div className="bg-blue-50/10 p-2 rounded-lg">
-                <Activity className="h-5 w-5 text-blue-400" />
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-10">
+        <Card className="lg:col-span-2 shadow-2xl border-white/5 bg-slate-950/30 backdrop-blur-3xl rounded-[2.5rem] overflow-hidden">
+          <CardHeader className="flex flex-row items-center justify-between border-b border-white/5 pb-8 px-10 pt-10">
+            <div className="flex items-center gap-5">
+              <div className="bg-blue-500/10 p-3 rounded-2xl border border-blue-500/20">
+                <Activity className="h-6 w-6 text-blue-400" />
               </div>
               <div>
-                <CardTitle className="text-xl font-bold text-white tracking-tight">System Feed</CardTitle>
-                <CardDescription className="text-slate-500 text-xs">Real-time event stream from connected branches.</CardDescription>
+                <CardTitle className="text-2xl font-black text-white tracking-tight uppercase italic">Live Activity Feed</CardTitle>
+                <CardDescription className="text-slate-500 text-[10px] font-bold uppercase tracking-widest">Real-time event stream from global nodes</CardDescription>
               </div>
             </div>
+            <Badge variant="outline" className="border-white/10 text-slate-500 text-[10px] font-bold px-3 py-1">REAL-TIME</Badge>
           </CardHeader>
           <CardContent className="p-0">
-            <div className="divide-y divide-slate-800/50">
-              {orders && orders.length > 0 ? orders.slice(0, 6).map((order, i) => (
-                <div key={i} className="flex items-center justify-between px-8 py-5 hover:bg-white/[0.02] transition-colors group">
-                  <div className="flex gap-4 items-center">
+            <div className="divide-y divide-white/5">
+              {orders && orders.length > 0 ? orders.slice(0, 7).map((order, i) => (
+                <div key={i} className="flex items-center justify-between px-10 py-6 hover:bg-white/[0.03] transition-all group cursor-pointer">
+                  <div className="flex gap-6 items-center">
                     <div className="relative">
                       <div className={cn(
-                        "h-3 w-3 rounded-full",
-                        order.status === 'delivered' ? 'bg-emerald-500' : 'bg-blue-500'
+                        "h-3 w-3 rounded-full shadow-[0_0_10px_currentColor]",
+                        order.status === 'delivered' ? 'text-emerald-500 bg-emerald-500' : 'text-primary bg-primary'
                       )} />
                     </div>
-                    <div className="space-y-0.5">
-                      <p className="text-sm font-bold text-white flex items-center gap-2">
+                    <div className="space-y-1">
+                      <p className="text-sm font-black text-white flex items-center gap-3">
                         {order.storeName || 'Branch Node'}
-                        <Badge variant="outline" className="text-[8px] h-4 font-mono border-slate-800 text-slate-500">#{order.id.substring(0, 6)}</Badge>
+                        <span className="text-[10px] font-mono text-slate-600 border border-white/5 px-2 py-0.5 rounded-lg bg-black/40">#{order.id.substring(0, 6).toUpperCase()}</span>
                       </p>
-                      <p className="text-xs text-slate-500 font-medium">Requested: <span className="text-slate-300">{order.items || 'Restock'}</span></p>
+                      <p className="text-[11px] text-slate-500 font-medium">Payload: <span className="text-slate-300 font-bold uppercase tracking-tight">{order.items || 'Standard Logistics'}</span></p>
                     </div>
                   </div>
-                  <div className="text-right">
-                    <p className="text-sm font-black text-white">${(order.total || 0).toFixed(2)}</p>
+                  <div className="text-right flex flex-col items-end gap-1">
+                    <p className="text-base font-black text-white tracking-tighter">${(order.total || 0).toFixed(2)}</p>
+                    <Badge className={cn(
+                      "text-[8px] font-black tracking-widest uppercase px-2 py-0.5 rounded-md",
+                      order.status === 'delivered' ? 'bg-emerald-500/10 text-emerald-500' : 'bg-primary/10 text-primary'
+                    )}>
+                      {order.status}
+                    </Badge>
                   </div>
                 </div>
               )) : (
-                <div className="py-24 text-center">
-                  <Globe className="h-12 w-12 text-slate-800 mx-auto mb-4 animate-spin-slow" />
-                  <p className="text-slate-600 font-medium italic">Scanning for network activity...</p>
+                <div className="py-40 text-center">
+                  <Globe className="h-16 w-16 text-slate-800 mx-auto mb-6 animate-pulse" />
+                  <p className="text-slate-600 font-black uppercase tracking-[0.2em] text-xs italic">Awaiting telemetry synchronization...</p>
                 </div>
               )}
             </div>
           </CardContent>
         </Card>
 
-        <div className="space-y-8">
-          <Card className="bg-gradient-to-br from-primary via-primary/90 to-primary/80 text-primary-foreground shadow-[0_20px_50px_rgba(var(--primary),0.2)] border-none overflow-hidden relative">
-            <CardHeader className="relative z-10 pb-4">
-              <div className="flex items-center justify-between mb-4">
-                <div className="bg-white/20 p-2 rounded-xl">
-                  <BrainCircuit className="h-6 w-6 text-white" />
+        <div className="space-y-10">
+          <Card className="bg-gradient-to-br from-primary via-primary/90 to-[#2563eb] text-primary-foreground shadow-[0_30px_60px_rgba(var(--primary),0.3)] border-none rounded-[2.5rem] overflow-hidden relative group">
+            <div className="absolute inset-0 bg-[url('https://picsum.photos/seed/ai-noise/400/400')] opacity-10 mix-blend-overlay" />
+            <CardHeader className="relative z-10 pb-4 pt-10 px-8">
+              <div className="flex items-center justify-between mb-6">
+                <div className="bg-white/20 p-3 rounded-2xl backdrop-blur-md">
+                  <BrainCircuit className="h-7 w-7 text-white" />
                 </div>
+                <Badge className="bg-white/20 text-white border-none text-[9px] font-black tracking-widest">AI CORE v4.0</Badge>
               </div>
-              <CardTitle className="text-2xl font-black tracking-tighter">PREDICTIVE ENGINE</CardTitle>
+              <CardTitle className="text-3xl font-black tracking-tighter uppercase italic">Predictive Synthesis</CardTitle>
             </CardHeader>
-            <CardContent className="space-y-6 relative z-10">
+            <CardContent className="space-y-8 relative z-10 px-8 pb-10">
               {aiAnalysis ? (
-                <div className="space-y-6 animate-in slide-in-from-bottom-4 duration-500">
-                  <div className="bg-black/20 backdrop-blur-md rounded-2xl p-5 border border-white/10 space-y-3">
-                    <p className="text-sm leading-relaxed font-medium italic">
+                <div className="space-y-8 animate-in slide-in-from-bottom-8 duration-700">
+                  <div className="bg-black/20 backdrop-blur-xl rounded-[2rem] p-6 border border-white/10 space-y-4">
+                    <p className="text-sm leading-relaxed font-bold italic opacity-90">
                       "{aiAnalysis.summary}"
                     </p>
                   </div>
                   <Button 
                     variant="secondary" 
-                    className="w-full h-11 text-xs font-bold bg-white text-primary hover:bg-slate-100 rounded-xl"
+                    className="w-full h-14 text-xs font-black uppercase tracking-widest bg-white text-primary hover:bg-slate-100 rounded-2xl shadow-2xl transition-all"
                     onClick={handleRunAIAnalysis}
                     disabled={isAnalyzing}
                   >
-                    Refresh Analysis
+                    Refresh Synthesis
                   </Button>
                 </div>
               ) : (
                 <Button 
-                  className="w-full h-12 bg-white text-primary hover:bg-slate-100 font-bold rounded-2xl shadow-xl"
+                  className="w-full h-16 bg-white text-primary hover:bg-slate-100 font-black rounded-[1.5rem] shadow-2xl text-sm uppercase tracking-[0.2em] transition-all group-hover:scale-[1.02]"
                   onClick={handleRunAIAnalysis}
                   disabled={isAnalyzing}
                 >
-                  {isAnalyzing ? "Analyzing..." : "Synthesize Insights"}
+                  {isAnalyzing ? (
+                    <Loader2 className="h-6 w-6 animate-spin" />
+                  ) : (
+                    "Initialize Synthesis"
+                  )}
                 </Button>
               )}
             </CardContent>
+          </Card>
+
+          <Card className="border-white/5 bg-slate-900/40 backdrop-blur-3xl rounded-[2.5rem] p-4">
+             <CardHeader>
+               <CardTitle className="text-xs font-black uppercase tracking-[0.3em] text-slate-500">System Integrity</CardTitle>
+             </CardHeader>
+             <CardContent className="space-y-4">
+               {[
+                 { label: "Core Services", status: "Nominal", color: "text-emerald-500" },
+                 { label: "Data Latency", status: "24ms", color: "text-primary" },
+                 { label: "Security Hub", status: "Active", color: "text-emerald-500" }
+               ].map((item, i) => (
+                 <div key={i} className="flex justify-between items-center p-4 bg-black/40 rounded-2xl border border-white/5">
+                   <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{item.label}</span>
+                   <span className={cn("text-[10px] font-black uppercase tracking-wider", item.color)}>{item.status}</span>
+                 </div>
+               ))}
+             </CardContent>
           </Card>
         </div>
       </div>

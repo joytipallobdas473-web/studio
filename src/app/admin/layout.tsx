@@ -1,7 +1,7 @@
 "use client";
 
 import { SidebarProvider, Sidebar, SidebarContent, SidebarHeader, SidebarMenu, SidebarMenuItem, SidebarMenuButton, SidebarGroup, SidebarGroupLabel, SidebarGroupContent, SidebarInset, SidebarTrigger, SidebarFooter, useSidebar } from "@/components/ui/sidebar";
-import { LayoutDashboard, Store, Package, ShoppingCart, LogOut, ShieldCheck, UserCircle, Key, Cpu, Zap } from "lucide-react";
+import { LayoutDashboard, Store, Package, ShoppingCart, LogOut, ShieldCheck, UserCircle, Key, Cpu, Zap, Activity, Globe } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
@@ -29,24 +29,24 @@ function AdminSidebar() {
   };
 
   return (
-    <Sidebar collapsible="icon" className="bg-slate-950 border-r-slate-800 text-slate-400">
-      <SidebarHeader className="h-20 flex items-center px-6 border-b border-slate-800">
-        <Link href="/admin" onClick={handleLinkClick} className="flex items-center gap-3 font-bold text-white overflow-hidden">
-          <div className="bg-primary p-2 rounded-xl shadow-[0_0_15px_rgba(var(--primary),0.3)]">
-            <Cpu className="h-5 w-5 text-primary-foreground" />
+    <Sidebar collapsible="icon" className="bg-[#0a0c10] border-r-white/5 text-slate-400">
+      <SidebarHeader className="h-24 flex items-center px-6 border-b border-white/5 bg-[#0a0c10]">
+        <Link href="/admin" onClick={handleLinkClick} className="flex items-center gap-4 font-bold text-white overflow-hidden">
+          <div className="bg-primary p-2.5 rounded-xl shadow-[0_0_20px_rgba(var(--primary),0.3)] shrink-0">
+            <Cpu className="h-6 w-6 text-primary-foreground" />
           </div>
           <div className="flex flex-col group-data-[collapsible=icon]:hidden">
-            <span className="text-sm tracking-tight">RETAIL OS</span>
-            <span className="text-[10px] text-slate-500 font-mono">v2.0.4-PRO</span>
+            <span className="text-base tracking-tight font-black">RETAIL OS</span>
+            <span className="text-[10px] text-primary font-mono uppercase tracking-widest">Global Node</span>
           </div>
         </Link>
       </SidebarHeader>
       
-      <SidebarContent className="px-2 pt-6">
+      <SidebarContent className="px-3 pt-8 bg-[#0a0c10]">
         <SidebarGroup>
-          <SidebarGroupLabel className="px-4 text-[10px] uppercase font-bold tracking-[0.2em] text-sidebar-foreground/70 outline-none ring-sidebar-ring mb-2">Systems</SidebarGroupLabel>
+          <SidebarGroupLabel className="px-4 text-[10px] uppercase font-bold tracking-[0.3em] text-slate-500 mb-4">Core Systems</SidebarGroupLabel>
           <SidebarGroupContent>
-            <SidebarMenu>
+            <SidebarMenu className="gap-2">
               {menuItems.map((item) => (
                 <SidebarMenuItem key={item.title}>
                   <SidebarMenuButton 
@@ -54,14 +54,14 @@ function AdminSidebar() {
                     isActive={pathname === item.href} 
                     tooltip={item.title}
                     className={cn(
-                      "h-11 rounded-lg transition-all duration-200",
+                      "h-12 rounded-xl transition-all duration-300",
                       pathname === item.href 
-                        ? "bg-primary/10 text-primary font-bold shadow-sm" 
-                        : "hover:bg-slate-900 hover:text-white"
+                        ? "bg-primary text-white font-bold shadow-[0_8px_16px_rgba(var(--primary),0.2)]" 
+                        : "hover:bg-white/5 hover:text-white"
                     )}
                   >
                     <Link href={item.href} onClick={handleLinkClick}>
-                      <item.icon className={cn("h-4 w-4", pathname === item.href ? "text-primary" : "text-slate-500")} />
+                      <item.icon className={cn("h-5 w-5", pathname === item.href ? "text-white" : "text-slate-500")} />
                       <span className="text-sm">{item.title}</span>
                     </Link>
                   </SidebarMenuButton>
@@ -72,24 +72,24 @@ function AdminSidebar() {
         </SidebarGroup>
       </SidebarContent>
 
-      <SidebarFooter className="border-t border-slate-800 p-6 space-y-6">
+      <SidebarFooter className="border-t border-white/5 p-6 space-y-6 bg-[#0a0c10]">
         {user && (
-          <div className="group-data-[collapsible=icon]:hidden p-4 bg-slate-900/50 border border-slate-800 rounded-xl space-y-3">
+          <div className="group-data-[collapsible=icon]:hidden p-4 bg-slate-900/40 border border-white/5 rounded-2xl space-y-4">
             <div className="flex items-center justify-between text-[10px] font-bold text-slate-500 uppercase tracking-widest">
-              <span className="flex items-center gap-1"><Key className="h-3 w-3" /> Root ID</span>
-              <Badge variant="outline" className="h-4 px-1 text-[8px] border-slate-700 text-slate-400">SECURE</Badge>
+              <span className="flex items-center gap-1"><ShieldCheck className="h-3 w-3" /> Identity</span>
+              <div className="h-1.5 w-1.5 rounded-full bg-green-500 shadow-[0_0_8px_#22c55e]" />
             </div>
-            <div className="text-[10px] font-mono break-all text-slate-300 bg-slate-950 p-2 rounded border border-slate-800 select-all">
+            <div className="text-[10px] font-mono break-all text-primary bg-black/40 p-3 rounded-xl border border-white/5 select-all">
               {user.uid}
             </div>
           </div>
         )}
         <SidebarMenu>
           <SidebarMenuItem>
-            <SidebarMenuButton asChild className="hover:bg-red-500/10 hover:text-red-400 transition-colors">
+            <SidebarMenuButton asChild className="h-12 rounded-xl hover:bg-rose-500/10 hover:text-rose-500 transition-colors">
               <Link href="/" onClick={handleLinkClick}>
-                <LogOut className="h-4 w-4" />
-                <span className="text-sm font-medium">Terminate Session</span>
+                <LogOut className="h-5 w-5" />
+                <span className="text-sm font-bold uppercase tracking-wider">Terminate</span>
               </Link>
             </SidebarMenuButton>
           </SidebarMenuItem>
@@ -102,30 +102,33 @@ function AdminSidebar() {
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
   return (
     <SidebarProvider defaultOpen={true}>
-      <div className="flex min-h-svh w-full bg-[#0a0c10]">
+      <div className="flex min-h-svh w-full bg-[#050608] text-slate-200">
         <AdminSidebar />
-        <SidebarInset className="flex flex-col min-w-0 bg-transparent">
-          <header className="sticky top-0 z-30 flex h-20 shrink-0 items-center gap-4 border-b border-slate-800/50 bg-[#0a0c10]/80 backdrop-blur-xl px-8">
+        <SidebarInset className="flex flex-col min-w-0 bg-transparent border-l border-white/5">
+          <header className="sticky top-0 z-30 flex h-24 shrink-0 items-center gap-6 border-b border-white/5 bg-[#050608]/80 backdrop-blur-2xl px-10">
             <SidebarTrigger className="text-slate-400 hover:text-white" />
-            <div className="h-6 w-px bg-slate-800 hidden md:block" />
+            <div className="h-8 w-px bg-white/5 hidden md:block" />
             <div className="flex flex-col">
-              <h2 className="text-sm font-bold text-white tracking-tight">Command Center</h2>
-              <span className="text-[10px] text-slate-500 font-medium">Real-time Node Monitoring</span>
+              <h2 className="text-lg font-black text-white tracking-tight uppercase">Control Center</h2>
+              <div className="flex items-center gap-2">
+                <Globe className="h-3 w-3 text-primary animate-pulse" />
+                <span className="text-[10px] text-slate-500 font-bold uppercase tracking-widest">Active Cluster: US-EAST-1</span>
+              </div>
             </div>
             
-            <div className="ml-auto flex items-center gap-4">
-              <div className="flex items-center gap-2 px-3 py-1.5 bg-green-500/5 border border-green-500/20 rounded-full">
-                <div className="h-1.5 w-1.5 rounded-full bg-green-500 animate-pulse" />
-                <span className="text-[10px] font-bold text-green-500 uppercase tracking-wider">Sync Active</span>
+            <div className="ml-auto flex items-center gap-6">
+              <div className="flex items-center gap-3 px-4 py-2 bg-primary/5 border border-primary/20 rounded-full">
+                <div className="h-2 w-2 rounded-full bg-primary animate-pulse" />
+                <span className="text-[11px] font-black text-primary uppercase tracking-wider">Sync Synchronized</span>
               </div>
-              <Separator orientation="vertical" className="h-8 bg-slate-800" />
-              <Button variant="ghost" size="icon" className="rounded-full text-slate-400 hover:text-white">
-                <UserCircle className="h-5 w-5" />
+              <Separator orientation="vertical" className="h-10 bg-white/5" />
+              <Button variant="ghost" size="icon" className="rounded-2xl h-11 w-11 text-slate-400 hover:text-white hover:bg-white/5">
+                <UserCircle className="h-6 w-6" />
               </Button>
             </div>
           </header>
           
-          <main className="flex-1 overflow-y-auto p-8">
+          <main className="flex-1 overflow-y-auto p-10">
             <div className="mx-auto max-w-7xl">
               {children}
             </div>
