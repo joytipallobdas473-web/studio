@@ -78,7 +78,7 @@ export default function NewOrderPage() {
       
       return matchesSearch && matchesCategory;
     });
-  }, [products, searchQuery, selectedCategory]);
+  }, [products, searchQuery, setSelectedCategory]);
 
   const handleOpenOrderDialog = (product: any) => {
     setSelectedProduct(product);
@@ -95,7 +95,7 @@ export default function NewOrderPage() {
     }
 
     if (!phoneNumber || phoneNumber.trim().length < 10) {
-      toast({ title: "Validation Error", description: "Valid contact phone is required for North East logistics.", variant: "destructive" });
+      toast({ title: "Validation Error", description: "Valid contact phone is required.", variant: "destructive" });
       return;
     }
 
@@ -118,13 +118,12 @@ export default function NewOrderPage() {
     addDocumentNonBlocking(collection(db, "orders"), orderData)
       .then(() => {
         setSubmitted(true);
-        toast({ title: "Packet Transmitted", description: `Logistics request for ${qty} x ${selectedProduct.name} saved.` });
+        toast({ title: "Order Sent", description: `Request for ${qty} x ${selectedProduct.name} saved.` });
         setTimeout(() => router.push("/dashboard"), 1500);
       })
       .catch((err) => {
-        console.error("Order save failure:", err);
         setIsSubmitting(false);
-        toast({ title: "Transmission Failed", description: "The regional node rejected the request. Please try again.", variant: "destructive" });
+        toast({ title: "Transmission Failed", description: "Could not save order. Please try again.", variant: "destructive" });
       });
   };
 
@@ -147,7 +146,7 @@ export default function NewOrderPage() {
         <div className="space-y-1">
           <h1 className="text-3xl font-bold text-primary tracking-tight">Stock Catalog</h1>
           <p className="text-muted-foreground font-medium flex items-center gap-2">
-            <Info className="h-3.5 w-3.5" /> Select inventory for the {store?.name || 'North East'} node.
+            <Info className="h-3.5 w-3.5" /> Select inventory for {store?.name || 'your node'}.
           </p>
         </div>
         <div className="relative w-full md:w-96">
@@ -186,15 +185,6 @@ export default function NewOrderPage() {
               </div>
             </CardContent>
           </Card>
-          
-          <div className="bg-[#2260B5]/5 border border-[#2260B5]/10 p-6 rounded-3xl space-y-3">
-            <div className="flex items-center gap-2 text-[#2260B5] font-bold text-xs uppercase tracking-wider">
-              <Info className="h-4 w-4" /> Logistics Alert
-            </div>
-            <p className="text-xs text-slate-600 leading-relaxed font-medium">
-              Regional restocks are processed within 24 hours of submission. Ensure node contact is valid.
-            </p>
-          </div>
         </aside>
 
         <main className="flex-1">
@@ -225,18 +215,8 @@ export default function NewOrderPage() {
                       <h3 className="font-bold text-lg text-slate-900 leading-tight group-hover:text-primary transition-colors italic uppercase">{product.name}</h3>
                       <p className="text-[10px] text-slate-400 font-mono font-bold tracking-widest">SKU: {product.sku}</p>
                     </div>
-                    
                     <div className="flex items-end justify-between">
                       <p className="text-3xl font-black text-primary tracking-tighter">${(product.price || 0).toFixed(2)}</p>
-                      <div className="text-right">
-                        {(product.stockQuantity || 0) < 10 ? (
-                          <p className="text-[10px] text-rose-500 font-bold uppercase flex items-center justify-end gap-1">
-                            <AlertCircle className="h-3 w-3" /> Low Stock: {product.stockQuantity || 0}
-                          </p>
-                        ) : (
-                          <p className="text-[10px] text-emerald-600 font-bold uppercase">Ready: {product.stockQuantity || 0}</p>
-                        )}
-                      </div>
                     </div>
                   </CardContent>
                   <CardFooter className="p-6 pt-0">
@@ -245,7 +225,7 @@ export default function NewOrderPage() {
                       onClick={() => handleOpenOrderDialog(product)} 
                       disabled={!product.stockQuantity || product.stockQuantity <= 0}
                     >
-                      {!product.stockQuantity || product.stockQuantity <= 0 ? "Unavailable" : "Request Stock"}
+                      {!product.stockQuantity || product.stockQuantity <= 0 ? "Out of Stock" : "Request Stock"}
                     </Button>
                   </CardFooter>
                 </Card>
@@ -255,8 +235,7 @@ export default function NewOrderPage() {
             <div className="text-center py-32 bg-white rounded-[2.5rem] border-2 border-dashed border-slate-100">
               <Package className="h-20 w-20 text-slate-100 mx-auto mb-6" />
               <h3 className="font-bold text-slate-900">No items detected in this sector</h3>
-              <p className="text-sm text-slate-500 mt-2">Try adjusting your filters or search query.</p>
-              <Button variant="ghost" className="mt-6 text-primary font-bold" onClick={() => setSelectedCategory("all")}>Reset Protocol</Button>
+              <p className="text-sm text-slate-500 mt-2">Try adjusting your filters.</p>
             </div>
           )}
         </main>
@@ -270,36 +249,28 @@ export default function NewOrderPage() {
           {selectedProduct && (
             <div className="p-10 space-y-8">
               <div className="flex gap-6 p-6 bg-slate-50 rounded-3xl border border-slate-100 items-center">
-                <div className="relative h-24 w-24 rounded-2xl bg-white shadow-sm shrink-0 border border-slate-100 overflow-hidden">
-                   <Image src={`https://picsum.photos/seed/${selectedProduct.id}/200`} alt={selectedProduct.name} fill className="object-cover" />
-                </div>
                 <div className="flex-1 space-y-1">
                   <h4 className="font-bold text-slate-900 text-lg uppercase italic">{selectedProduct.name}</h4>
-                  <div className="flex items-center gap-2">
-                    <span className="text-[10px] font-mono text-slate-400 font-bold">NODE VALUE:</span>
-                    <span className="text-xl font-black text-primary">${(selectedProduct.price || 0).toFixed(2)}</span>
-                  </div>
+                  <p className="text-xl font-black text-primary">${(selectedProduct.price || 0).toFixed(2)}</p>
                 </div>
               </div>
               
               <div className="space-y-6">
                 <div className="space-y-3">
-                  <Label className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 ml-1">Node Contact Verification</Label>
+                  <Label className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 ml-1">Contact Phone Number</Label>
                   <div className="relative">
                     <Phone className="absolute left-5 top-1/2 -translate-y-1/2 h-5 w-5 text-primary opacity-50" />
                     <Input 
-                      placeholder="Enter mobile number for confirmation..." 
-                      className="h-16 pl-14 rounded-2xl bg-slate-50 border-none focus:ring-primary font-bold text-slate-900 placeholder:text-slate-300" 
+                      placeholder="Enter mobile number..." 
+                      className="h-16 pl-14 rounded-2xl bg-slate-50 border-none focus:ring-primary font-bold text-slate-900" 
                       value={phoneNumber}
                       onChange={(e) => setPhoneNumber(e.target.value)}
                     />
                   </div>
-                  <p className="text-[10px] text-slate-400 font-medium italic px-1">Required for regional logistics synchronization.</p>
                 </div>
-
                 <div className="grid grid-cols-2 gap-6">
                    <div className="space-y-3">
-                     <Label className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 ml-1">Request Qty</Label>
+                     <Label className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 ml-1">Qty</Label>
                      <Input 
                        type="number" 
                        min="1" 
@@ -309,28 +280,18 @@ export default function NewOrderPage() {
                      />
                    </div>
                    <div className="space-y-3">
-                     <Label className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 ml-1">Net Valuation</Label>
-                     <div className="h-16 flex items-center justify-center bg-primary text-white font-black rounded-2xl text-xl shadow-lg shadow-primary/20">
+                     <Label className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 ml-1">Total</Label>
+                     <div className="h-16 flex items-center justify-center bg-primary text-white font-black rounded-2xl text-xl">
                         ${(parseFloat(orderQuantity || "0") * (selectedProduct.price || 0)).toFixed(2)}
                      </div>
                    </div>
-                </div>
-
-                <div className="space-y-3">
-                  <Label className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 ml-1">Logistics Notes (Optional)</Label>
-                  <Textarea 
-                    value={orderNotes} 
-                    onChange={(e) => setOrderNotes(e.target.value)} 
-                    className="min-h-[120px] rounded-2xl bg-slate-50 border-none placeholder:text-slate-300 focus:ring-primary p-5" 
-                    placeholder="Specific regional delivery instructions or store requirements..."
-                  />
                 </div>
               </div>
             </div>
           )}
           <DialogFooter className="p-10 pt-0 flex gap-4">
-            <Button variant="ghost" onClick={() => setOrderDialogOpen(false)} className="flex-1 h-14 rounded-2xl font-bold text-slate-400 hover:text-slate-900">Abort</Button>
-            <Button onClick={handleSubmitOrder} className="flex-[2] bg-accent text-primary hover:bg-primary hover:text-white h-14 rounded-2xl font-black shadow-xl shadow-accent/20 uppercase tracking-widest" disabled={isSubmitting}>
+            <Button variant="ghost" onClick={() => setOrderDialogOpen(false)} className="flex-1 h-14 rounded-2xl">Abort</Button>
+            <Button onClick={handleSubmitOrder} className="flex-[2] bg-accent text-primary hover:bg-primary hover:text-white h-14 rounded-2xl font-black uppercase tracking-widest" disabled={isSubmitting}>
               {isSubmitting ? <Loader2 className="h-5 w-5 animate-spin" /> : "Transmit Reorder"}
             </Button>
           </DialogFooter>
