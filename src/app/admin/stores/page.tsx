@@ -1,34 +1,33 @@
-
 "use client";
 
-import { useFirestore, useCollection } from "@/firebase";
+import { useFirestore, useCollection, useUser } from "@/firebase";
 import { collection, doc, updateDoc, query, orderBy } from "firebase/firestore";
 import { useMemoFirebase } from "@/firebase/use-memo-firebase";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Check, X, MapPin, User, Loader2 } from "lucide-react";
+import { Check, X, MapPin, User, Loader2, ShieldAlert, Key } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
 import { errorEmitter } from "@/firebase/error-emitter";
 import { FirestorePermissionError } from "@/firebase/errors";
 
 export default function StoreManagement() {
   const db = useFirestore();
+  const { user } = useUser();
   
   const storesQuery = useMemoFirebase(() => {
     if (!db) return null;
     return query(collection(db, "stores"), orderBy("createdAt", "desc"));
   }, [db]);
 
-  const { data: stores, loading } = useCollection(storesQuery);
+  const { data: stores, loading, error } = useCollection(storesQuery);
 
   const handleAction = (id: string, newStatus: string) => {
     if (!db) return;
     const storeRef = doc(db, "stores", id);
     const updateData = { status: newStatus };
     
-    // Non-blocking Firestore update with contextual error handling
     updateDoc(storeRef, updateData)
       .then(() => {
         toast({
@@ -45,6 +44,25 @@ export default function StoreManagement() {
         errorEmitter.emit('permission-error', permissionError);
       });
   };
+
+  if (error) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-[50vh] text-center p-8 bg-white rounded-3xl shadow-sm border border-red-100">
+        <ShieldAlert className="h-12 w-12 text-red-500 mb-4" />
+        <h2 className="text-xl font-bold mb-2">Access Denied</h2>
+        <p className="text-muted-foreground mb-6 max-w-sm">
+          You don't have permission to manage store registrations. Add your UID to <code>roles_admin</code> in the Firebase console.
+        </p>
+        {user && (
+          <div className="p-3 bg-muted rounded border w-full max-w-xs font-mono text-xs break-all mb-4">
+            <span className="text-muted-foreground block mb-1 font-sans">YOUR UID:</span>
+            {user.uid}
+          </div>
+        )}
+        <Button onClick={() => window.location.reload()}>Retry Access</Button>
+      </div>
+    );
+  }
 
   if (loading) {
     return (

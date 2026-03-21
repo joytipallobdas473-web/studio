@@ -1,11 +1,11 @@
 "use client";
 
 import { useState, useMemo } from "react";
-import { useFirestore, useCollection } from "@/firebase";
+import { useFirestore, useCollection, useUser } from "@/firebase";
 import { collection, query, orderBy, limit } from "firebase/firestore";
 import { useMemoFirebase } from "@/firebase/provider";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { Store, Package, ShoppingCart, AlertCircle, ArrowUpRight, Activity, Loader2, Sparkles, BrainCircuit } from "lucide-react";
+import { Store, Package, ShoppingCart, AlertCircle, ArrowUpRight, Activity, Loader2, Sparkles, BrainCircuit, ShieldAlert, Key } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { format } from "date-fns";
@@ -13,6 +13,7 @@ import { analyzeInventory, type InventoryAnalysisOutput } from "@/ai/flows/inven
 
 export default function AdminOverview() {
   const db = useFirestore();
+  const { user } = useUser();
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [aiAnalysis, setAiAnalysis] = useState<InventoryAnalysisOutput | null>(null);
 
@@ -23,8 +24,6 @@ export default function AdminOverview() {
 
   const ordersQuery = useMemoFirebase(() => {
     if (!db) return null;
-    // Query global orders if they exist or path to user-specific orders
-    // For this prototype, we'll look at a global orders collection if available
     return query(collection(db, "orders"), orderBy("createdAt", "desc"), limit(10));
   }, [db]);
 
@@ -33,9 +32,9 @@ export default function AdminOverview() {
     return collection(db, "products");
   }, [db]);
 
-  const { data: stores, isLoading: storesLoading } = useCollection(storesQuery);
-  const { data: orders, isLoading: ordersLoading } = useCollection(ordersQuery);
-  const { data: products, isLoading: productsLoading } = useCollection(productsQuery);
+  const { data: stores, isLoading: storesLoading, error: storesError } = useCollection(storesQuery);
+  const { data: orders, isLoading: ordersLoading, error: ordersError } = useCollection(ordersQuery);
+  const { data: products, isLoading: productsLoading, error: productsError } = useCollection(productsQuery);
 
   const stats = useMemo(() => {
     const pendingStoresCount = stores?.filter(s => s.status === 'pending')?.length || 0;
@@ -96,6 +95,34 @@ export default function AdminOverview() {
       setIsAnalyzing(false);
     }
   };
+
+  // Graceful error handling for missing permissions
+  if (storesError || ordersError) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-[60vh] text-center p-6 bg-white rounded-3xl shadow-sm border space-y-6">
+        <div className="bg-red-50 p-6 rounded-full">
+          <ShieldAlert className="h-16 w-16 text-red-600" />
+        </div>
+        <div className="space-y-2">
+          <h2 className="text-2xl font-bold text-primary">Admin Access Required</h2>
+          <p className="text-muted-foreground max-w-md mx-auto">
+            You are logged in, but you don't have permissions to view global data. 
+            Add your UID to the <code>roles_admin</code> collection in the Firebase Console.
+          </p>
+        </div>
+        {user && (
+          <div className="p-4 bg-muted/50 rounded-xl border w-full max-w-sm">
+            <div className="flex items-center justify-between text-xs font-bold uppercase mb-2">
+              <span className="flex items-center gap-1 text-muted-foreground"><Key className="h-3 w-3" /> Your UID</span>
+              <Badge variant="outline" className="bg-white">Copy This</Badge>
+            </div>
+            <code className="text-sm font-mono break-all block p-2 bg-white rounded border select-all">{user.uid}</code>
+          </div>
+        )}
+        <Button onClick={() => window.location.reload()} variant="outline">Retry Access</Button>
+      </div>
+    );
+  }
 
   if (storesLoading || ordersLoading || productsLoading) {
     return (
@@ -230,17 +257,6 @@ export default function AdminOverview() {
                   </Button>
                 </div>
               )}
-            </CardContent>
-          </Card>
-
-          <Card className="border-dashed border-2 bg-muted/20">
-            <CardHeader className="pb-2">
-              <CardTitle className="text-sm">Regional Alert</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <p className="text-xs text-muted-foreground">
-                Stock levels below 10 units trigger global alerts. {stats.find(s => s.label === "Low Stock Alerts")?.value || 0} items currently at risk.
-              </p>
             </CardContent>
           </Card>
         </div>

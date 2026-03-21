@@ -6,16 +6,8 @@ service cloud.firestore {
      * DOCUMENTATION
      *
      * Core Philosophy: 
-     * This ruleset implements a centralized retail management model.
      * - Admins (defined in roles_admin) have global visibility.
      * - Retailers manage their own data via identity-based ownership.
-     *
-     * Data Structure:
-     * - /users/{userId}: Private user profiles.
-     * - /products/{productId}: Publicly readable product catalog.
-     * - /orders/{orderId}: Consolidated order requests (Root level for Admin visibility).
-     * - /stores/{storeId}: Store registration and approval queue.
-     * - /roles_admin/{adminUid}: System collection for RBAC.
      */
 
     // --- Helper Functions ---
@@ -37,19 +29,18 @@ service cloud.firestore {
     // User Profiles
     match /users/{userId} {
       allow get, list: if isOwner(userId);
-      allow create: if isOwner(userId);
-      allow update: if isOwner(userId);
+      allow create, update: if isOwner(userId);
     }
 
     // Product Catalog
     match /products/{productId} {
-      allow read: if true; // Publicly viewable
+      allow read: if true; 
       allow write: if isAdmin();
     }
 
     // Consolidated Orders
     match /orders/{orderId} {
-      // Admins see all. Users see their own (identified by userId field).
+      // Admins see all. Users see their own.
       allow list, get: if isAdmin() || (isSignedIn() && resource.data.userId == request.auth.uid);
       
       // Users can create orders.
@@ -58,16 +49,14 @@ service cloud.firestore {
       // Admin handles status updates. Users can update their own pending orders.
       allow update: if isAdmin() || (isSignedIn() && resource.data.userId == request.auth.uid);
       
-      // Destructive actions are admin-only.
       allow delete: if isAdmin();
     }
 
     // Store Registration Queue
     match /stores/{storeId} {
       allow list, get: if isAdmin();
-      allow create: if true; // Public registration
-      allow update: if isAdmin();
-      allow delete: if isAdmin();
+      allow create: if true; 
+      allow update, delete: if isAdmin();
     }
 
     // Administrative Roles
