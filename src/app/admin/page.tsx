@@ -2,7 +2,8 @@
 "use client";
 
 import { useFirestore, useCollection } from "@/firebase";
-import { collection, query, orderBy, limit } from "firebase/firestore";
+import { collection, query, orderBy } from "firebase/firestore";
+import { useMemoFirebase } from "@/firebase/use-memo-firebase";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Store, Package, ShoppingCart, AlertCircle, ArrowUpRight, Activity, Loader2 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
@@ -11,10 +12,13 @@ import { format } from "date-fns";
 export default function AdminOverview() {
   const db = useFirestore();
 
-  // Fetch data for real-time overview
-  const { data: stores, loading: storesLoading } = useCollection(db ? collection(db, "stores") : null);
-  const { data: orders, loading: ordersLoading } = useCollection(db ? collection(db, "orders") : null);
-  const { data: products } = useCollection(db ? collection(db, "inventory") : null);
+  const storesRef = useMemoFirebase(() => db ? collection(db, "stores") : null, [db]);
+  const ordersRef = useMemoFirebase(() => db ? collection(db, "orders") : null, [db]);
+  const inventoryRef = useMemoFirebase(() => db ? collection(db, "inventory") : null, [db]);
+
+  const { data: stores, loading: storesLoading } = useCollection(storesRef);
+  const { data: orders, loading: ordersLoading } = useCollection(ordersRef);
+  const { data: products } = useCollection(inventoryRef);
 
   const pendingStoresCount = stores?.filter(s => s.status === 'pending').length || 0;
   const activeOrdersCount = orders?.filter(o => !['delivered', 'cancelled'].includes(o.status)).length || 0;
@@ -27,21 +31,20 @@ export default function AdminOverview() {
     { label: "Low Stock Alerts", value: lowStockCount.toString(), icon: AlertCircle, color: "text-red-600", bg: "bg-red-50", trend: lowStockCount > 0 ? "Action required" : "Healthy" },
   ];
 
-  // Combined activity feed
   const recentActivities = [
     ...(stores?.map(s => ({
       title: "New store registration",
       target: s.name,
       time: s.createdAt?.toDate ? format(s.createdAt.toDate(), 'MMM dd, h:mm a') : 'Recently',
       status: s.status,
-      timestamp: s.createdAt?.toMillis() || 0
+      timestamp: s.createdAt?.toMillis ? s.createdAt.toMillis() : 0
     })) || []),
     ...(orders?.map(o => ({
       title: "New order placed",
-      target: `${o.storeName} (${o.items})`,
+      target: `${o.storeName || 'Store'} (${o.items || 'Items'})`,
       time: o.createdAt?.toDate ? format(o.createdAt.toDate(), 'MMM dd, h:mm a') : 'Recently',
       status: o.status,
-      timestamp: o.createdAt?.toMillis() || 0
+      timestamp: o.createdAt?.toMillis ? o.createdAt.toMillis() : 0
     })) || [])
   ].sort((a, b) => b.timestamp - a.timestamp).slice(0, 5);
 
@@ -92,12 +95,12 @@ export default function AdminOverview() {
                 <div key={i} className="flex items-center justify-between p-4 hover:bg-muted/30 transition-colors">
                   <div className="flex gap-3 items-start">
                     <div className="mt-1 h-2 w-2 rounded-full bg-accent shrink-0" />
-                    <div>
-                      <p className="text-sm font-semibold">{item.title}: <span className="text-primary">{item.target}</span></p>
+                    <div className="min-w-0">
+                      <p className="text-sm font-semibold truncate">{item.title}: <span className="text-primary">{item.target}</span></p>
                       <p className="text-xs text-muted-foreground">{item.time}</p>
                     </div>
                   </div>
-                  <Badge variant={item.status === 'pending' ? 'outline' : 'secondary'} className="text-[10px] capitalize">
+                  <Badge variant={item.status === 'pending' ? 'outline' : 'secondary'} className="text-[10px] capitalize shrink-0 ml-2">
                     {item.status}
                   </Badge>
                 </div>

@@ -3,34 +3,44 @@
 
 import { useFirestore, useCollection } from "@/firebase";
 import { collection, doc, updateDoc, query, orderBy } from "firebase/firestore";
+import { useMemoFirebase } from "@/firebase/use-memo-firebase";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Check, X, MapPin, User, Loader2 } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
+import { errorEmitter } from "@/firebase/error-emitter";
+import { FirestorePermissionError } from "@/firebase/errors";
 
 export default function StoreManagement() {
   const db = useFirestore();
-  const storesQuery = db ? query(collection(db, "stores"), orderBy("createdAt", "desc")) : null;
+  
+  const storesQuery = useMemoFirebase(() => {
+    if (!db) return null;
+    return query(collection(db, "stores"), orderBy("createdAt", "desc"));
+  }, [db]);
+
   const { data: stores, loading } = useCollection(storesQuery);
 
-  const handleAction = async (id: string, newStatus: string) => {
+  const handleAction = (id: string, newStatus: string) => {
     if (!db) return;
-    try {
-      const storeRef = doc(db, "stores", id);
-      await updateDoc(storeRef, { status: newStatus });
-      toast({
-        title: "Status Updated",
-        description: `Store is now ${newStatus}.`,
+    const storeRef = doc(db, "stores", id);
+    
+    updateDoc(storeRef, { status: newStatus })
+      .then(() => {
+        toast({
+          title: "Status Updated",
+          description: `Store registration marked as ${newStatus}.`,
+        });
+      })
+      .catch(async (err) => {
+        errorEmitter.emit('permission-error', new FirestorePermissionError({
+          path: storeRef.path,
+          operation: 'update',
+          requestResourceData: { status: newStatus }
+        }));
       });
-    } catch (error) {
-      toast({
-        variant: "destructive",
-        title: "Update Failed",
-        description: "Could not update store status.",
-      });
-    }
   };
 
   if (loading) {
@@ -67,19 +77,21 @@ export default function StoreManagement() {
                 stores.map((store) => (
                   <TableRow key={store.id}>
                     <TableCell className="font-bold">{store.name}</TableCell>
-                    <TableCell className="flex items-center gap-2">
-                      <User className="h-3 w-3 text-muted-foreground" />
-                      {store.managerName}
+                    <TableCell>
+                      <div className="flex items-center gap-2">
+                        <User className="h-3 w-3 text-muted-foreground" />
+                        {store.managerName || 'Anonymous'}
+                      </div>
                     </TableCell>
                     <TableCell>
                       <div className="flex items-center gap-2 text-xs text-muted-foreground">
                         <MapPin className="h-3 w-3" />
-                        {store.location}
+                        {store.location || 'Unknown'}
                       </div>
                     </TableCell>
                     <TableCell>
                       <Badge variant={store.status === "pending" ? "outline" : "default"} 
-                             className={store.status === "active" ? "bg-green-100 text-green-700" : store.status === "rejected" ? "bg-red-100 text-red-700" : ""}>
+                             className={store.status === "active" ? "bg-green-100 text-green-700 hover:bg-green-100" : store.status === "rejected" ? "bg-red-100 text-red-700 hover:bg-red-100" : ""}>
                         {store.status}
                       </Badge>
                     </TableCell>

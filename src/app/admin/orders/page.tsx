@@ -4,46 +4,54 @@
 import { useState } from "react";
 import { useFirestore, useCollection } from "@/firebase";
 import { collection, doc, updateDoc, query, orderBy } from "firebase/firestore";
+import { useMemoFirebase } from "@/firebase/use-memo-firebase";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Download, Search, FileText, Filter, CheckCircle2, Clock, Truck, PackageCheck, XCircle, Loader2 } from "lucide-react";
-import { Badge } from "@/components/ui/badge";
+import { Download, Search, FileText, Filter, Clock, Truck, PackageCheck, XCircle, Loader2 } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
 import { format } from "date-fns";
+import { errorEmitter } from "@/firebase/error-emitter";
+import { FirestorePermissionError } from "@/firebase/errors";
 
 export default function AdminOrdersPage() {
   const db = useFirestore();
   const [storeFilter, setStoreFilter] = useState("all");
   const [searchQuery, setSearchQuery] = useState("");
 
-  const ordersQuery = db ? query(collection(db, "orders"), orderBy("createdAt", "desc")) : null;
+  const ordersQuery = useMemoFirebase(() => {
+    if (!db) return null;
+    return query(collection(db, "orders"), orderBy("createdAt", "desc"));
+  }, [db]);
+
   const { data: orders, loading } = useCollection(ordersQuery);
 
-  const handleStatusUpdate = async (orderId: string, newStatus: string) => {
+  const handleStatusUpdate = (orderId: string, newStatus: string) => {
     if (!db) return;
-    try {
-      const orderRef = doc(db, "orders", orderId);
-      await updateDoc(orderRef, { status: newStatus });
-      toast({
-        title: "Status Updated",
-        description: `Order ${orderId.substring(0, 5)} is now ${newStatus}.`,
+    const orderRef = doc(db, "orders", orderId);
+    
+    updateDoc(orderRef, { status: newStatus })
+      .then(() => {
+        toast({
+          title: "Status Updated",
+          description: `Order updated to ${newStatus}.`,
+        });
+      })
+      .catch(async (err) => {
+        errorEmitter.emit('permission-error', new FirestorePermissionError({
+          path: orderRef.path,
+          operation: 'update',
+          requestResourceData: { status: newStatus }
+        }));
       });
-    } catch (error) {
-      toast({
-        variant: "destructive",
-        title: "Update Failed",
-        description: "Could not update order status.",
-      });
-    }
   };
 
   const filteredOrders = orders?.filter(order => {
     const matchesStore = storeFilter === "all" || order.storeName === storeFilter;
     const matchesSearch = order.id.toLowerCase().includes(searchQuery.toLowerCase()) || 
-                         order.storeName.toLowerCase().includes(searchQuery.toLowerCase());
+                         (order.storeName || "").toLowerCase().includes(searchQuery.toLowerCase());
     return matchesStore && matchesSearch;
   });
 
@@ -55,10 +63,10 @@ export default function AdminOrdersPage() {
     const headers = ["Order ID", "Store", "Date", "Items", "Total Amount ($)", "Status"];
     const csvData = ordersToExport.map(o => [
       o.id,
-      o.storeName,
+      o.storeName || 'Unknown Store',
       o.createdAt?.toDate ? format(o.createdAt.toDate(), 'yyyy-MM-dd') : 'N/A',
-      `"${o.items}"`,
-      o.total.toFixed(2),
+      `"${o.items || 'No items'}"`,
+      (o.total || 0).toFixed(2),
       o.status
     ]);
 
@@ -78,7 +86,7 @@ export default function AdminOrdersPage() {
   };
 
   const getStatusIcon = (status: string) => {
-    switch (status.toLowerCase()) {
+    switch ((status || "").toLowerCase()) {
       case "delivered": return <PackageCheck className="h-3 w-3 mr-1" />;
       case "processing": return <Clock className="h-3 w-3 mr-1" />;
       case "pending": return <Clock className="h-3 w-3 mr-1" />;
@@ -89,7 +97,7 @@ export default function AdminOrdersPage() {
   };
 
   const getStatusColor = (status: string) => {
-    switch (status.toLowerCase()) {
+    switch ((status || "").toLowerCase()) {
       case "delivered": return "text-green-700 bg-green-50 border-green-200";
       case "processing": return "text-blue-700 bg-blue-50 border-blue-200";
       case "pending": return "text-yellow-700 bg-yellow-50 border-yellow-200";
@@ -139,7 +147,7 @@ export default function AdminOrdersPage() {
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="all">All Stores</SelectItem>
-              {Array.from(new Set(orders?.map(o => o.storeName) || [])).map(store => (
+              {Array.from(new Set(orders?.map(o => o.storeName).filter(Boolean) || [])).map(store => (
                 <SelectItem key={store} value={store}>{store}</SelectItem>
               ))}
             </SelectContent>
@@ -167,14 +175,14 @@ export default function AdminOrdersPage() {
                     <TableCell className="font-code font-bold text-primary text-xs">{order.id.substring(0, 8)}</TableCell>
                     <TableCell>
                       <div className="flex flex-col">
-                        <span className="font-medium">{order.storeName}</span>
+                        <span className="font-medium">{order.storeName || 'N/A'}</span>
                         <span className="text-[10px] text-muted-foreground">
                           {order.createdAt?.toDate ? format(order.createdAt.toDate(), 'MMM dd, h:mm a') : 'N/A'}
                         </span>
                       </div>
                     </TableCell>
-                    <TableCell className="max-w-[200px] truncate">{order.items}</TableCell>
-                    <TableCell className="font-bold">${order.total.toFixed(2)}</TableCell>
+                    <TableCell className="max-w-[200px] truncate">{order.items || 'No items'}</TableCell>
+                    <TableCell className="font-bold">${(order.total || 0).toFixed(2)}</TableCell>
                     <TableCell>
                       <Select 
                         defaultValue={order.status} 

@@ -13,6 +13,8 @@ import { Package, ShoppingBag, CheckCircle, Loader2 } from "lucide-react";
 import { useFirestore } from "@/firebase";
 import { collection, addDoc, serverTimestamp } from "firebase/firestore";
 import { toast } from "@/hooks/use-toast";
+import { errorEmitter } from "@/firebase/error-emitter";
+import { FirestorePermissionError } from "@/firebase/errors";
 
 export default function NewOrderPage() {
   const router = useRouter();
@@ -27,37 +29,45 @@ export default function NewOrderPage() {
     notes: ""
   });
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!db) return;
 
     setIsSubmitting(true);
-    try {
-      await addDoc(collection(db, "orders"), {
-        category: formData.category,
-        items: formData.item, // Simplified for MVP
-        quantity: parseInt(formData.quantity),
-        total: Math.floor(Math.random() * 500) + 100, // Dummy price for demo
-        priority: formData.priority,
-        notes: formData.notes,
-        status: "pending",
-        storeName: "Downtown Brooklyn", // Hardcoded for simulated user
-        createdAt: serverTimestamp()
-      });
+    const orderData = {
+      category: formData.category,
+      items: formData.item,
+      quantity: parseInt(formData.quantity) || 0,
+      total: Math.floor(Math.random() * 500) + 100,
+      priority: formData.priority,
+      notes: formData.notes,
+      status: "pending",
+      storeName: "Downtown Brooklyn", // Simulated user
+      createdAt: serverTimestamp()
+    };
 
-      setSubmitted(true);
-      setTimeout(() => {
-        router.push("/dashboard");
-      }, 2000);
-    } catch (error) {
-      toast({
-        variant: "destructive",
-        title: "Order Failed",
-        description: "Could not submit your order request.",
+    addDoc(collection(db, "orders"), orderData)
+      .then(() => {
+        setSubmitted(true);
+        setTimeout(() => {
+          router.push("/dashboard");
+        }, 2000);
+      })
+      .catch(async (err) => {
+        errorEmitter.emit('permission-error', new FirestorePermissionError({
+          path: 'orders',
+          operation: 'create',
+          requestResourceData: orderData
+        }));
+        toast({
+          variant: "destructive",
+          title: "Order Failed",
+          description: "Could not submit your order request.",
+        });
+      })
+      .finally(() => {
+        setIsSubmitting(false);
       });
-    } finally {
-      setIsSubmitting(false);
-    }
   };
 
   if (submitted) {

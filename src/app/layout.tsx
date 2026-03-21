@@ -3,6 +3,7 @@ import type {Metadata} from 'next';
 import './globals.css';
 import { FirebaseClientProvider } from '@/firebase/client-provider';
 import { Toaster } from '@/components/ui/toaster';
+import { FirebaseErrorListener } from '@/components/firebase-error-listener';
 
 export const metadata: Metadata = {
   title: 'Retails Stocks | Professional Inventory Management',
@@ -24,6 +25,7 @@ export default function RootLayout({
       <body className="font-body antialiased">
         <FirebaseClientProvider>
           {children}
+          <FirebaseErrorListener />
           <Toaster />
         </FirebaseClientProvider>
       </body>
