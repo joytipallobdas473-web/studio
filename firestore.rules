@@ -2,20 +2,12 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
 
-    /**
-     * CORE SECURITY PROTOCOL
-     * 
-     * Hardcoded Admin Overrides for Prototype:
-     * - AEGmDwRin2c5sDZdx1Jhk87yF9L2
-     * - cKRTD1vPTOfID6XADH31VVpGYAU2
-     */
-
     function isSignedIn() {
       return request.auth != null;
     }
 
     function isAdmin() {
-      // Explicit override for the developer/owner UIDs to ensure immediate access
+      // Prototype override: Grant admin access to specific UIDs
       return isSignedIn() && (
         request.auth.uid == "AEGmDwRin2c5sDZdx1Jhk87yF9L2" ||
         request.auth.uid == "cKRTD1vPTOfID6XADH31VVpGYAU2" ||
@@ -29,18 +21,18 @@ service cloud.firestore {
 
     // --- Collection Rules ---
 
-    // User Profiles: Private to the user and Admins
+    // User Profiles
     match /users/{userId} {
       allow read, write: if isOwner(userId) || isAdmin();
     }
 
-    // Global Product Catalog: Publicly readable, Admin writeable
+    // Global Product Catalog: Publicly readable for authenticated users
     match /products/{productId} {
-      allow read: if true; 
+      allow read: if isSignedIn(); 
       allow write: if isAdmin();
     }
 
-    // Consolidated Orders: Admins see all; Users see their own
+    // Orders: Admins see all; Users see their own
     match /orders/{orderId} {
       allow read: if isAdmin() || (isSignedIn() && (resource == null || resource.data.userId == request.auth.uid));
       allow create: if isSignedIn();
@@ -48,17 +40,17 @@ service cloud.firestore {
       allow delete: if isAdmin();
     }
 
-    // Store Registration: Anyone can apply; Admins manage
+    // Store Registration
     match /stores/{storeId} {
       allow read: if isAdmin() || (isSignedIn() && (resource == null || resource.data.userId == request.auth.uid));
-      allow create: if true; 
+      allow create: if isSignedIn(); 
       allow update, delete: if isAdmin();
     }
 
-    // Administrative Roles Registry
+    // Admin Roles
     match /roles_admin/{adminUid} {
-      allow get: if isSignedIn();
-      allow list, write: if isAdmin();
+      allow read: if isSignedIn();
+      allow write: if isAdmin();
     }
   }
 }

@@ -1,20 +1,17 @@
 "use client";
 
 import { useState, useMemo } from "react";
-import { useFirestore, useCollection, useUser, useMemoFirebase } from "@/firebase";
+import { useFirestore, useCollection, useMemoFirebase } from "@/firebase";
 import { collection, query, orderBy, limit } from "firebase/firestore";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { Store, Package, ShoppingCart, AlertCircle, Activity, Loader2, BrainCircuit, ShieldAlert, BarChart3, Globe, Zap, Network, Mountain, TrendingUp } from "lucide-react";
+import { Store, Package, ShoppingCart, AlertCircle, Loader2, BrainCircuit, Activity, Zap } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { analyzeInventory, type InventoryAnalysisOutput } from "@/ai/flows/inventory-analyst";
 import { cn } from "@/lib/utils";
 
-const ADMIN_OVERRIDES = ["AEGmDwRin2c5sDZdx1Jhk87yF9L2", "cKRTD1vPTOfID6XADH31VVpGYAU2"];
-
 export default function AdminOverview() {
   const db = useFirestore();
-  const { user } = useUser();
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [aiAnalysis, setAiAnalysis] = useState<InventoryAnalysisOutput | null>(null);
 
@@ -33,9 +30,9 @@ export default function AdminOverview() {
     return collection(db, "products");
   }, [db]);
 
-  const { data: stores, isLoading: storesLoading, error: storesError } = useCollection(storesQuery);
-  const { data: orders, isLoading: ordersLoading, error: ordersError } = useCollection(ordersQuery);
-  const { data: products, isLoading: productsLoading, error: productsError } = useCollection(productsQuery);
+  const { data: stores, isLoading: storesLoading } = useCollection(storesQuery);
+  const { data: orders, isLoading: ordersLoading } = useCollection(ordersQuery);
+  const { data: products, isLoading: productsLoading } = useCollection(productsQuery);
 
   const stats = useMemo(() => {
     const pendingStoresCount = stores?.filter(s => s.status === 'pending')?.length || 0;
@@ -43,10 +40,10 @@ export default function AdminOverview() {
     const lowStockCount = products?.filter(p => (p.stockQuantity || 0) < 10)?.length || 0;
 
     return [
-      { label: "Pending Nodes", value: pendingStoresCount.toString(), icon: Store, color: "text-primary", bg: "bg-primary/5", border: "border-primary/10" },
-      { label: "Active SKUs", value: (products?.length || 0).toString(), icon: Package, color: "text-accent", bg: "bg-accent/5", border: "border-accent/10" },
-      { label: "Transit Units", value: activeOrdersCount.toString(), icon: ShoppingCart, color: "text-blue-600", bg: "bg-blue-600/5", border: "border-blue-600/10" },
-      { label: "Risk Nodes", value: lowStockCount.toString(), icon: AlertCircle, color: "text-rose-500", bg: "bg-rose-500/5", border: "border-rose-500/10" },
+      { label: "New Requests", value: pendingStoresCount.toString(), icon: Store, color: "text-blue-600", bg: "bg-blue-50" },
+      { label: "Total SKUs", value: (products?.length || 0).toString(), icon: Package, color: "text-slate-600", bg: "bg-slate-50" },
+      { label: "Active Orders", value: activeOrdersCount.toString(), icon: ShoppingCart, color: "text-accent", bg: "bg-accent/5" },
+      { label: "Low Stock", value: lowStockCount.toString(), icon: AlertCircle, color: "text-rose-500", bg: "bg-rose-50" },
     ];
   }, [stores, orders, products]);
 
@@ -75,38 +72,6 @@ export default function AdminOverview() {
     }
   };
 
-  const isExplicitAdmin = user && ADMIN_OVERRIDES.includes(user.uid);
-  const hasPermissionError = !isExplicitAdmin && (!!storesError || !!ordersError || !!productsError);
-
-  if (hasPermissionError) {
-    return (
-      <div className="flex flex-col items-center justify-center min-h-[60vh] text-center p-16 glass-card rounded-[3rem] border border-white space-y-10 animate-in fade-in duration-700">
-        <div className="relative">
-          <div className="absolute inset-0 bg-primary/20 blur-3xl rounded-full" />
-          <div className="relative bg-white p-10 rounded-[2.5rem] border border-primary/20 shadow-xl">
-            <ShieldAlert className="h-16 w-16 text-primary" />
-          </div>
-        </div>
-        <div className="space-y-4">
-          <h2 className="text-4xl font-black text-primary tracking-tighter uppercase italic">Bypass Required</h2>
-          <p className="text-muted-foreground max-w-lg mx-auto leading-relaxed text-sm font-medium">
-            Administrative terminal access is restricted to the root grid registry. Ensure your Node ID is authorized.
-          </p>
-        </div>
-        {user && (
-          <div className="p-8 bg-secondary/50 rounded-[2rem] border w-full max-w-lg shadow-inner">
-            <div className="flex items-center justify-between text-[9px] font-black uppercase mb-4 tracking-[0.3em] text-muted-foreground">
-              <span className="flex items-center gap-2"><Network className="h-3 w-3 text-primary" /> Authority Key</span>
-              <Badge variant="outline" className="border-primary/20 text-primary text-[8px]">RESTRICTED</Badge>
-            </div>
-            <code className="text-xs font-mono break-all block p-5 bg-white rounded-xl border text-primary select-all leading-relaxed shadow-sm">{user.uid}</code>
-          </div>
-        )}
-        <Button onClick={() => window.location.reload()} className="h-14 px-10 rounded-2xl bg-primary text-white font-black uppercase tracking-widest transition-all hover:scale-105">Re-Authorize Node</Button>
-      </div>
-    );
-  }
-
   if (storesLoading || ordersLoading || productsLoading) {
     return (
       <div className="flex h-[60vh] items-center justify-center">
@@ -116,160 +81,109 @@ export default function AdminOverview() {
   }
 
   return (
-    <div className="space-y-12 animate-in fade-in duration-700">
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-8">
-        <div className="space-y-3">
-          <div className="flex items-center gap-3">
-            <div className="h-2.5 w-2.5 rounded-full bg-accent shadow-[0_0_10px_var(--accent)] animate-pulse" />
-            <span className="text-[10px] font-black tracking-[0.4em] text-primary uppercase">NE Regional Hub</span>
-          </div>
-          <h1 className="text-5xl font-black tracking-tighter text-primary uppercase italic text-glow">Grid Command</h1>
-          <p className="text-muted-foreground text-sm font-medium tracking-wide">Orchestrating {stores?.length || 0} regional nodes across the NE Sector network.</p>
+    <div className="space-y-8 animate-in fade-in duration-500">
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+        <div>
+          <h1 className="text-3xl font-bold text-slate-900 tracking-tight">Regional Overview</h1>
+          <p className="text-slate-500 text-sm font-medium">Monitoring {stores?.length || 0} North East branch nodes.</p>
         </div>
-        <div className="flex gap-4">
-          <Button variant="outline" className="h-14 px-8 rounded-2xl border-primary/20 bg-white text-primary font-black uppercase tracking-widest text-[10px] hover:bg-secondary">
-            <BarChart3 className="mr-3 h-4 w-4" /> Global Logs
-          </Button>
-          <Button className="h-14 px-8 rounded-2xl bg-primary text-white font-black shadow-lg hover:scale-105 transition-all uppercase tracking-widest text-[10px]">
-            <Zap className="mr-3 h-4 w-4" /> Force Sync
-          </Button>
-        </div>
+        <Button className="font-bold bg-primary">
+          <Zap className="mr-2 h-4 w-4" /> System Sync
+        </Button>
       </div>
       
-      <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
         {stats.map((stat, i) => (
-          <Card key={i} className={cn(
-            "relative overflow-hidden border glass-card group hover:scale-[1.02] transition-all duration-300 rounded-[2rem] p-6",
-            stat.border
-          )}>
-            <CardHeader className="flex flex-row items-center justify-between pb-4 space-y-0">
-              <CardTitle className="text-[9px] font-black uppercase tracking-[0.3em] text-muted-foreground">{stat.label}</CardTitle>
-              <div className={cn(stat.bg, stat.color, "p-3 rounded-xl transition-transform group-hover:scale-110 shadow-sm")}>
+          <Card key={i} className="border-none shadow-sm rounded-2xl overflow-hidden">
+            <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
+              <CardTitle className="text-xs font-bold uppercase tracking-wider text-slate-400">{stat.label}</CardTitle>
+              <div className={cn(stat.bg, stat.color, "p-2 rounded-xl")}>
                 <stat.icon className="h-5 w-5" />
               </div>
             </CardHeader>
             <CardContent>
-              <div className="text-4xl font-black text-primary tracking-tighter mb-2">{stat.value}</div>
-              <div className="flex items-center gap-2 text-[9px] font-bold text-muted-foreground uppercase tracking-widest">
-                <TrendingUp className="h-3 w-3 text-accent" /> Nominal Flow
-              </div>
+              <div className="text-3xl font-bold text-slate-800 tracking-tight">{stat.value}</div>
             </CardContent>
           </Card>
         ))}
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-10">
-        <Card className="lg:col-span-2 shadow-xl glass-card rounded-[2.5rem] overflow-hidden border-none">
-          <CardHeader className="flex flex-row items-center justify-between border-b bg-white/50 pb-8 px-10 pt-10">
-            <div className="flex items-center gap-5">
-              <div className="bg-primary/5 p-3 rounded-xl border border-primary/10">
-                <Activity className="h-6 w-6 text-primary" />
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        <Card className="lg:col-span-2 shadow-sm rounded-3xl border-none">
+          <CardHeader className="border-b pb-6">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <Activity className="h-5 w-5 text-primary" />
+                <CardTitle className="text-lg font-bold">Recent Transit Activity</CardTitle>
               </div>
-              <div>
-                <CardTitle className="text-2xl font-black text-primary tracking-tight uppercase italic">Transit Stream</CardTitle>
-                <CardDescription className="text-muted-foreground text-[9px] font-black uppercase tracking-[0.2em] mt-1">Real-time packet telemetry</CardDescription>
-              </div>
+              <Badge variant="secondary" className="text-[10px] font-bold uppercase">Live Data</Badge>
             </div>
-            <Badge variant="outline" className="border-primary/20 text-primary text-[8px] font-black px-3 py-1 rounded-full uppercase">Live Sync</Badge>
           </CardHeader>
           <CardContent className="p-0">
-            <div className="divide-y divide-secondary/50">
-              {orders && orders.length > 0 ? orders.slice(0, 6).map((order, i) => (
-                <div key={i} className="flex items-center justify-between px-10 py-6 hover:bg-secondary/30 transition-all group cursor-pointer">
-                  <div className="flex gap-6 items-center">
+            <div className="divide-y">
+              {orders && orders.length > 0 ? orders.slice(0, 5).map((order, i) => (
+                <div key={i} className="flex items-center justify-between px-6 py-5 hover:bg-slate-50 transition-colors">
+                  <div className="flex items-center gap-4">
                     <div className={cn(
-                      "h-2.5 w-2.5 rounded-full shadow-[0_0_8px_currentColor]",
-                      order.status === 'delivered' ? 'text-accent bg-accent' : 'text-primary bg-primary'
+                      "h-2 w-2 rounded-full",
+                      order.status === 'delivered' ? 'bg-emerald-500' : 'bg-primary'
                     )} />
-                    <div className="space-y-1">
-                      <p className="text-sm font-black text-primary flex items-center gap-3 uppercase italic">
-                        {order.storeName || 'Branch Node'}
-                        <span className="text-[9px] font-mono text-muted-foreground bg-secondary px-2 py-0.5 rounded-lg border">NE-{order.id.substring(0, 6).toUpperCase()}</span>
-                      </p>
-                      <p className="text-[10px] text-muted-foreground font-medium">Payload: <span className="text-primary font-bold uppercase">{order.items || 'Standard SKU'}</span></p>
+                    <div>
+                      <p className="text-sm font-bold text-slate-800">{order.storeName || 'Branch Node'}</p>
+                      <p className="text-[10px] text-slate-500 font-medium uppercase tracking-tight">{order.items || 'Restock Payload'}</p>
                     </div>
                   </div>
-                  <div className="text-right space-y-1">
-                    <p className="text-base font-black text-primary tracking-tight">₹{(order.total || 0).toFixed(2)}</p>
-                    <Badge variant="outline" className={cn(
-                      "text-[8px] font-black tracking-widest uppercase px-2 py-0.5 rounded-lg border-none",
-                      order.status === 'delivered' ? 'bg-accent text-primary' : 'bg-primary text-white'
-                    )}>
-                      {order.status}
-                    </Badge>
+                  <div className="text-right">
+                    <p className="text-sm font-bold text-slate-800">${(order.total || 0).toFixed(2)}</p>
+                    <span className="text-[10px] font-bold text-primary uppercase">{order.status}</span>
                   </div>
                 </div>
               )) : (
-                <div className="py-32 text-center opacity-30">
-                  <Globe className="h-16 w-16 mx-auto mb-4 animate-spin-slow" />
-                  <p className="font-black uppercase tracking-[0.4em] text-[10px]">Searching for Transit Packets...</p>
-                </div>
+                <div className="py-20 text-center text-slate-400 text-sm">No recent activity detected.</div>
               )}
             </div>
           </CardContent>
         </Card>
 
-        <div className="space-y-8">
-          <Card className="bg-primary text-white shadow-2xl border-none rounded-[2.5rem] overflow-hidden relative group">
-            <div className="absolute inset-0 bg-gradient-to-br from-white/10 to-transparent pointer-events-none" />
-            <CardHeader className="relative z-10 pb-4 pt-10 px-8">
-              <div className="flex items-center justify-between mb-6">
-                <div className="bg-white/10 p-3 rounded-xl backdrop-blur-md">
-                  <BrainCircuit className="h-7 w-7 text-accent" />
-                </div>
-                <Badge className="bg-accent text-primary border-none text-[8px] font-black tracking-widest px-3 py-1">NE AI v2</Badge>
+        <div className="space-y-6">
+          <Card className="bg-primary text-white shadow-lg border-none rounded-3xl overflow-hidden p-6">
+            <div className="flex items-center gap-3 mb-6">
+              <BrainCircuit className="h-6 w-6 text-accent" />
+              <CardTitle className="text-xl font-bold tracking-tight">Regional Intel</CardTitle>
+            </div>
+            {aiAnalysis ? (
+              <div className="space-y-4">
+                <p className="text-sm leading-relaxed opacity-90 italic">"{aiAnalysis.summary}"</p>
+                <Button variant="secondary" className="w-full font-bold text-xs" onClick={handleRunAIAnalysis} disabled={isAnalyzing}>
+                  Refresh Intel
+                </Button>
               </div>
-              <CardTitle className="text-3xl font-black tracking-tighter uppercase italic">Regional Intel</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-8 relative z-10 px-8 pb-10">
-              {aiAnalysis ? (
-                <div className="space-y-6 animate-in slide-in-from-bottom-8 duration-500">
-                  <div className="bg-black/20 backdrop-blur-md rounded-2xl p-6 border border-white/10">
-                    <p className="text-xs leading-relaxed font-bold italic text-white/90">
-                      "{aiAnalysis.summary}"
-                    </p>
-                  </div>
-                  <Button 
-                    variant="secondary" 
-                    className="w-full h-14 text-[9px] font-black uppercase tracking-widest bg-white text-primary hover:bg-accent rounded-xl"
-                    onClick={handleRunAIAnalysis}
-                    disabled={isAnalyzing}
-                  >
-                    Refresh Synthesis
-                  </Button>
-                </div>
-              ) : (
+            ) : (
+              <div className="space-y-4">
+                <p className="text-xs opacity-70">Run AI synthesis for stock health and reordering insights.</p>
                 <Button 
-                  className="w-full h-16 bg-accent text-primary hover:bg-white font-black rounded-2xl shadow-lg text-[10px] uppercase tracking-widest transition-all group-hover:scale-[1.03]"
+                  className="w-full bg-accent text-primary hover:bg-white font-bold rounded-xl"
                   onClick={handleRunAIAnalysis}
                   disabled={isAnalyzing}
                 >
-                  {isAnalyzing ? (
-                    <Loader2 className="h-6 w-6 animate-spin" />
-                  ) : (
-                    "Init NE Synthesis"
-                  )}
+                  {isAnalyzing ? <Loader2 className="h-4 w-4 animate-spin" /> : "Generate Analysis"}
                 </Button>
-              )}
-            </CardContent>
+              </div>
+            )}
           </Card>
 
-          <Card className="glass-card rounded-[2.5rem] p-6 border-none">
-             <CardHeader className="pb-6">
-               <CardTitle className="text-[9px] font-black uppercase tracking-[0.3em] text-muted-foreground">Grid Integrity</CardTitle>
-             </CardHeader>
-             <CardContent className="space-y-4">
-               {[
-                 { label: "Mesh Services", status: "Nominal", color: "text-accent" },
-                 { label: "Transit Latency", status: "28ms", color: "text-primary" },
-                 { label: "Sector Health", status: "99.4%", color: "text-accent" }
-               ].map((item, i) => (
-                 <div key={i} className="flex justify-between items-center p-4 bg-secondary rounded-xl border border-primary/5">
-                   <span className="text-[9px] font-bold text-muted-foreground uppercase tracking-widest">{item.label}</span>
-                   <span className={cn("text-[9px] font-black uppercase tracking-widest", item.color)}>{item.status}</span>
-                 </div>
-               ))}
-             </CardContent>
+          <Card className="border-none shadow-sm rounded-3xl p-6">
+            <h3 className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-4">Grid Health</h3>
+            <div className="space-y-3">
+              <div className="flex justify-between items-center text-sm">
+                <span className="text-slate-500">Service Status</span>
+                <span className="text-emerald-500 font-bold">Online</span>
+              </div>
+              <div className="flex justify-between items-center text-sm">
+                <span className="text-slate-500">Sync Latency</span>
+                <span className="font-bold text-primary">24ms</span>
+              </div>
+            </div>
           </Card>
         </div>
       </div>

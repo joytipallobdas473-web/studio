@@ -1,69 +1,57 @@
 "use client";
 
-import { SidebarProvider, Sidebar, SidebarContent, SidebarHeader, SidebarMenu, SidebarMenuItem, SidebarMenuButton, SidebarGroup, SidebarGroupLabel, SidebarGroupContent, SidebarInset, SidebarTrigger, SidebarFooter, useSidebar } from "@/components/ui/sidebar";
-import { LayoutDashboard, Store, Package, ShoppingCart, LogOut, ShieldCheck, UserCircle, Globe, Zap, Network, Map, Mountain } from "lucide-react";
+import { SidebarProvider, Sidebar, SidebarContent, SidebarHeader, SidebarMenu, SidebarMenuItem, SidebarMenuButton, SidebarGroup, SidebarGroupLabel, SidebarGroupContent, SidebarInset, SidebarTrigger, SidebarFooter } from "@/components/ui/sidebar";
+import { LayoutDashboard, Store, Package, ShoppingCart, LogOut, MapPin, Mountain, UserCircle } from "lucide-react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { cn } from "@/lib/utils";
-import { useUser, useAuth } from "@/firebase";
-import { Separator } from "@/components/ui/separator";
+import { useAuth } from "@/firebase";
 import { Button } from "@/components/ui/button";
+import { Separator } from "@/components/ui/separator";
 import { signOut } from "firebase/auth";
 import { toast } from "@/hooks/use-toast";
 
 function AdminSidebar() {
   const pathname = usePathname();
-  const { setOpenMobile, isMobile } = useSidebar();
-  const { user } = useUser();
 
   const menuItems = [
-    { title: "Network Status", icon: LayoutDashboard, href: "/admin" },
-    { title: "Retail Nodes", icon: Store, href: "/admin/stores" },
-    { title: "SKU Registry", icon: Package, href: "/admin/inventory" },
+    { title: "Network Overview", icon: LayoutDashboard, href: "/admin" },
+    { title: "Retail Partners", icon: Store, href: "/admin/stores" },
+    { title: "Stock Registry", icon: Package, href: "/admin/inventory" },
     { title: "Transit Flows", icon: ShoppingCart, href: "/admin/orders" },
   ];
 
-  const handleLinkClick = () => {
-    if (isMobile) {
-      setOpenMobile(false);
-    }
-  };
-
   return (
-    <Sidebar collapsible="icon" className="bg-primary border-r-0 text-primary-foreground">
-      <SidebarHeader className="h-24 flex items-center px-6 border-b border-white/10">
-        <Link href="/admin" onClick={handleLinkClick} className="flex items-center gap-3 font-bold text-white overflow-hidden">
-          <div className="bg-accent p-2.5 rounded-xl shadow-lg shrink-0">
+    <Sidebar className="bg-primary border-none text-white">
+      <SidebarHeader className="h-20 flex items-center px-6">
+        <Link href="/admin" className="flex items-center gap-3">
+          <div className="bg-white p-2 rounded-xl">
             <Mountain className="h-5 w-5 text-primary" />
           </div>
-          <div className="flex flex-col group-data-[collapsible=icon]:hidden">
-            <span className="text-base tracking-tighter font-black uppercase">NE CONNECT</span>
-            <span className="text-[8px] text-accent font-black uppercase tracking-[0.3em]">Regional Operations</span>
-          </div>
+          <span className="font-bold text-lg tracking-tight">NE Admin</span>
         </Link>
       </SidebarHeader>
       
-      <SidebarContent className="px-3 pt-8">
+      <SidebarContent className="px-3 pt-6">
         <SidebarGroup>
-          <SidebarGroupLabel className="px-4 text-[9px] uppercase font-black tracking-[0.4em] text-white/50 mb-4">Command Protocols</SidebarGroupLabel>
+          <SidebarGroupLabel className="px-4 text-[10px] uppercase font-bold tracking-widest text-white/50 mb-4">Control Plane</SidebarGroupLabel>
           <SidebarGroupContent>
-            <SidebarMenu className="gap-2">
+            <SidebarMenu className="gap-1">
               {menuItems.map((item) => (
                 <SidebarMenuItem key={item.title}>
                   <SidebarMenuButton 
                     asChild 
-                    isActive={pathname === item.href} 
-                    tooltip={item.title}
+                    isActive={pathname === item.href}
                     className={cn(
-                      "h-12 rounded-xl transition-all duration-300",
+                      "h-11 rounded-xl transition-colors",
                       pathname === item.href 
-                        ? "bg-white text-primary font-black shadow-lg" 
+                        ? "bg-white text-primary font-bold" 
                         : "text-white/70 hover:bg-white/10 hover:text-white"
                     )}
                   >
-                    <Link href={item.href} onClick={handleLinkClick}>
-                      <item.icon className={cn("h-5 w-5", pathname === item.href ? "text-primary" : "text-white/50")} />
-                      <span className="text-xs uppercase tracking-wider font-bold">{item.title}</span>
+                    <Link href={item.href}>
+                      <item.icon className="h-4 w-4" />
+                      <span className="text-sm font-medium">{item.title}</span>
                     </Link>
                   </SidebarMenuButton>
                 </SidebarMenuItem>
@@ -73,18 +61,11 @@ function AdminSidebar() {
         </SidebarGroup>
       </SidebarContent>
 
-      <SidebarFooter className="p-6 space-y-6">
-        {user && (
-          <div className="group-data-[collapsible=icon]:hidden p-4 bg-white/5 border border-white/10 rounded-2xl space-y-3">
-            <div className="flex items-center justify-between text-[8px] font-black text-white/40 uppercase tracking-widest">
-              <span className="flex items-center gap-2"><Network className="h-3 w-3" /> System Root</span>
-              <div className="h-1.5 w-1.5 rounded-full bg-accent animate-pulse" />
-            </div>
-            <div className="text-[9px] font-mono break-all text-accent/80 bg-black/20 p-3 rounded-xl border border-white/5 select-all leading-tight">
-              {user.uid}
-            </div>
-          </div>
-        )}
+      <SidebarFooter className="p-6">
+        <div className="p-4 bg-white/5 rounded-2xl border border-white/10">
+          <p className="text-[10px] font-bold text-white/40 uppercase tracking-widest mb-1">System Node</p>
+          <p className="text-[10px] font-mono text-accent truncate">NE-REGION-PROD</p>
+        </div>
       </SidebarFooter>
     </Sidebar>
   );
@@ -97,7 +78,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   const handleLogout = async () => {
     try {
       await signOut(auth);
-      toast({ title: "Session Terminated", description: "Node disconnected from grid." });
+      toast({ title: "Logged Out", description: "Your session has ended." });
       router.push("/");
     } catch (e) {
       console.error(e);
@@ -106,38 +87,30 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 
   return (
     <SidebarProvider defaultOpen={true}>
-      <div className="flex min-h-svh w-full bg-background text-foreground ne-gradient-bg">
+      <div className="flex min-h-screen w-full bg-[#ECF0F5]">
         <AdminSidebar />
         <SidebarInset className="flex flex-col min-w-0 bg-transparent">
-          <header className="sticky top-0 z-30 flex h-24 shrink-0 items-center gap-6 border-b bg-white/80 backdrop-blur-xl px-10">
-            <SidebarTrigger className="text-primary hover:bg-secondary rounded-xl transition-colors" />
-            <Separator orientation="vertical" className="h-8 bg-secondary" />
+          <header className="sticky top-0 z-30 flex h-20 shrink-0 items-center gap-4 border-b bg-white/80 backdrop-blur-md px-8">
+            <SidebarTrigger className="text-primary" />
+            <Separator orientation="vertical" className="h-6" />
             <div className="flex flex-col">
-              <h2 className="text-lg font-black text-primary tracking-tighter uppercase italic">Operations Command</h2>
-              <div className="flex items-center gap-2">
-                <Map className="h-3 w-3 text-accent animate-pulse" />
-                <span className="text-[9px] text-muted-foreground font-black uppercase tracking-[0.2em]">Active Sector: NE-Region-7</span>
+              <span className="text-sm font-bold text-slate-800">Regional Hub Console</span>
+              <div className="flex items-center gap-1 text-[10px] text-slate-400 font-bold uppercase tracking-widest">
+                <MapPin className="h-3 w-3 text-accent" /> Sector 7
               </div>
             </div>
-            
-            <div className="ml-auto flex items-center gap-6">
-              <div className="hidden lg:flex items-center gap-3 px-4 py-2 bg-secondary rounded-xl border">
-                <div className="h-1.5 w-1.5 rounded-full bg-accent shadow-[0_0_8px_var(--accent)]" />
-                <span className="text-[9px] font-black text-primary uppercase tracking-widest">Mesh Latency: 28ms</span>
-              </div>
-              <Button 
-                variant="ghost" 
-                size="icon" 
-                onClick={handleLogout}
-                className="rounded-xl h-12 w-12 text-muted-foreground hover:text-destructive hover:bg-destructive/10"
-              >
+            <div className="ml-auto flex items-center gap-4">
+              <Button variant="ghost" size="icon" className="rounded-full text-slate-400 hover:text-white" onClick={handleLogout}>
                 <LogOut className="h-5 w-5" />
               </Button>
+              <div className="h-10 w-10 rounded-full bg-slate-100 border flex items-center justify-center">
+                <UserCircle className="h-6 w-6 text-slate-400" />
+              </div>
             </div>
           </header>
           
-          <main className="flex-1 overflow-y-auto p-10">
-            <div className="mx-auto max-w-7xl">
+          <main className="flex-1 p-8 overflow-y-auto">
+            <div className="max-w-7xl mx-auto">
               {children}
             </div>
           </main>
