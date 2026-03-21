@@ -4,7 +4,7 @@
 import { useState, useMemo } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Image from "next/image";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -19,8 +19,8 @@ import {
   Search, 
   ChevronRight, 
   Filter, 
-  Star,
-  Info
+  Info,
+  AlertCircle
 } from "lucide-react";
 import { useFirestore, useCollection } from "@/firebase";
 import { collection, addDoc, serverTimestamp, query, orderBy } from "firebase/firestore";
@@ -32,10 +32,10 @@ import { cn } from "@/lib/utils";
 
 const CATEGORIES = [
   { id: "all", name: "All Categories", icon: ShoppingBag },
-  { id: "electronics", name: "Electronics", icon: Package },
-  { id: "apparel", name: "Apparel", icon: Package },
-  { id: "grocery", name: "Grocery", icon: Package },
-  { id: "office", name: "Office Supplies", icon: Package },
+  { id: "Electronics", name: "Electronics", icon: Package },
+  { id: "Apparel", name: "Apparel", icon: Package },
+  { id: "Grocery", name: "Grocery", icon: Package },
+  { id: "Office Supplies", name: "Office Supplies", icon: Package },
 ];
 
 export default function NewOrderPage() {
@@ -48,13 +48,11 @@ export default function NewOrderPage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
   
-  // Order Dialog State
   const [orderDialogOpen, setOrderDialogOpen] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState<any>(null);
   const [orderQuantity, setOrderQuantity] = useState("1");
   const [orderNotes, setOrderNotes] = useState("");
 
-  // Fetch inventory
   const inventoryQuery = useMemoFirebase(() => {
     if (!db) return null;
     return query(collection(db, "inventory"), orderBy("name"));
@@ -67,10 +65,10 @@ export default function NewOrderPage() {
     return products.filter(p => {
       const name = (p.name || "").toLowerCase();
       const sku = (p.sku || "").toLowerCase();
-      const category = (p.category || "").toLowerCase();
+      const productCategory = (p.category || "");
       
       const matchesSearch = name.includes(searchQuery.toLowerCase()) || sku.includes(searchQuery.toLowerCase());
-      const matchesCategory = selectedCategory === "all" || category === selectedCategory.toLowerCase();
+      const matchesCategory = selectedCategory === "all" || productCategory === selectedCategory;
       
       return matchesSearch && matchesCategory;
     });
@@ -98,7 +96,7 @@ export default function NewOrderPage() {
       priority: "normal",
       notes: orderNotes,
       status: "pending",
-      storeName: "Retailer Outlet", // This would ideally come from the user profile
+      storeName: "Retailer Outlet", 
       createdAt: serverTimestamp()
     };
 
@@ -114,7 +112,7 @@ export default function NewOrderPage() {
           router.push("/dashboard");
         }, 2000);
       })
-      .catch(async (err) => {
+      .catch(async () => {
         setIsSubmitting(false);
         errorEmitter.emit('permission-error', new FirestorePermissionError({
           path: 'orders',
@@ -132,7 +130,7 @@ export default function NewOrderPage() {
         </div>
         <h2 className="text-3xl font-bold text-primary">Order Confirmed!</h2>
         <p className="text-muted-foreground max-w-md font-medium">
-          Your restock request for <strong>{selectedProduct?.name}</strong> is being processed by the central warehouse.
+          Your restock request for <strong>{selectedProduct?.name}</strong> is being processed.
         </p>
         <Button variant="outline" onClick={() => router.push("/dashboard")} className="mt-4">
           Return to Dashboard
@@ -143,7 +141,6 @@ export default function NewOrderPage() {
 
   return (
     <div className="space-y-8 pb-12">
-      {/* Header Section */}
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 bg-white p-6 rounded-xl shadow-sm border">
         <div>
           <h1 className="text-3xl font-bold text-primary">Warehouse Inventory</h1>
@@ -161,7 +158,6 @@ export default function NewOrderPage() {
       </div>
 
       <div className="flex flex-col lg:flex-row gap-8">
-        {/* Sidebar Filter */}
         <div className="w-full lg:w-64 shrink-0 space-y-4">
           <Card className="border-none shadow-sm overflow-hidden bg-white">
             <CardHeader className="bg-muted/30 py-4">
@@ -203,7 +199,6 @@ export default function NewOrderPage() {
           </Card>
         </div>
 
-        {/* Product Grid */}
         <div className="flex-1 space-y-6">
           {loading ? (
             <div className="flex flex-col items-center justify-center py-24 gap-4">
@@ -220,18 +215,15 @@ export default function NewOrderPage() {
                       alt={product.name}
                       fill
                       className="object-cover group-hover:scale-110 transition-transform duration-700"
-                      data-ai-hint="product inventory"
                     />
                     <Badge className="absolute top-3 left-3 bg-primary/90 text-white border-none text-[10px] font-bold tracking-wider uppercase">
                       {product.category}
                     </Badge>
                   </div>
                   <CardContent className="p-5 flex-1 space-y-3">
-                    <div className="flex justify-between items-start gap-2">
-                      <h3 className="font-bold text-base leading-tight group-hover:text-primary transition-colors">
-                        {product.name}
-                      </h3>
-                    </div>
+                    <h3 className="font-bold text-base leading-tight group-hover:text-primary transition-colors">
+                      {product.name}
+                    </h3>
                     <div className="flex items-center gap-2">
                       <p className="text-[10px] text-muted-foreground font-code bg-muted px-2 py-0.5 rounded">SKU: {product.sku}</p>
                     </div>
@@ -241,10 +233,10 @@ export default function NewOrderPage() {
                     <div className="pt-2">
                       {(product.currentStock || 0) < 10 ? (
                         <p className="text-[10px] text-red-500 font-bold uppercase tracking-wider flex items-center gap-1">
-                          <AlertCircle className="h-3 w-3" /> Low Warehouse Stock: {product.currentStock}
+                          <AlertCircle className="h-3 w-3" /> Low Stock: {product.currentStock}
                         </p>
                       ) : (
-                        <p className="text-[10px] text-green-600 font-bold uppercase tracking-wider">Available at Warehouse</p>
+                        <p className="text-[10px] text-green-600 font-bold uppercase tracking-wider">Available: {product.currentStock}</p>
                       )}
                     </div>
                   </CardContent>
@@ -267,7 +259,7 @@ export default function NewOrderPage() {
               </div>
               <h3 className="text-xl font-bold text-primary">No Matching Items</h3>
               <p className="text-muted-foreground max-w-xs text-center mt-2 font-medium">
-                The global warehouse doesn't have any items matching your current filters.
+                No items matching your current filters.
               </p>
               <Button 
                 variant="outline" 
@@ -284,14 +276,10 @@ export default function NewOrderPage() {
         </div>
       </div>
 
-      {/* Order Dialog */}
       <Dialog open={orderDialogOpen} onOpenChange={setOrderDialogOpen}>
         <DialogContent className="sm:max-w-[500px]">
           <DialogHeader>
             <DialogTitle className="text-xl font-bold text-primary">Stock Reorder Request</DialogTitle>
-            <DialogDescription className="font-medium">
-              Specify the restock quantity for your outlet.
-            </DialogDescription>
           </DialogHeader>
           
           {selectedProduct && (
@@ -308,13 +296,13 @@ export default function NewOrderPage() {
                 <div className="flex-1 space-y-1">
                   <h4 className="font-bold text-primary text-sm leading-tight">{selectedProduct.name}</h4>
                   <p className="text-[10px] text-muted-foreground font-bold uppercase tracking-wider">{selectedProduct.category} • SKU: {selectedProduct.sku}</p>
-                  <p className="text-lg font-bold text-primary pt-1">${(selectedProduct.mrp || 0).toFixed(2)} <span className="text-[10px] font-normal text-muted-foreground">per unit</span></p>
+                  <p className="text-lg font-bold text-primary pt-1">${(selectedProduct.mrp || 0).toFixed(2)}</p>
                 </div>
               </div>
 
               <div className="space-y-4">
                 <div className="grid grid-cols-4 items-center gap-4">
-                  <Label htmlFor="quantity" className="text-right font-bold text-xs uppercase tracking-wider">Quantity</Label>
+                  <Label htmlFor="quantity" className="text-right font-bold text-xs uppercase">Quantity</Label>
                   <Input 
                     id="quantity" 
                     type="number" 
@@ -327,10 +315,10 @@ export default function NewOrderPage() {
                 </div>
 
                 <div className="grid grid-cols-4 items-start gap-4">
-                  <Label htmlFor="notes" className="text-right font-bold text-xs uppercase tracking-wider mt-3">Notes</Label>
+                  <Label htmlFor="notes" className="text-right font-bold text-xs uppercase mt-3">Notes</Label>
                   <Textarea 
                     id="notes" 
-                    placeholder="Instructions for the warehouse team..."
+                    placeholder="Instructions..."
                     value={orderNotes}
                     onChange={(e) => setOrderNotes(e.target.value)}
                     className="col-span-3 min-h-[100px] bg-white"
@@ -339,7 +327,7 @@ export default function NewOrderPage() {
               </div>
 
               <div className="border-t pt-4 flex justify-between items-center bg-muted/10 p-4 rounded-lg">
-                <span className="text-xs font-bold uppercase tracking-widest text-muted-foreground">Est. Total Value:</span>
+                <span className="text-xs font-bold uppercase tracking-widest text-muted-foreground">Est. Total:</span>
                 <span className="text-2xl font-bold text-primary">
                   ${((selectedProduct.mrp || 0) * (parseInt(orderQuantity) || 0)).toFixed(2)}
                 </span>
@@ -347,8 +335,8 @@ export default function NewOrderPage() {
             </div>
           )}
 
-          <DialogFooter className="gap-2 sm:gap-0 border-t pt-4">
-            <Button variant="ghost" onClick={() => setOrderDialogOpen(false)} disabled={isSubmitting} className="font-bold">
+          <DialogFooter className="border-t pt-4">
+            <Button variant="ghost" onClick={() => setOrderDialogOpen(false)} disabled={isSubmitting}>
               Cancel
             </Button>
             <Button 

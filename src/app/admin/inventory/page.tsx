@@ -1,7 +1,7 @@
 
 "use client";
 
-import { useState, useMemo, useEffect } from "react";
+import { useState, useMemo } from "react";
 import { useFirestore, useCollection } from "@/firebase";
 import { collection, doc, addDoc, updateDoc, deleteDoc, query, orderBy, serverTimestamp } from "firebase/firestore";
 import { useMemoFirebase } from "@/firebase/use-memo-firebase";
@@ -93,12 +93,12 @@ export default function InventoryControl() {
         .then(() => {
           toast({ 
             title: "Updated Successfully", 
-            description: `${productData.name} has been updated in the global catalog.`,
+            description: `${productData.name} has been updated.`,
           });
           setIsDialogOpen(false);
           setIsSaving(false);
         })
-        .catch(async (err) => {
+        .catch(async () => {
           setIsSaving(false);
           errorEmitter.emit('permission-error', new FirestorePermissionError({
             path: docRef.path,
@@ -112,13 +112,13 @@ export default function InventoryControl() {
         .then(() => {
           toast({ 
             title: "Saved Successfully", 
-            description: `${productData.name} is now available for retailer orders.`,
+            description: `${productData.name} has been added to the catalog.`,
           });
           setIsDialogOpen(false);
           setIsSaving(false);
           setFormData(initialFormState);
         })
-        .catch(async (err) => {
+        .catch(async () => {
           setIsSaving(false);
           errorEmitter.emit('permission-error', new FirestorePermissionError({
             path: colRef.path,
@@ -136,7 +136,7 @@ export default function InventoryControl() {
       .then(() => {
         toast({ 
           title: "Item Deleted", 
-          description: `${name} has been removed from global inventory.`, 
+          description: `${name} removed from inventory.`, 
           variant: "destructive" 
         });
       })
@@ -150,10 +150,11 @@ export default function InventoryControl() {
 
   const filteredProducts = useMemo(() => {
     if (!products) return [];
+    const lowerQuery = searchQuery.toLowerCase();
     return products.filter(p => 
-      (p.name || "").toLowerCase().includes(searchQuery.toLowerCase()) ||
-      (p.sku || "").toLowerCase().includes(searchQuery.toLowerCase()) ||
-      (p.category || "").toLowerCase().includes(searchQuery.toLowerCase())
+      (p.name || "").toLowerCase().includes(lowerQuery) ||
+      (p.sku || "").toLowerCase().includes(lowerQuery) ||
+      (p.category || "").toLowerCase().includes(lowerQuery)
     );
   }, [products, searchQuery]);
 
@@ -170,7 +171,7 @@ export default function InventoryControl() {
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
         <div>
           <h1 className="text-3xl font-bold text-primary">Global Stock Management</h1>
-          <p className="text-muted-foreground text-sm">Add and update inventory items across the entire retail network.</p>
+          <p className="text-muted-foreground text-sm">Add and update inventory items across the network.</p>
         </div>
         <Button 
           onClick={() => handleOpenDialog()}
@@ -194,7 +195,7 @@ export default function InventoryControl() {
         <CardContent className="p-0">
           <Table>
             <TableHeader>
-              <TableRow className="bg-muted/50 hover:bg-muted/50">
+              <TableRow className="bg-muted/50">
                 <TableHead>Product</TableHead>
                 <TableHead>SKU</TableHead>
                 <TableHead>Category</TableHead>
@@ -208,7 +209,7 @@ export default function InventoryControl() {
                 filteredProducts.map((product) => (
                   <TableRow key={product.id} className="hover:bg-muted/20">
                     <TableCell className="font-bold text-primary">{product.name}</TableCell>
-                    <TableCell className="text-xs font-code font-bold opacity-70">{product.sku}</TableCell>
+                    <TableCell className="text-xs font-code opacity-70">{product.sku}</TableCell>
                     <TableCell>
                       <span className="text-[10px] font-bold bg-secondary px-2 py-1 rounded-full uppercase tracking-wider">
                         {product.category}
@@ -236,7 +237,7 @@ export default function InventoryControl() {
                         <Button 
                           size="icon" 
                           variant="ghost" 
-                          className="text-red-500 hover:text-red-600 hover:bg-red-50 h-8 w-8"
+                          className="text-red-500 hover:text-red-600 h-8 w-8"
                           onClick={() => handleDelete(product.id, product.name)}
                         >
                           <Trash2 className="h-4 w-4" />
@@ -249,7 +250,7 @@ export default function InventoryControl() {
                 <TableRow>
                   <TableCell colSpan={6} className="text-center py-20 text-muted-foreground">
                     <Package className="h-10 w-10 mx-auto mb-4 opacity-20" />
-                    No products found in the global catalog.
+                    No products found.
                   </TableCell>
                 </TableRow>
               )}
@@ -264,12 +265,12 @@ export default function InventoryControl() {
         <DialogContent className="sm:max-w-[500px]">
           <DialogHeader>
             <DialogTitle className="text-xl font-bold text-primary">
-              {editingProduct ? "Update Product Details" : "Register New Stock Item"}
+              {editingProduct ? "Update Product" : "Register New Item"}
             </DialogTitle>
           </DialogHeader>
           <div className="grid gap-6 py-4">
             <div className="space-y-2">
-              <Label htmlFor="name" className="text-xs font-bold uppercase tracking-wider">Product Name</Label>
+              <Label htmlFor="name" className="text-xs font-bold uppercase">Product Name</Label>
               <Input 
                 id="name" 
                 placeholder="e.g. Ultra HD Monitor 27\"
@@ -280,7 +281,7 @@ export default function InventoryControl() {
             </div>
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label htmlFor="sku" className="text-xs font-bold uppercase tracking-wider">SKU Code</Label>
+                <Label htmlFor="sku" className="text-xs font-bold uppercase">SKU Code</Label>
                 <Input 
                   id="sku" 
                   placeholder="WH-INV-001"
@@ -290,7 +291,7 @@ export default function InventoryControl() {
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="category" className="text-xs font-bold uppercase tracking-wider">Category</Label>
+                <Label htmlFor="category" className="text-xs font-bold uppercase">Category</Label>
                 <Select 
                   value={formData.category} 
                   onValueChange={(val) => setFormData({...formData, category: val})}
@@ -309,7 +310,7 @@ export default function InventoryControl() {
             </div>
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label htmlFor="mrp" className="text-xs font-bold uppercase tracking-wider">Unit Price ($)</Label>
+                <Label htmlFor="mrp" className="text-xs font-bold uppercase">Unit Price ($)</Label>
                 <Input 
                   id="mrp" 
                   type="number" 
@@ -320,7 +321,7 @@ export default function InventoryControl() {
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="stock" className="text-xs font-bold uppercase tracking-wider">Warehouse Stock</Label>
+                <Label htmlFor="stock" className="text-xs font-bold uppercase">Warehouse Stock</Label>
                 <Input 
                   id="stock" 
                   type="number" 
@@ -335,13 +336,13 @@ export default function InventoryControl() {
             <Button variant="ghost" onClick={() => setIsDialogOpen(false)} disabled={isSaving}>Cancel</Button>
             <Button 
               onClick={handleSave} 
-              className="bg-primary text-primary-foreground min-w-[140px] font-bold shadow-lg" 
+              className="bg-primary font-bold shadow-lg" 
               disabled={isSaving}
             >
               {isSaving ? (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Saving Data...
+                  Saving...
                 </>
               ) : (
                 <span className="flex items-center gap-2">
