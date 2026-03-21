@@ -23,13 +23,19 @@ export function initializeFirebase() {
     }
   }
 
-  if (!globalForFirebase.auth) globalForFirebase.auth = getAuth(globalForFirebase.app);
-  if (!globalForFirebase.db) globalForFirebase.db = getFirestore(globalForFirebase.app);
+  // Ensure services are only initialized once and linked to the same app instance
+  if (!globalForFirebase.auth && globalForFirebase.app) {
+    globalForFirebase.auth = getAuth(globalForFirebase.app);
+  }
+  
+  if (!globalForFirebase.db && globalForFirebase.app) {
+    globalForFirebase.db = getFirestore(globalForFirebase.app);
+  }
 
   return {
-    firebaseApp: globalForFirebase.app,
-    auth: globalForFirebase.auth,
-    firestore: globalForFirebase.db
+    firebaseApp: globalForFirebase.app || null,
+    auth: globalForFirebase.auth || null,
+    firestore: globalForFirebase.db || null
   };
 }
 
