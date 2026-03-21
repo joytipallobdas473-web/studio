@@ -1,7 +1,7 @@
 
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { useFirestore, useCollection } from "@/firebase";
 import { collection, doc, addDoc, updateDoc, deleteDoc, query, orderBy, serverTimestamp } from "firebase/firestore";
 import { useMemoFirebase } from "@/firebase/use-memo-firebase";
@@ -9,7 +9,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Plus, Search, Edit2, Trash2, Loader2, Package, AlertCircle } from "lucide-react";
+import { Plus, Search, Edit2, Trash2, Loader2, Package, AlertCircle, CheckCircle2 } from "lucide-react";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -33,33 +33,30 @@ export default function InventoryControl() {
   const [isSaving, setIsSaving] = useState(false);
   const [editingProduct, setEditingProduct] = useState<any>(null);
   const [searchQuery, setSearchQuery] = useState("");
-  const [formData, setFormData] = useState({
+  
+  const initialFormState = {
     name: "",
     sku: "",
     mrp: "",
-    currentStock: "",
+    currentStock: "0",
     category: "Electronics"
-  });
+  };
+
+  const [formData, setFormData] = useState(initialFormState);
 
   const handleOpenDialog = (product?: any) => {
     if (product) {
       setEditingProduct(product);
       setFormData({
-        name: product.name,
-        sku: product.sku,
-        mrp: product.mrp.toString(),
-        currentStock: product.currentStock.toString(),
+        name: product.name || "",
+        sku: product.sku || "",
+        mrp: (product.mrp || 0).toString(),
+        currentStock: (product.currentStock || 0).toString(),
         category: product.category || "Electronics"
       });
     } else {
       setEditingProduct(null);
-      setFormData({ 
-        name: "", 
-        sku: "", 
-        mrp: "", 
-        currentStock: "0", 
-        category: "Electronics" 
-      });
+      setFormData(initialFormState);
     }
     setIsDialogOpen(true);
   };
@@ -67,14 +64,13 @@ export default function InventoryControl() {
   const handleSave = () => {
     if (!db) return;
 
-    // Strict validation for numeric fields
     const mrp = parseFloat(formData.mrp);
     const stock = parseInt(formData.currentStock);
 
     if (!formData.name.trim() || !formData.sku.trim() || isNaN(mrp) || isNaN(stock)) {
       toast({
-        title: "Invalid Input",
-        description: "Please provide a valid product name, SKU, and numeric values for price and stock.",
+        title: "Validation Error",
+        description: "Please ensure all fields are filled correctly. Price and Stock must be valid numbers.",
         variant: "destructive"
       });
       return;
@@ -96,13 +92,13 @@ export default function InventoryControl() {
       updateDoc(docRef, productData)
         .then(() => {
           toast({ 
-            title: "Success", 
-            description: `${productData.name} updated successfully.` 
+            title: "Updated Successfully", 
+            description: `${productData.name} has been updated in the global catalog.`,
           });
           setIsDialogOpen(false);
           setIsSaving(false);
         })
-        .catch(async () => {
+        .catch(async (err) => {
           setIsSaving(false);
           errorEmitter.emit('permission-error', new FirestorePermissionError({
             path: docRef.path,
@@ -115,13 +111,14 @@ export default function InventoryControl() {
       addDoc(colRef, productData)
         .then(() => {
           toast({ 
-            title: "Saved", 
-            description: `${productData.name} added to global inventory.` 
+            title: "Saved Successfully", 
+            description: `${productData.name} is now available for retailer orders.`,
           });
           setIsDialogOpen(false);
           setIsSaving(false);
+          setFormData(initialFormState);
         })
-        .catch(async () => {
+        .catch(async (err) => {
           setIsSaving(false);
           errorEmitter.emit('permission-error', new FirestorePermissionError({
             path: colRef.path,
@@ -138,8 +135,8 @@ export default function InventoryControl() {
     deleteDoc(docRef)
       .then(() => {
         toast({ 
-          title: "Item Removed", 
-          description: `${name} deleted from stock.`, 
+          title: "Item Deleted", 
+          description: `${name} has been removed from global inventory.`, 
           variant: "destructive" 
         });
       })
@@ -154,9 +151,9 @@ export default function InventoryControl() {
   const filteredProducts = useMemo(() => {
     if (!products) return [];
     return products.filter(p => 
-      p.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      p.sku.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      p.category.toLowerCase().includes(searchQuery.toLowerCase())
+      (p.name || "").toLowerCase().includes(searchQuery.toLowerCase()) ||
+      (p.sku || "").toLowerCase().includes(searchQuery.toLowerCase()) ||
+      (p.category || "").toLowerCase().includes(searchQuery.toLowerCase())
     );
   }, [products, searchQuery]);
 
@@ -177,7 +174,7 @@ export default function InventoryControl() {
         </div>
         <Button 
           onClick={() => handleOpenDialog()}
-          className="bg-accent text-accent-foreground font-bold hover:bg-accent/90 w-full md:w-auto"
+          className="bg-accent text-accent-foreground font-bold hover:bg-accent/90 w-full md:w-auto shadow-md"
         >
           <Plus className="mr-2 h-4 w-4" /> Add New Product
         </Button>
@@ -186,8 +183,8 @@ export default function InventoryControl() {
       <div className="relative">
         <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
         <Input 
-          placeholder="Search global inventory..." 
-          className="pl-9 h-11" 
+          placeholder="Search by name, SKU or category..." 
+          className="pl-9 h-11 bg-white" 
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
         />
@@ -197,7 +194,7 @@ export default function InventoryControl() {
         <CardContent className="p-0">
           <Table>
             <TableHeader>
-              <TableRow className="bg-muted/50">
+              <TableRow className="bg-muted/50 hover:bg-muted/50">
                 <TableHead>Product</TableHead>
                 <TableHead>SKU</TableHead>
                 <TableHead>Category</TableHead>
@@ -213,16 +210,16 @@ export default function InventoryControl() {
                     <TableCell className="font-bold text-primary">{product.name}</TableCell>
                     <TableCell className="text-xs font-code font-bold opacity-70">{product.sku}</TableCell>
                     <TableCell>
-                      <span className="text-xs font-medium bg-secondary px-2 py-1 rounded-full uppercase tracking-wider">
+                      <span className="text-[10px] font-bold bg-secondary px-2 py-1 rounded-full uppercase tracking-wider">
                         {product.category}
                       </span>
                     </TableCell>
                     <TableCell className="font-bold">${(product.mrp || 0).toFixed(2)}</TableCell>
                     <TableCell>
                       <div className="flex items-center gap-2">
-                        {product.currentStock < 10 && <AlertCircle className="h-3 w-3 text-red-500" />}
-                        <span className={product.currentStock < 10 ? "text-red-500 font-bold" : "font-medium"}>
-                          {product.currentStock}
+                        {(product.currentStock || 0) < 10 && <AlertCircle className="h-3 w-3 text-red-500" />}
+                        <span className={(product.currentStock || 0) < 10 ? "text-red-500 font-bold" : "font-medium"}>
+                          {product.currentStock || 0}
                         </span>
                       </div>
                     </TableCell>
@@ -267,7 +264,7 @@ export default function InventoryControl() {
         <DialogContent className="sm:max-w-[500px]">
           <DialogHeader>
             <DialogTitle className="text-xl font-bold text-primary">
-              {editingProduct ? "Update Product" : "Add New Stock Item"}
+              {editingProduct ? "Update Product Details" : "Register New Stock Item"}
             </DialogTitle>
           </DialogHeader>
           <div className="grid gap-6 py-4">
@@ -275,7 +272,7 @@ export default function InventoryControl() {
               <Label htmlFor="name" className="text-xs font-bold uppercase tracking-wider">Product Name</Label>
               <Input 
                 id="name" 
-                placeholder="e.g. Premium Wireless Mouse"
+                placeholder="e.g. Ultra HD Monitor 27\"
                 value={formData.name}
                 onChange={(e) => setFormData({...formData, name: e.target.value})}
                 disabled={isSaving}
@@ -286,7 +283,7 @@ export default function InventoryControl() {
                 <Label htmlFor="sku" className="text-xs font-bold uppercase tracking-wider">SKU Code</Label>
                 <Input 
                   id="sku" 
-                  placeholder="WH-001"
+                  placeholder="WH-INV-001"
                   value={formData.sku}
                   onChange={(e) => setFormData({...formData, sku: e.target.value})}
                   disabled={isSaving}
@@ -300,7 +297,7 @@ export default function InventoryControl() {
                   disabled={isSaving}
                 >
                   <SelectTrigger>
-                    <SelectValue placeholder="Category" />
+                    <SelectValue placeholder="Select Category" />
                   </SelectTrigger>
                   <SelectContent>
                     {CATEGORIES.map((cat) => (
@@ -323,7 +320,7 @@ export default function InventoryControl() {
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="stock" className="text-xs font-bold uppercase tracking-wider">Initial Stock</Label>
+                <Label htmlFor="stock" className="text-xs font-bold uppercase tracking-wider">Warehouse Stock</Label>
                 <Input 
                   id="stock" 
                   type="number" 
@@ -338,16 +335,19 @@ export default function InventoryControl() {
             <Button variant="ghost" onClick={() => setIsDialogOpen(false)} disabled={isSaving}>Cancel</Button>
             <Button 
               onClick={handleSave} 
-              className="bg-primary text-primary-foreground min-w-[140px] font-bold" 
+              className="bg-primary text-primary-foreground min-w-[140px] font-bold shadow-lg" 
               disabled={isSaving}
             >
               {isSaving ? (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Saving...
+                  Saving Data...
                 </>
               ) : (
-                editingProduct ? "Update Item" : "Save Product"
+                <span className="flex items-center gap-2">
+                  <CheckCircle2 className="h-4 w-4" />
+                  {editingProduct ? "Apply Changes" : "Confirm Entry"}
+                </span>
               )}
             </Button>
           </DialogFooter>
