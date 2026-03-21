@@ -1,6 +1,7 @@
+
 "use client";
 
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { useFirestore, useCollection } from "@/firebase";
 import { collection, query, orderBy, limit } from "firebase/firestore";
 import { useMemoFirebase } from "@/firebase/use-memo-firebase";
@@ -35,9 +36,40 @@ export default function AdminOverview() {
   const { data: orders, loading: ordersLoading } = useCollection(ordersQuery);
   const { data: products, loading: inventoryLoading } = useCollection(inventoryQuery);
 
-  const pendingStoresCount = stores?.filter(s => s.status === 'pending').length || 0;
-  const activeOrdersCount = orders?.filter(o => !['delivered', 'cancelled'].includes(o.status)).length || 0;
-  const lowStockCount = products?.filter(p => p.currentStock < 10).length || 0;
+  const stats = useMemo(() => {
+    const pendingStoresCount = stores?.filter(s => s.status === 'pending').length || 0;
+    const activeOrdersCount = orders?.filter(o => !['delivered', 'cancelled'].includes(o.status)).length || 0;
+    const lowStockCount = products?.filter(p => p.currentStock < 10).length || 0;
+
+    return [
+      { label: "Pending Registrations", value: pendingStoresCount.toString(), icon: Store, color: "text-orange-600", bg: "bg-orange-50", trend: "Approval needed" },
+      { label: "Total Products", value: products?.length.toString() || "0", icon: Package, color: "text-blue-600", bg: "bg-blue-50", trend: "Global catalog" },
+      { label: "Active Orders", value: activeOrdersCount.toString(), icon: ShoppingCart, color: "text-green-600", bg: "bg-green-50", trend: "Ongoing requests" },
+      { label: "Low Stock Alerts", value: lowStockCount.toString(), icon: AlertCircle, color: "text-red-600", bg: "bg-red-50", trend: lowStockCount > 0 ? "Action required" : "Healthy" },
+    ];
+  }, [stores, orders, products]);
+
+  const recentActivities = useMemo(() => {
+    const combined = [
+      ...(stores?.map(s => ({
+        title: "New store registration",
+        target: s.name,
+        time: s.createdAt?.toDate ? format(s.createdAt.toDate(), 'MMM dd, h:mm a') : 'Recently',
+        status: s.status,
+        timestamp: s.createdAt?.toMillis ? s.createdAt.toMillis() : 0,
+        type: 'store'
+      })) || []),
+      ...(orders?.map(o => ({
+        title: "New order placed",
+        target: `${o.storeName || 'Store'} (${o.items || 'Items'})`,
+        time: o.createdAt?.toDate ? format(o.createdAt.toDate(), 'MMM dd, h:mm a') : 'Recently',
+        status: o.status,
+        timestamp: o.createdAt?.toMillis ? o.createdAt.toMillis() : 0,
+        type: 'order'
+      })) || [])
+    ];
+    return combined.sort((a, b) => b.timestamp - a.timestamp).slice(0, 5);
+  }, [stores, orders]);
 
   const handleRunAIAnalysis = async () => {
     if (!products || !orders) return;
@@ -63,32 +95,6 @@ export default function AdminOverview() {
       setIsAnalyzing(false);
     }
   };
-
-  const stats = [
-    { label: "Pending Registrations", value: pendingStoresCount.toString(), icon: Store, color: "text-orange-600", bg: "bg-orange-50", trend: "Approval needed" },
-    { label: "Total Products", value: products?.length.toString() || "0", icon: Package, color: "text-blue-600", bg: "bg-blue-50", trend: "Global catalog" },
-    { label: "Active Orders", value: activeOrdersCount.toString(), icon: ShoppingCart, color: "text-green-600", bg: "bg-green-50", trend: "Ongoing requests" },
-    { label: "Low Stock Alerts", value: lowStockCount.toString(), icon: AlertCircle, color: "text-red-600", bg: "bg-red-50", trend: lowStockCount > 0 ? "Action required" : "Healthy" },
-  ];
-
-  const recentActivities = [
-    ...(stores?.map(s => ({
-      title: "New store registration",
-      target: s.name,
-      time: s.createdAt?.toDate ? format(s.createdAt.toDate(), 'MMM dd, h:mm a') : 'Recently',
-      status: s.status,
-      timestamp: s.createdAt?.toMillis ? s.createdAt.toMillis() : 0,
-      type: 'store'
-    })) || []),
-    ...(orders?.map(o => ({
-      title: "New order placed",
-      target: `${o.storeName || 'Store'} (${o.items || 'Items'})`,
-      time: o.createdAt?.toDate ? format(o.createdAt.toDate(), 'MMM dd, h:mm a') : 'Recently',
-      status: o.status,
-      timestamp: o.createdAt?.toMillis ? o.createdAt.toMillis() : 0,
-      type: 'order'
-    })) || [])
-  ].sort((a, b) => b.timestamp - a.timestamp).slice(0, 5);
 
   if (storesLoading || ordersLoading || inventoryLoading) {
     return (
@@ -232,7 +238,7 @@ export default function AdminOverview() {
             </CardHeader>
             <CardContent>
               <p className="text-xs text-muted-foreground">
-                Stock levels below 10 units trigger global alerts. {lowStockCount} items currently at risk.
+                Stock levels below 10 units trigger global alerts. {stats.find(s => s.label === "Low Stock Alerts")?.value || 0} items currently at risk.
               </p>
             </CardContent>
           </Card>

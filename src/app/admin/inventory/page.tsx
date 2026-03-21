@@ -1,9 +1,10 @@
 
 "use client";
 
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { useFirestore, useCollection } from "@/firebase";
 import { collection, doc, addDoc, updateDoc, deleteDoc, query, orderBy, serverTimestamp } from "firebase/firestore";
+import { useMemoFirebase } from "@/firebase/use-memo-firebase";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -17,7 +18,12 @@ import { FirestorePermissionError } from "@/firebase/errors";
 
 export default function InventoryControl() {
   const db = useFirestore();
-  const productsQuery = db ? query(collection(db, "inventory"), orderBy("name")) : null;
+  
+  const productsQuery = useMemoFirebase(() => {
+    if (!db) return null;
+    return query(collection(db, "inventory"), orderBy("name"));
+  }, [db]);
+
   const { data: products, loading } = useCollection(productsQuery);
 
   const [isDialogOpen, setIsDialogOpen] = useState(false);
@@ -114,11 +120,13 @@ export default function InventoryControl() {
       });
   };
 
-  const filteredProducts = products?.filter(p => 
-    p.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    p.sku.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    p.category.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  const filteredProducts = useMemo(() => {
+    return products?.filter(p => 
+      p.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      p.sku.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      p.category.toLowerCase().includes(searchQuery.toLowerCase())
+    );
+  }, [products, searchQuery]);
 
   if (loading) {
     return (
