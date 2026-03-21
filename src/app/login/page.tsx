@@ -8,9 +8,9 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
-import { Boxes, Mail, Lock, Loader2, ArrowLeft, ChevronRight, MapPin } from "lucide-react";
+import { Boxes, Mail, Lock, Loader2, ArrowLeft, ChevronRight, MapPin, ShieldCheck, User } from "lucide-react";
 import { useAuth, useUser, useFirestore, useDoc, useMemoFirebase } from "@/firebase";
-import { signInWithEmailAndPassword, onAuthStateChanged } from "firebase/auth";
+import { signInWithEmailAndPassword, createUserWithEmailAndPassword } from "firebase/auth";
 import { doc } from "firebase/firestore";
 import { toast } from "@/hooks/use-toast";
 
@@ -32,18 +32,17 @@ export default function LoginPage() {
 
   useEffect(() => {
     if (user && !storeLoading) {
-      const isAdmin = email.toLowerCase().includes("admin") || user.email?.toLowerCase().includes("admin");
+      const isAdmin = user.email?.toLowerCase().includes("admin");
       
       if (isAdmin) {
         router.push("/admin");
       } else if (store) {
         router.push("/dashboard");
       } else {
-        // Registration is compulsory
         router.push("/register");
       }
     }
-  }, [user, store, storeLoading, email, router]);
+  }, [user, store, storeLoading, router]);
 
   const handleSignIn = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -51,17 +50,26 @@ export default function LoginPage() {
     
     setIsLoading(true);
     try {
-      await signInWithEmailAndPassword(auth, email, password);
+      // Try to sign in; if user doesn't exist, create them for demo purposes
+      try {
+        await signInWithEmailAndPassword(auth, email, password);
+      } catch (err: any) {
+        if (err.code === 'auth/user-not-found' || err.code === 'auth/invalid-credential') {
+          await createUserWithEmailAndPassword(auth, email, password);
+        } else {
+          throw err;
+        }
+      }
+      
       toast({
         title: "Access Authorized",
-        description: "Verifying registry node connection...",
+        description: "Synchronizing with regional telemetry...",
       });
     } catch (error: any) {
       setIsLoading(false);
-      console.error("Auth error:", error);
       toast({
-        title: "Verification Failed",
-        description: "The credentials provided are invalid. Please check your registry data.",
+        title: "Auth Error",
+        description: error.message || "Credential verification failed.",
         variant: "destructive",
       });
     }
@@ -79,16 +87,16 @@ export default function LoginPage() {
           <div className="bg-primary p-3 rounded-2xl shadow-lg inline-block mb-4">
             <Boxes className="h-6 w-6 text-white" />
           </div>
-          <h1 className="text-3xl font-bold text-slate-900 tracking-tight">Identity Verification</h1>
+          <h1 className="text-3xl font-bold text-slate-900 tracking-tight">Identity Portal</h1>
           <p className="text-slate-500 font-medium flex items-center justify-center gap-2 text-sm">
-            <MapPin className="h-3 w-3 text-accent" /> NE Regional Access Portal
+            <MapPin className="h-3 w-3 text-accent" /> North East Cluster Access
           </p>
         </div>
 
         <Card className="border-none shadow-sm rounded-3xl bg-white overflow-hidden">
           <CardHeader className="p-8 pb-0 bg-slate-50/50">
             <CardTitle className="text-lg font-bold text-primary italic uppercase tracking-tighter">Login Protocol</CardTitle>
-            <CardDescription>Enter your credentials for network authorization.</CardDescription>
+            <CardDescription>Enter credentials for regional authorization.</CardDescription>
           </CardHeader>
           <CardContent className="p-8">
             <form onSubmit={handleSignIn} className="space-y-6">
@@ -98,7 +106,7 @@ export default function LoginPage() {
                   <Mail className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
                   <Input 
                     type="email" 
-                    placeholder="name@region.com" 
+                    placeholder="admin@retail.com or user@retail.com" 
                     className="pl-12 h-14 bg-slate-50 border-slate-100 rounded-2xl focus:ring-primary font-bold text-slate-900" 
                     required 
                     value={email}
@@ -131,10 +139,18 @@ export default function LoginPage() {
               </Button>
             </form>
           </CardContent>
-          <CardFooter className="p-8 pt-0 flex flex-col space-y-4">
+          <CardFooter className="p-8 pt-0 flex flex-col space-y-6">
+             <div className="bg-slate-50 p-4 rounded-2xl border border-slate-100 w-full space-y-2">
+                <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest flex items-center gap-2">
+                  <ShieldCheck className="h-3 w-3 text-accent" /> Demo Access Key
+                </p>
+                <p className="text-[11px] text-slate-600 font-medium">
+                  Use email containing <strong>'admin'</strong> for Admin Hub access.
+                </p>
+             </div>
              <div className="relative w-full">
                 <div className="absolute inset-0 flex items-center"><span className="w-full border-t border-slate-100" /></div>
-                <div className="relative flex justify-center text-[9px] uppercase font-black text-slate-400 bg-white px-4">New to the network?</div>
+                <div className="relative flex justify-center text-[9px] uppercase font-black text-slate-400 bg-white px-4">Retailer Node Registration</div>
              </div>
              <Link href="/register" className="w-full">
                <Button variant="outline" className="w-full h-14 rounded-2xl border-slate-200 text-slate-600 font-bold hover:bg-slate-50 uppercase tracking-widest text-[10px]">

@@ -14,26 +14,15 @@ import {
   UserPlus,
   ArrowRight,
   ChevronRight,
-  Lock
+  Lock,
+  LayoutDashboard
 } from "lucide-react";
 import { useAuth, useUser } from "@/firebase";
-import { signInAnonymously } from "firebase/auth";
-import { toast } from "@/hooks/use-toast";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 
 export default function Home() {
   const router = useRouter();
-  const auth = useAuth();
   const { isUserLoading, user } = useUser();
-  const [isLoading, setIsLoading] = useState<string | null>(null);
-
-  const handleEntry = async (role: "retailer" | "admin") => {
-    if (user) {
-      router.push(role === "admin" ? "/admin" : "/dashboard");
-      return;
-    }
-    router.push("/login");
-  };
 
   if (isUserLoading) {
     return (
@@ -59,14 +48,14 @@ export default function Home() {
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-          {/* Join Network Card */}
+          {/* Register Card */}
           <Card className="border-none shadow-sm hover:shadow-md transition-all bg-white rounded-[2.5rem] overflow-hidden border-t-4 border-t-accent">
             <CardHeader className="pt-10 text-center">
               <div className="mx-auto bg-accent/10 p-5 rounded-2xl text-accent">
                 <UserPlus className="h-10 w-10" />
               </div>
-              <CardTitle className="text-2xl font-bold pt-4">Register New Branch</CardTitle>
-              <CardDescription className="px-6">Registration is compulsory for all regional nodes to access the network.</CardDescription>
+              <CardTitle className="text-2xl font-bold pt-4">Branch Onboarding</CardTitle>
+              <CardDescription className="px-6">Registration is compulsory for all regional retailer nodes.</CardDescription>
             </CardHeader>
             <CardContent className="pb-10 px-10">
               <Link href="/register">
@@ -77,14 +66,14 @@ export default function Home() {
             </CardContent>
           </Card>
 
-          {/* Secure Login Card */}
+          {/* Login Card */}
           <Card className="border-none shadow-sm hover:shadow-md transition-all bg-white rounded-[2.5rem] overflow-hidden border-t-4 border-t-primary">
             <CardHeader className="pt-10 text-center">
               <div className="mx-auto bg-primary/10 p-5 rounded-2xl text-primary">
-                <Lock className="h-10 w-10" />
+                <LayoutDashboard className="h-10 w-10" />
               </div>
-              <CardTitle className="text-2xl font-bold pt-4">Secure Identity Portal</CardTitle>
-              <CardDescription className="px-6">Authorized administrators and registered branch managers only.</CardDescription>
+              <CardTitle className="text-2xl font-bold pt-4">Network Entry</CardTitle>
+              <CardDescription className="px-6">Authorized admins and registered branch managers only.</CardDescription>
             </CardHeader>
             <CardContent className="pb-10 px-10">
               <Link href="/login">
@@ -96,9 +85,13 @@ export default function Home() {
           </Card>
         </div>
 
-        <div className="flex flex-col items-center space-y-4 pt-8">
-          <p className="text-center text-[10px] text-slate-400 font-black uppercase tracking-[0.4em]">
-            North East Logistics Infrastructure • v2.5 PRD
+        <div className="flex flex-col items-center space-y-6 pt-8">
+          <div className="flex items-center gap-8 text-[10px] text-slate-400 font-black uppercase tracking-[0.3em]">
+             <span className="flex items-center gap-2"><ShieldCheck className="h-3 w-3 text-emerald-500" /> SECURE GRID</span>
+             <span className="flex items-center gap-2"><MapPin className="h-3 w-3 text-accent" /> NE REGION</span>
+          </div>
+          <p className="text-center text-[9px] text-slate-400 font-medium">
+            Proprietary Logistics Architecture • v2.6 PRD
           </p>
         </div>
       </div>
