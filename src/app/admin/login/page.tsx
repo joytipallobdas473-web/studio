@@ -8,10 +8,11 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
-import { Mail, Lock, Loader2, ArrowLeft, ShieldAlert, Zap, Globe, Info } from "lucide-react";
+import { Mail, Lock, Loader2, ArrowLeft, ShieldAlert, Zap, Globe, Info, AlertTriangle } from "lucide-react";
 import { useAuth, useUser } from "@/firebase";
 import { signInWithEmailAndPassword } from "firebase/auth";
 import { toast } from "@/hooks/use-toast";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 
 export default function AdminLoginPage() {
   const router = useRouter();
@@ -20,6 +21,7 @@ export default function AdminLoginPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     if (!isUserLoading && user) {
@@ -32,15 +34,17 @@ export default function AdminLoginPage() {
 
   const handleAdminSignIn = async (e: React.FormEvent) => {
     e.preventDefault();
+    setError(null);
     if (!auth) return;
     
-    // Strict Admin Keyword Protocol
+    // Strict Admin Keyword Protocol check
     if (!email.toLowerCase().includes("admin")) {
       toast({
         title: "Access Denied",
         description: "Standard branch accounts cannot access the Command Portal. Use an 'admin' signature.",
         variant: "destructive",
       });
+      setError("Email must contain the keyword 'admin' for console access.");
       return;
     }
 
@@ -53,9 +57,13 @@ export default function AdminLoginPage() {
       });
     } catch (error: any) {
       setIsLoading(false);
+      const isAuthError = error.code === 'auth/invalid-credential' || error.code === 'auth/user-not-found';
+      
+      setError(isAuthError ? "Identity not found. Have you registered this admin node yet?" : "Security Authentication Failure.");
+      
       toast({
         title: "Security Authentication Failure",
-        description: "Invalid admin credentials. If you haven't registered this admin node yet, please use the registration link below.",
+        description: isAuthError ? "Account not found. Please register first." : "Invalid credentials.",
         variant: "destructive",
       });
     }
@@ -87,6 +95,16 @@ export default function AdminLoginPage() {
           </p>
         </div>
 
+        {error && (
+          <Alert variant="destructive" className="bg-rose-500/10 border-rose-500/20 text-rose-500 rounded-3xl p-6">
+            <AlertTriangle className="h-4 w-4" />
+            <AlertTitle className="font-black uppercase text-[10px] tracking-widest mb-1">Identity Sync Error</AlertTitle>
+            <AlertDescription className="text-xs font-medium opacity-90">
+              {error}
+            </AlertDescription>
+          </Alert>
+        )}
+
         <Card className="border-white/5 bg-slate-900/50 backdrop-blur-3xl rounded-[2.5rem] overflow-hidden shadow-2xl">
           <CardHeader className="p-10 pb-0">
             <CardTitle className="text-xl font-black text-primary uppercase italic tracking-tighter">Identity Protocol</CardTitle>
@@ -95,7 +113,7 @@ export default function AdminLoginPage() {
           <CardContent className="p-10">
             <form onSubmit={handleAdminSignIn} className="space-y-8">
               <div className="space-y-3">
-                <Label className="text-[10px] font-black uppercase tracking-[0.3em] text-slate-500 ml-1">Admin Signature</Label>
+                <Label className="text-[10px] font-black uppercase tracking-[0.3em] text-slate-500 ml-1 text-primary">Admin Email (Required 'admin' keyword)</Label>
                 <div className="relative">
                   <Mail className="absolute left-5 top-1/2 -translate-y-1/2 h-5 w-5 text-slate-600" />
                   <Input 
@@ -129,23 +147,23 @@ export default function AdminLoginPage() {
                   <Loader2 className="h-6 w-6 animate-spin" />
                 ) : (
                   <div className="flex items-center gap-3">
-                    <Zap className="h-5 w-5" /> Initialize Console Access
+                    <Zap className="h-5 w-5" /> Initialize Access
                   </div>
                 )}
               </Button>
             </form>
           </CardContent>
           <CardFooter className="p-10 pt-0 flex flex-col gap-6">
-             <div className="bg-white/[0.02] p-6 rounded-3xl border border-white/5 w-full">
-                <p className="text-[9px] font-black text-slate-600 uppercase tracking-widest flex items-center gap-2 mb-2">
-                   <Info className="h-3 w-3 text-primary" /> SYSTEM ADVISORY
+             <div className="bg-primary/5 p-6 rounded-3xl border border-primary/10 w-full">
+                <p className="text-[9px] font-black text-primary uppercase tracking-widest flex items-center gap-2 mb-2">
+                   <Info className="h-3 w-3 text-primary" /> NEW ADMIN NODE?
                 </p>
                 <p className="text-[11px] text-slate-400 font-medium leading-relaxed">
-                  First-time access requires registration. Use the link below to initialize a new administrator identity.
+                  If you haven't registered your node, click the button below and use an email containing <span className="text-primary font-black">"admin"</span> to create your credentials.
                 </p>
              </div>
              <Link href="/register" className="w-full">
-               <Button variant="ghost" className="w-full text-slate-500 hover:text-white font-black uppercase tracking-[0.2em] text-[10px]">
+               <Button variant="outline" className="w-full h-16 rounded-2xl border-white/10 text-white hover:bg-white/5 font-black uppercase tracking-[0.2em] text-[10px]">
                  Create New Admin Node
                </Button>
              </Link>

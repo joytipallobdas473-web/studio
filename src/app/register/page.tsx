@@ -17,7 +17,9 @@ import {
   ArrowLeft,
   ChevronRight,
   CheckCircle2,
-  Lock
+  Lock,
+  ShieldCheck,
+  Info
 } from "lucide-react";
 import { useFirestore, useAuth, useUser, useDoc, useMemoFirebase, setDocumentNonBlocking } from "@/firebase";
 import { doc, serverTimestamp } from "firebase/firestore";
@@ -41,6 +43,8 @@ export default function RegisterPage() {
     location: ""
   });
 
+  const isAdminRegistration = formData.email.toLowerCase().includes("admin");
+
   const storeRef = useMemoFirebase(() => {
     if (!db || !user) return null;
     return doc(db, "stores", user.uid);
@@ -50,7 +54,7 @@ export default function RegisterPage() {
 
   useEffect(() => {
     if (!isUserLoading && !storeLoading && user && store) {
-      router.push("/dashboard");
+      router.push(user.email?.toLowerCase().includes("admin") ? "/admin" : "/dashboard");
     }
   }, [user, isUserLoading, store, storeLoading, router]);
 
@@ -75,7 +79,7 @@ export default function RegisterPage() {
         managerName: formData.managerName.trim(),
         email: formData.email.trim(),
         location: formData.location.trim(),
-        status: "pending",
+        status: isAdminRegistration ? "active" : "pending",
         createdAt: serverTimestamp()
       };
 
@@ -84,16 +88,19 @@ export default function RegisterPage() {
       
       setIsSuccess(true);
       toast({
-        title: "Registration Logged",
-        description: "Your regional node application is pending verification.",
+        title: isAdminRegistration ? "Admin Identity Registered" : "Registration Logged",
+        description: isAdminRegistration ? "Redirecting to Command Console..." : "Your branch application is pending verification.",
       });
-      setTimeout(() => router.push("/dashboard"), 2000);
+      
+      setTimeout(() => {
+        router.push(isAdminRegistration ? "/admin" : "/dashboard");
+      }, 2000);
       
     } catch (error: any) {
       setIsLoading(false);
       toast({ 
         title: "Registration Error", 
-        description: error.message || "Protocol rejected. Please try again.", 
+        description: error.message || "Protocol rejected. Identity may already exist.", 
         variant: "destructive" 
       });
     }
@@ -112,11 +119,15 @@ export default function RegisterPage() {
       <div className="min-h-screen flex flex-col items-center justify-center p-6 bg-[#ECF0F5]">
         <div className="text-center space-y-6 animate-in zoom-in duration-500">
            <div className="bg-primary p-6 rounded-full shadow-2xl inline-block">
-              <CheckCircle2 className="h-16 w-16 text-white" />
+              {isAdminRegistration ? <ShieldCheck className="h-16 w-16 text-white" /> : <CheckCircle2 className="h-16 w-16 text-white" />}
            </div>
            <div className="space-y-2">
-             <h2 className="text-3xl font-bold text-slate-900 tracking-tight">Application Logged</h2>
-             <p className="text-slate-500 font-medium">Regional administrators will verify your branch details shortly.</p>
+             <h2 className="text-3xl font-bold text-slate-900 tracking-tight">
+               {isAdminRegistration ? "Admin Node Active" : "Application Logged"}
+             </h2>
+             <p className="text-slate-500 font-medium">
+               {isAdminRegistration ? "Synchronizing controller telemetry..." : "Regional administrators will verify your branch details shortly."}
+             </p>
            </div>
            <div className="flex flex-col items-center gap-2">
              <Loader2 className="h-6 w-6 animate-spin text-primary" />
@@ -136,19 +147,33 @@ export default function RegisterPage() {
         </Link>
 
         <div className="text-center space-y-2">
-          <div className="bg-primary p-3 rounded-2xl shadow-lg inline-block mb-4">
-            <Boxes className="h-6 w-6 text-white" />
+          <div className="bg-primary p-4 rounded-3xl shadow-lg inline-block mb-4">
+            <Boxes className="h-8 w-8 text-white" />
           </div>
-          <h1 className="text-3xl font-bold text-slate-900 tracking-tight">Branch Onboarding</h1>
-          <p className="text-slate-500 font-medium font-body italic">Register your node for North East Regional access.</p>
+          <h1 className="text-3xl font-black text-slate-900 tracking-tighter uppercase italic">Regional Onboarding</h1>
+          <p className="text-slate-500 font-bold flex items-center justify-center gap-2 text-[10px] uppercase tracking-[0.3em]">
+             <MapPin className="h-3 w-3 text-accent" /> North East Network Registry
+          </p>
         </div>
 
-        <Card className="border-none shadow-sm rounded-3xl bg-white overflow-hidden">
-          <CardHeader className="p-8 pb-0 bg-slate-50/50">
-            <CardTitle className="text-lg font-bold text-primary uppercase italic tracking-tighter">New Branch Registry</CardTitle>
-            <CardDescription>All fields are compulsory for regional verification.</CardDescription>
+        <Card className="border-none shadow-sm rounded-[2.5rem] bg-white overflow-hidden">
+          <CardHeader className="p-10 pb-0 bg-slate-50/50">
+            <CardTitle className="text-xl font-black text-primary uppercase italic tracking-tighter">
+              {isAdminRegistration ? "New Admin Registration" : "New Branch Registry"}
+            </CardTitle>
+            <CardDescription className="font-medium">Please provide your official work credentials.</CardDescription>
           </CardHeader>
-          <CardContent className="p-8">
+          <CardContent className="p-10">
+            {isAdminRegistration && (
+              <div className="mb-8 bg-primary/5 border border-primary/20 p-5 rounded-3xl flex items-start gap-4">
+                <ShieldCheck className="h-6 w-6 text-primary shrink-0 mt-1" />
+                <div className="space-y-1">
+                  <p className="text-xs font-black text-primary uppercase tracking-widest">Admin Mode Detected</p>
+                  <p className="text-[11px] text-slate-500 leading-relaxed">Using the "admin" keyword in your email will grant you regional controller access upon completion.</p>
+                </div>
+              </div>
+            )}
+            
             <form onSubmit={handleRegister} className="space-y-6">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div className="space-y-2">
@@ -170,7 +195,7 @@ export default function RegisterPage() {
                     <Mail className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
                     <Input 
                       type="email" 
-                      placeholder="email@work.com" 
+                      placeholder="admin@retail.com" 
                       className="pl-12 h-14 bg-slate-50 border-slate-100 rounded-2xl focus:ring-primary font-bold text-slate-900" 
                       required 
                       value={formData.email}
@@ -181,7 +206,7 @@ export default function RegisterPage() {
               </div>
               
               <div className="space-y-2">
-                <Label className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 ml-1">Secure Password</Label>
+                <Label className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 ml-1">Secure Passkey</Label>
                 <div className="relative">
                   <Lock className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
                   <Input 
@@ -196,11 +221,11 @@ export default function RegisterPage() {
               </div>
 
               <div className="space-y-2">
-                <Label className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 ml-1">Branch Designation</Label>
+                <Label className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 ml-1">Branch/Sector Name</Label>
                 <div className="relative">
                   <Building className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
                   <Input 
-                    placeholder="e.g., Guwahati North Station" 
+                    placeholder="e.g., Regional HQ / Guwahati Station" 
                     className="pl-12 h-14 bg-slate-50 border-slate-100 rounded-2xl focus:ring-primary font-bold text-slate-900" 
                     required 
                     value={formData.storeName}
@@ -210,11 +235,11 @@ export default function RegisterPage() {
               </div>
 
               <div className="space-y-2">
-                <Label className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 ml-1">Regional Location</Label>
+                <Label className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 ml-1">Node Location</Label>
                 <div className="relative">
                   <MapPin className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
                   <Input 
-                    placeholder="City, State (NE Region)" 
+                    placeholder="City, State (North East Region)" 
                     className="pl-12 h-14 bg-slate-50 border-slate-100 rounded-2xl focus:ring-primary font-bold text-slate-900" 
                     required 
                     value={formData.location}
@@ -223,18 +248,23 @@ export default function RegisterPage() {
                 </div>
               </div>
 
-              <Button type="submit" className="w-full h-14 bg-primary text-white hover:bg-primary/90 font-black rounded-2xl shadow-md group uppercase tracking-widest text-xs" disabled={isLoading}>
+              <Button type="submit" className="w-full h-16 bg-primary text-white hover:bg-primary/90 font-black rounded-2xl shadow-xl group uppercase tracking-widest text-xs" disabled={isLoading}>
                 {isLoading ? (
-                  <Loader2 className="h-5 w-5 animate-spin" />
+                  <Loader2 className="h-6 w-6 animate-spin" />
                 ) : (
                   <>Apply for Access <ChevronRight className="ml-2 h-4 w-4 group-hover:translate-x-1 transition-transform" /></>
                 )}
               </Button>
             </form>
           </CardContent>
-          <div className="p-8 pt-0 border-t border-slate-50 bg-slate-50/30 text-center">
+          <div className="p-10 pt-0 border-t border-slate-50 bg-slate-50/30 text-center space-y-4">
+            {!isAdminRegistration && (
+              <div className="flex items-center justify-center gap-2 text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2">
+                <Info className="h-3 w-3" /> Tip: Use "admin" in email for controller access
+              </div>
+            )}
             <p className="text-xs text-slate-500 font-medium">
-              Already have a registered branch? <Link href="/login" className="text-primary font-black hover:underline">Identity Login</Link>
+              Already have a registered node? <Link href="/login" className="text-primary font-black hover:underline">Identity Login</Link>
             </p>
           </div>
         </Card>
