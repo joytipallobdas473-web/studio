@@ -1,25 +1,36 @@
-
 "use client";
 
 import { useState } from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Download, Search, FileText, Filter } from "lucide-react";
+import { Download, Search, FileText, Filter, CheckCircle2, Clock, Truck, PackageCheck, XCircle } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
+import { toast } from "@/hooks/use-toast";
 
 export default function AdminOrdersPage() {
   const [storeFilter, setStoreFilter] = useState("all");
   const [searchQuery, setSearchQuery] = useState("");
 
-  const [orders] = useState([
+  const [orders, setOrders] = useState([
     { id: "ORD-9901", store: "Downtown Brooklyn", date: "2024-05-15", items: "Logitech MX Master 3 (x5)", total: 495.00, status: "pending" },
     { id: "ORD-9902", store: "Jersey City Hub", date: "2024-05-14", items: "Dell 27 Monitor (x2)", total: 579.00, status: "processing" },
     { id: "ORD-9903", store: "Downtown Brooklyn", date: "2024-05-14", items: "USB-C Hubs (x10)", total: 350.00, status: "shipped" },
     { id: "ORD-9904", store: "Main St Boutique", date: "2024-05-13", items: "Office Chairs (x4)", total: 1200.00, status: "delivered" },
   ]);
+
+  const handleStatusUpdate = (orderId: string, newStatus: string) => {
+    setOrders(prev => prev.map(order => 
+      order.id === orderId ? { ...order, status: newStatus } : order
+    ));
+    
+    toast({
+      title: "Status Updated",
+      description: `Order ${orderId} is now ${newStatus}.`,
+    });
+  };
 
   const filteredOrders = orders.filter(order => {
     const matchesStore = storeFilter === "all" || order.store === storeFilter;
@@ -58,13 +69,25 @@ export default function AdminOrdersPage() {
     document.body.removeChild(link);
   };
 
+  const getStatusIcon = (status: string) => {
+    switch (status.toLowerCase()) {
+      case "delivered": return <PackageCheck className="h-3 w-3 mr-1" />;
+      case "processing": return <Clock className="h-3 w-3 mr-1" />;
+      case "pending": return <Clock className="h-3 w-3 mr-1" />;
+      case "shipped": return <Truck className="h-3 w-3 mr-1" />;
+      case "cancelled": return <XCircle className="h-3 w-3 mr-1" />;
+      default: return null;
+    }
+  };
+
   const getStatusColor = (status: string) => {
     switch (status.toLowerCase()) {
-      case "delivered": return "bg-green-100 text-green-700";
-      case "processing": return "bg-blue-100 text-blue-700";
-      case "pending": return "bg-yellow-100 text-yellow-700";
-      case "shipped": return "bg-purple-100 text-purple-700";
-      default: return "bg-gray-100 text-gray-700";
+      case "delivered": return "text-green-700 bg-green-50 border-green-200";
+      case "processing": return "text-blue-700 bg-blue-50 border-blue-200";
+      case "pending": return "text-yellow-700 bg-yellow-50 border-yellow-200";
+      case "shipped": return "text-purple-700 bg-purple-50 border-purple-200";
+      case "cancelled": return "text-red-700 bg-red-50 border-red-200";
+      default: return "text-gray-700 bg-gray-50 border-gray-200";
     }
   };
 
@@ -73,10 +96,10 @@ export default function AdminOrdersPage() {
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
         <div>
           <h1 className="text-3xl font-bold text-primary">Consolidated Orders</h1>
-          <p className="text-muted-foreground text-sm">Track and manage stock requests across all stores.</p>
+          <p className="text-muted-foreground text-sm">Track and update delivery status for all store requests.</p>
         </div>
         <Button onClick={() => downloadPO()} className="bg-accent text-accent-foreground font-bold hover:bg-accent/90">
-          <Download className="mr-2 h-4 w-4" /> Download Store-wise PO
+          <Download className="mr-2 h-4 w-4" /> Download PO
         </Button>
       </div>
 
@@ -90,23 +113,21 @@ export default function AdminOrdersPage() {
             onChange={(e) => setSearchQuery(e.target.value)}
           />
         </div>
-        <div className="flex gap-2">
-          <div className="flex-1">
-            <Select value={storeFilter} onValueChange={setStoreFilter}>
-              <SelectTrigger>
-                <div className="flex items-center gap-2">
-                  <Filter className="h-4 w-4 text-muted-foreground" />
-                  <SelectValue placeholder="Filter by Store" />
-                </div>
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All Stores</SelectItem>
-                <SelectItem value="Downtown Brooklyn">Downtown Brooklyn</SelectItem>
-                <SelectItem value="Jersey City Hub">Jersey City Hub</SelectItem>
-                <SelectItem value="Main St Boutique">Main St Boutique</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
+        <div>
+          <Select value={storeFilter} onValueChange={setStoreFilter}>
+            <SelectTrigger>
+              <div className="flex items-center gap-2">
+                <Filter className="h-4 w-4 text-muted-foreground" />
+                <SelectValue placeholder="Filter by Store" />
+              </div>
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All Stores</SelectItem>
+              <SelectItem value="Downtown Brooklyn">Downtown Brooklyn</SelectItem>
+              <SelectItem value="Jersey City Hub">Jersey City Hub</SelectItem>
+              <SelectItem value="Main St Boutique">Main St Boutique</SelectItem>
+            </SelectContent>
+          </Select>
         </div>
       </div>
 
@@ -117,10 +138,9 @@ export default function AdminOrdersPage() {
               <TableRow>
                 <TableHead>Order ID</TableHead>
                 <TableHead>Store</TableHead>
-                <TableHead>Date</TableHead>
                 <TableHead>Items Requested</TableHead>
                 <TableHead>Total ($)</TableHead>
-                <TableHead>Status</TableHead>
+                <TableHead>Status Control</TableHead>
                 <TableHead className="text-right">Action</TableHead>
               </TableRow>
             </TableHeader>
@@ -129,14 +149,33 @@ export default function AdminOrdersPage() {
                 filteredOrders.map((order) => (
                   <TableRow key={order.id}>
                     <TableCell className="font-code font-bold text-primary">{order.id}</TableCell>
-                    <TableCell className="font-medium">{order.store}</TableCell>
-                    <TableCell className="text-xs text-muted-foreground">{order.date}</TableCell>
+                    <TableCell>
+                      <div className="flex flex-col">
+                        <span className="font-medium">{order.store}</span>
+                        <span className="text-[10px] text-muted-foreground">{order.date}</span>
+                      </div>
+                    </TableCell>
                     <TableCell className="max-w-[200px] truncate">{order.items}</TableCell>
                     <TableCell className="font-bold">${order.total.toFixed(2)}</TableCell>
                     <TableCell>
-                      <Badge className={getStatusColor(order.status)} variant="outline">
-                        {order.status}
-                      </Badge>
+                      <Select 
+                        defaultValue={order.status} 
+                        onValueChange={(val) => handleStatusUpdate(order.id, val)}
+                      >
+                        <SelectTrigger className={`h-8 w-[140px] text-xs font-semibold ${getStatusColor(order.status)}`}>
+                          <div className="flex items-center">
+                            {getStatusIcon(order.status)}
+                            <SelectValue />
+                          </div>
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="pending">Pending</SelectItem>
+                          <SelectItem value="processing">Processing</SelectItem>
+                          <SelectItem value="shipped">Shipped</SelectItem>
+                          <SelectItem value="delivered">Delivered</SelectItem>
+                          <SelectItem value="cancelled">Cancelled</SelectItem>
+                        </SelectContent>
+                      </Select>
                     </TableCell>
                     <TableCell className="text-right">
                       <Button 
@@ -152,7 +191,7 @@ export default function AdminOrdersPage() {
                 ))
               ) : (
                 <TableRow>
-                  <TableCell colSpan={7} className="text-center py-10 text-muted-foreground">
+                  <TableCell colSpan={6} className="text-center py-10 text-muted-foreground">
                     No orders found for the selected criteria.
                   </TableCell>
                 </TableRow>
