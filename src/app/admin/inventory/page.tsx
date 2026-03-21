@@ -7,12 +7,13 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Plus, Search, Edit2, Trash2, Loader2, Package, AlertCircle, CheckCircle2 } from "lucide-react";
+import { Plus, Search, Edit2, Trash2, Loader2, Package, AlertCircle, CheckCircle2, Filter, Boxes, MoreVertical } from "lucide-react";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "@/hooks/use-toast";
 import { addDocumentNonBlocking, updateDocumentNonBlocking, deleteDocumentNonBlocking } from "@/firebase";
+import { Badge } from "@/components/ui/badge";
 
 const CATEGORIES = ["Electronics", "Apparel", "Grocery", "Office Supplies"];
 
@@ -29,6 +30,7 @@ export default function InventoryControl() {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingProduct, setEditingProduct] = useState<any>(null);
   const [searchQuery, setSearchQuery] = useState("");
+  const [filterCategory, setFilterCategory] = useState("all");
   
   const initialFormState = {
     name: "",
@@ -68,7 +70,7 @@ export default function InventoryControl() {
     if (!formData.name.trim() || isNaN(priceNum) || isNaN(stockNum)) {
       toast({
         title: "Validation Error",
-        description: "Name, Price, and Stock are required and must be valid numbers.",
+        description: "Name, Price, and Stock are required.",
         variant: "destructive"
       });
       return;
@@ -87,108 +89,140 @@ export default function InventoryControl() {
     if (editingProduct) {
       const docRef = doc(db, "products", editingProduct.id);
       updateDocumentNonBlocking(docRef, productData);
-      toast({ title: "Updated Successfully", description: `${productData.name} updated.` });
+      toast({ title: "Updated", description: "Product SKU synchronized." });
     } else {
       const colRef = collection(db, "products");
       addDocumentNonBlocking(colRef, productData);
-      toast({ title: "Saved Successfully", description: `${productData.name} added to catalog.` });
+      toast({ title: "Registered", description: "Item added to core catalog." });
     }
     
     setIsDialogOpen(false);
-    setFormData(initialFormState);
-  };
-
-  const handleDelete = (id: string, name: string) => {
-    if (!db) return;
-    const docRef = doc(db, "products", id);
-    deleteDocumentNonBlocking(docRef);
-    toast({ title: "Item Deleted", description: `${name} removed.`, variant: "destructive" });
   };
 
   const filteredProducts = useMemo(() => {
     if (!products) return [];
-    const sorted = [...products].sort((a, b) => (a.name || "").localeCompare(b.name || ""));
-    const lowerQuery = searchQuery.toLowerCase();
-    if (!lowerQuery) return sorted;
-    return sorted.filter(p => 
-      (p.name || "").toLowerCase().includes(lowerQuery) ||
-      (p.sku || "").toLowerCase().includes(lowerQuery) ||
-      (p.category || "").toLowerCase().includes(lowerQuery)
-    );
-  }, [products, searchQuery]);
+    let list = [...products].sort((a, b) => (a.name || "").localeCompare(b.name || ""));
+    
+    if (filterCategory !== "all") {
+      list = list.filter(p => p.category === filterCategory);
+    }
+
+    if (searchQuery) {
+      const lowerQuery = searchQuery.toLowerCase();
+      list = list.filter(p => 
+        (p.name || "").toLowerCase().includes(lowerQuery) ||
+        (p.sku || "").toLowerCase().includes(lowerQuery)
+      );
+    }
+    return list;
+  }, [products, searchQuery, filterCategory]);
 
   if (loading) {
     return (
-      <div className="flex h-[400px] items-center justify-center">
-        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      <div className="flex h-[60vh] items-center justify-center">
+        <Loader2 className="h-10 w-10 animate-spin text-primary" />
       </div>
     );
   }
 
   return (
-    <div className="space-y-6 animate-in fade-in duration-500">
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-        <div>
-          <h1 className="text-3xl font-bold text-primary">Global Stock Management</h1>
-          <p className="text-muted-foreground text-sm">Add and update products across the retail network.</p>
+    <div className="space-y-8">
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-6">
+        <div className="space-y-1">
+          <h1 className="text-4xl font-black tracking-tighter text-white">INVENTORY ENGINE</h1>
+          <p className="text-slate-500 font-medium text-sm">Central product registry and stock synchronization.</p>
         </div>
         <Button 
           onClick={() => handleOpenDialog()}
-          className="bg-accent text-accent-foreground font-bold hover:bg-accent/90 w-full md:w-auto shadow-md"
+          className="bg-primary h-12 px-6 rounded-xl font-bold shadow-xl hover:shadow-primary/20 transition-all"
         >
-          <Plus className="mr-2 h-4 w-4" /> Add New Product
+          <Plus className="mr-2 h-5 w-5" /> Provision New SKU
         </Button>
       </div>
 
-      <div className="relative">
-        <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-        <Input 
-          placeholder="Search catalog..." 
-          className="pl-9 h-11 bg-white" 
-          value={searchQuery}
-          onChange={(e) => setSearchQuery(e.target.value)}
-        />
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+        <div className="md:col-span-3 relative">
+          <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-500" />
+          <Input 
+            placeholder="Query SKU or Name..." 
+            className="pl-12 h-14 bg-slate-900/50 border-slate-800 text-white placeholder:text-slate-600 rounded-2xl" 
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+          />
+        </div>
+        <Select value={filterCategory} onValueChange={setFilterCategory}>
+          <SelectTrigger className="h-14 bg-slate-900/50 border-slate-800 text-white rounded-2xl">
+            <div className="flex items-center gap-2">
+              <Filter className="h-4 w-4 text-slate-500" />
+              <SelectValue placeholder="All Clusters" />
+            </div>
+          </SelectTrigger>
+          <SelectContent className="bg-slate-900 border-slate-800 text-white">
+            <SelectItem value="all">All Clusters</SelectItem>
+            {CATEGORIES.map(c => <SelectItem key={c} value={c}>{c}</SelectItem>)}
+          </SelectContent>
+        </Select>
       </div>
 
-      <Card className="border-none shadow-md overflow-hidden">
+      <Card className="border-slate-800 bg-slate-900/30 backdrop-blur-xl rounded-2xl overflow-hidden">
         <CardContent className="p-0">
           <Table>
-            <TableHeader>
-              <TableRow className="bg-muted/50">
-                <TableHead>Product</TableHead>
-                <TableHead>SKU</TableHead>
-                <TableHead>Category</TableHead>
-                <TableHead>Price ($)</TableHead>
-                <TableHead>Stock</TableHead>
-                <TableHead className="text-right">Actions</TableHead>
+            <TableHeader className="bg-white/[0.02]">
+              <TableRow className="hover:bg-transparent border-slate-800">
+                <TableHead className="text-slate-500 uppercase text-[10px] font-bold tracking-widest pl-8 h-14">Identity</TableHead>
+                <TableHead className="text-slate-500 uppercase text-[10px] font-bold tracking-widest h-14">Cluster</TableHead>
+                <TableHead className="text-slate-500 uppercase text-[10px] font-bold tracking-widest h-14">Unit Value</TableHead>
+                <TableHead className="text-slate-500 uppercase text-[10px] font-bold tracking-widest h-14">Payload Status</TableHead>
+                <TableHead className="text-slate-500 uppercase text-[10px] font-bold tracking-widest text-right pr-8 h-14">Actions</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {filteredProducts.length ? (
                 filteredProducts.map((product) => (
-                  <TableRow key={product.id} className="hover:bg-muted/20">
-                    <TableCell className="font-bold text-primary">{product.name}</TableCell>
-                    <TableCell className="text-xs font-code opacity-70">{product.sku}</TableCell>
-                    <TableCell>
-                      <span className="text-[10px] font-bold bg-secondary px-2 py-1 rounded-full uppercase tracking-wider">
-                        {product.category}
-                      </span>
+                  <TableRow key={product.id} className="border-slate-800/50 hover:bg-white/[0.02] transition-colors group">
+                    <TableCell className="pl-8 py-5">
+                      <div className="flex flex-col">
+                        <span className="font-bold text-white text-sm">{product.name}</span>
+                        <span className="text-[10px] font-mono text-slate-500 uppercase tracking-tighter">{product.sku}</span>
+                      </div>
                     </TableCell>
-                    <TableCell className="font-bold">${(product.price || 0).toFixed(2)}</TableCell>
                     <TableCell>
-                      <div className="flex items-center gap-2">
-                        {(product.stockQuantity || 0) < 10 && <AlertCircle className="h-3 w-3 text-red-500" />}
-                        <span className={(product.stockQuantity || 0) < 10 ? "text-red-500 font-bold" : "font-medium"}>
+                      <Badge variant="outline" className="bg-slate-950 border-slate-800 text-slate-400 text-[9px] uppercase font-bold tracking-wider rounded-lg px-2">
+                        {product.category}
+                      </Badge>
+                    </TableCell>
+                    <TableCell className="font-mono text-sm text-white font-bold">
+                      ${(product.price || 0).toFixed(2)}
+                    </TableCell>
+                    <TableCell>
+                      <div className="flex items-center gap-3">
+                        <div className={cn(
+                          "h-2 w-16 rounded-full overflow-hidden bg-slate-800",
+                          (product.stockQuantity || 0) < 10 ? "border-rose-500/20" : ""
+                        )}>
+                           <div className={cn(
+                             "h-full transition-all duration-500",
+                             (product.stockQuantity || 0) < 10 ? "bg-rose-500 w-[20%]" : "bg-emerald-500 w-[80%]"
+                           )} />
+                        </div>
+                        <span className={cn(
+                          "text-xs font-bold font-mono",
+                          (product.stockQuantity || 0) < 10 ? "text-rose-500" : "text-slate-400"
+                        )}>
                           {product.stockQuantity || 0}
                         </span>
                       </div>
                     </TableCell>
-                    <TableCell className="text-right">
-                      <div className="flex justify-end gap-1">
-                        <Button size="icon" variant="ghost" className="h-8 w-8" onClick={() => handleOpenDialog(product)}>
+                    <TableCell className="text-right pr-8">
+                      <div className="flex justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                        <Button size="icon" variant="ghost" className="h-9 w-9 rounded-xl hover:bg-slate-800 text-slate-400 hover:text-white" onClick={() => handleOpenDialog(product)}>
                           <Edit2 className="h-4 w-4" />
                         </Button>
-                        <Button size="icon" variant="ghost" className="text-red-500 h-8 w-8" onClick={() => handleDelete(product.id, product.name)}>
+                        <Button size="icon" variant="ghost" className="h-9 w-9 rounded-xl hover:bg-rose-500/10 text-rose-500" onClick={() => {
+                          const docRef = doc(db!, "products", product.id);
+                          deleteDocumentNonBlocking(docRef);
+                          toast({ title: "Deprovisioned", variant: "destructive" });
+                        }}>
                           <Trash2 className="h-4 w-4" />
                         </Button>
                       </div>
@@ -197,9 +231,9 @@ export default function InventoryControl() {
                 ))
               ) : (
                 <TableRow>
-                  <TableCell colSpan={6} className="text-center py-20 text-muted-foreground">
-                    <Package className="h-10 w-10 mx-auto mb-4 opacity-20" />
-                    No items found.
+                  <TableCell colSpan={5} className="text-center py-32 text-slate-600">
+                    <Boxes className="h-12 w-12 mx-auto mb-4 opacity-10" />
+                    <p className="font-medium italic">No data clusters found.</p>
                   </TableCell>
                 </TableRow>
               )}
@@ -209,35 +243,37 @@ export default function InventoryControl() {
       </Card>
 
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-        <DialogContent className="sm:max-w-[500px]">
+        <DialogContent className="sm:max-w-[500px] bg-slate-950 border-slate-800 text-white rounded-3xl p-8">
           <DialogHeader>
-            <DialogTitle className="text-xl font-bold text-primary">
-              {editingProduct ? "Update Product" : "Register New Item"}
+            <DialogTitle className="text-2xl font-black tracking-tight uppercase">
+              {editingProduct ? "Modify Cluster" : "Provision Item"}
             </DialogTitle>
           </DialogHeader>
-          <div className="grid gap-6 py-4">
+          <div className="grid gap-6 py-8">
             <div className="space-y-2">
-              <Label htmlFor="name" className="text-xs font-bold uppercase">Product Name</Label>
+              <Label className="text-[10px] font-bold uppercase tracking-[0.2em] text-slate-500">Node Name</Label>
               <Input 
-                id="name" 
                 value={formData.name}
                 onChange={(e) => setFormData({...formData, name: e.target.value})}
+                className="bg-slate-900 border-slate-800 h-12 rounded-xl focus:ring-primary"
               />
             </div>
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label htmlFor="sku" className="text-xs font-bold uppercase">SKU</Label>
+                <Label className="text-[10px] font-bold uppercase tracking-[0.2em] text-slate-500">Registry SKU</Label>
                 <Input 
-                  id="sku" 
                   value={formData.sku}
                   onChange={(e) => setFormData({...formData, sku: e.target.value})}
+                  className="bg-slate-900 border-slate-800 h-12 rounded-xl font-mono uppercase"
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="category" className="text-xs font-bold uppercase">Category</Label>
+                <Label className="text-[10px] font-bold uppercase tracking-[0.2em] text-slate-500">Data Cluster</Label>
                 <Select value={formData.category} onValueChange={(val) => setFormData({...formData, category: val})}>
-                  <SelectTrigger><SelectValue /></SelectTrigger>
-                  <SelectContent>
+                  <SelectTrigger className="bg-slate-900 border-slate-800 h-12 rounded-xl">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent className="bg-slate-900 border-slate-800 text-white">
                     {CATEGORIES.map((cat) => (
                       <SelectItem key={cat} value={cat}>{cat}</SelectItem>
                     ))}
@@ -247,30 +283,30 @@ export default function InventoryControl() {
             </div>
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label htmlFor="price" className="text-xs font-bold uppercase">Unit Price ($)</Label>
+                <Label className="text-[10px] font-bold uppercase tracking-[0.2em] text-slate-500">Base Cost ($)</Label>
                 <Input 
-                  id="price" 
                   type="number" 
                   value={formData.price}
                   onChange={(e) => setFormData({...formData, price: e.target.value})}
+                  className="bg-slate-900 border-slate-800 h-12 rounded-xl font-mono"
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="stock" className="text-xs font-bold uppercase">Stock Quantity</Label>
+                <Label className="text-[10px] font-bold uppercase tracking-[0.2em] text-slate-500">Initial Stock</Label>
                 <Input 
-                  id="stock" 
                   type="number" 
                   value={formData.stockQuantity}
                   onChange={(e) => setFormData({...formData, stockQuantity: e.target.value})}
+                  className="bg-slate-900 border-slate-800 h-12 rounded-xl font-mono"
                 />
               </div>
             </div>
           </div>
-          <DialogFooter className="border-t pt-4">
-            <Button variant="ghost" onClick={() => setIsDialogOpen(false)}>Cancel</Button>
-            <Button onClick={handleSave} className="bg-primary font-bold shadow-lg">
-              <CheckCircle2 className="mr-2 h-4 w-4" />
-              {editingProduct ? "Apply Changes" : "Confirm Entry"}
+          <DialogFooter className="gap-2">
+            <Button variant="ghost" onClick={() => setIsDialogOpen(false)} className="text-slate-500 hover:text-white hover:bg-slate-900">Cancel</Button>
+            <Button onClick={handleSave} className="bg-primary font-bold rounded-xl px-8 h-12 shadow-lg hover:shadow-primary/20">
+              <CheckCircle2 className="mr-2 h-5 w-5" />
+              {editingProduct ? "Apply Delta" : "Deploy SKU"}
             </Button>
           </DialogFooter>
         </DialogContent>
