@@ -1,4 +1,3 @@
-
 "use client";
 
 import { SidebarProvider, Sidebar, SidebarContent, SidebarHeader, SidebarMenu, SidebarMenuItem, SidebarMenuButton, SidebarGroup, SidebarGroupLabel, SidebarGroupContent, SidebarInset, SidebarTrigger, SidebarFooter } from "@/components/ui/sidebar";
@@ -20,10 +19,10 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   return (
     <SidebarProvider defaultOpen={true}>
       <div className="flex min-h-svh w-full bg-background">
-        <Sidebar collapsible="icon">
-          <SidebarHeader className="h-16 flex items-center justify-center border-b px-4">
-            <Link href="/admin" className="flex items-center gap-2 font-bold text-primary w-full overflow-hidden">
-              <div className="bg-primary p-1.5 rounded-lg flex-shrink-0">
+        <Sidebar collapsible="icon" className="bg-sidebar border-r">
+          <SidebarHeader className="h-16 flex items-center px-4 border-b">
+            <Link href="/admin" className="flex items-center gap-3 font-bold text-primary overflow-hidden">
+              <div className="bg-primary p-2 rounded-lg shrink-0">
                 <ShieldCheck className="h-5 w-5 text-primary-foreground" />
               </div>
               <span className="truncate group-data-[collapsible=icon]:hidden">Official Admin</span>
@@ -31,7 +30,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
           </SidebarHeader>
           <SidebarContent>
             <SidebarGroup>
-              <SidebarGroupLabel className="px-4">System Management</SidebarGroupLabel>
+              <SidebarGroupLabel className="px-4 text-[10px] uppercase font-bold tracking-widest text-muted-foreground/60">System Management</SidebarGroupLabel>
               <SidebarGroupContent>
                 <SidebarMenu>
                   {menuItems.map((item) => (
@@ -51,7 +50,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
           <SidebarFooter className="border-t p-2">
             <SidebarMenu>
               <SidebarMenuItem>
-                <SidebarMenuButton asChild>
+                <SidebarMenuButton asChild tooltip="Logout">
                   <Link href="/">
                     <LogOut className="h-4 w-4" />
                     <span>Exit Admin Portal</span>
@@ -61,7 +60,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
             </SidebarMenu>
           </SidebarFooter>
         </Sidebar>
-        <SidebarInset className="flex flex-col">
+        <SidebarInset className="flex flex-col min-w-0">
           <header className="sticky top-0 z-30 flex h-16 shrink-0 items-center gap-4 border-b bg-background/95 backdrop-blur-sm px-4 md:px-6">
             <SidebarTrigger className="-ml-1" />
             <div className="h-4 w-[1px] bg-border md:hidden" />
