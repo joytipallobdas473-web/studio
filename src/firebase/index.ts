@@ -5,8 +5,7 @@ import { initializeApp, getApps, getApp, FirebaseApp } from 'firebase/app';
 import { getAuth, Auth } from 'firebase/auth';
 import { getFirestore, Firestore } from 'firebase/firestore'
 
-// Use a global variable to persist instances across HMR in development.
-// This prevents the "INTERNAL ASSERTION FAILED" error caused by multiple initializations.
+// Global singleton to prevent "INTERNAL ASSERTION FAILED" during HMR
 const globalForFirebase = globalThis as unknown as {
   app: FirebaseApp | undefined;
   auth: Auth | undefined;

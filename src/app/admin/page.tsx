@@ -10,6 +10,7 @@ import { Button } from "@/components/ui/button";
 import { analyzeInventory, type InventoryAnalysisOutput } from "@/ai/flows/inventory-analyst";
 import { cn } from "@/lib/utils";
 
+// Hardcoded administrative overrides for your UIDs
 const ADMIN_OVERRIDES = ["AEGmDwRin2c5sDZdx1Jhk87yF9L2", "cKRTD1vPTOfID6XADH31VVpGYAU2"];
 
 export default function AdminOverview() {
