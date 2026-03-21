@@ -102,9 +102,6 @@ export const useFirebase = (): FirebaseServicesAndUser => {
     throw new Error('useFirebase must be used within a FirebaseProvider.');
   }
 
-  // Relax the check during SSR (Server-Side Rendering). 
-  // initializeFirebase() returns nulls on the server, which is expected.
-  // We only throw if services are missing once we are safely in the browser.
   const isBrowser = typeof window !== 'undefined';
   if (isBrowser && (!context.firebaseApp || !context.firestore || !context.auth)) {
     throw new Error('Firebase core services not available. Check FirebaseProvider props.');

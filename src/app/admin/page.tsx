@@ -105,7 +105,7 @@ export default function AdminOverview() {
           <h2 className="text-2xl font-bold text-primary">Admin Access Required</h2>
           <p className="text-muted-foreground max-w-md mx-auto">
             You are logged in, but you don't have permissions to view global data. 
-            Add your UID to the <code>roles_admin</code> collection in the Firebase Console.
+            Add your UID to the <code className="font-bold">roles_admin</code> collection in the Firebase Console.
           </p>
         </div>
         {user && (
