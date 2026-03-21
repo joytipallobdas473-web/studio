@@ -2,7 +2,7 @@
 
 import { useFirestore, useCollection } from "@/firebase";
 import { collection, query, orderBy, limit } from "firebase/firestore";
-import { useMemoFirebase } from "@/firebase/use-memo-firebase";
+import { useMemoFirebase } from "@/firebase/provider";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Package, ShoppingCart, History, ArrowRight, Clock, Truck, PackageCheck, XCircle, PlusCircle, Activity, Loader2 } from "lucide-react";
@@ -19,13 +19,13 @@ export default function DashboardPage() {
     return query(collection(db, "orders"), orderBy("createdAt", "desc"), limit(10));
   }, [db]);
 
-  const inventoryQuery = useMemoFirebase(() => {
+  const productsQuery = useMemoFirebase(() => {
     if (!db) return null;
-    return query(collection(db, "inventory"), orderBy("name"), limit(5));
+    return query(collection(db, "products"), orderBy("name"), limit(5));
   }, [db]);
 
-  const { data: orders, loading: ordersLoading } = useCollection(ordersQuery);
-  const { data: products, loading: inventoryLoading } = useCollection(inventoryQuery);
+  const { data: orders, isLoading: ordersLoading } = useCollection(ordersQuery);
+  const { data: products, isLoading: productsLoading } = useCollection(productsQuery);
 
   const stats = useMemo(() => [
     { 
@@ -73,7 +73,7 @@ export default function DashboardPage() {
     }
   };
 
-  if (ordersLoading || inventoryLoading) {
+  if (ordersLoading || productsLoading) {
     return (
       <div className="flex h-[400px] items-center justify-center">
         <Loader2 className="h-8 w-8 animate-spin text-primary" />
@@ -183,7 +183,7 @@ export default function DashboardPage() {
                   <Button variant="secondary" className="w-full justify-start text-xs font-semibold h-11 mb-2">
                     <div className="flex flex-col items-start min-w-0">
                       <span className="truncate w-full">{product.name}</span>
-                      <span className="text-[10px] opacity-70">{product.category} • ${product.mrp?.toFixed(2)}</span>
+                      <span className="text-[10px] opacity-70">{product.category} • ${(product.price || 0).toFixed(2)}</span>
                     </div>
                   </Button>
                 </Link>

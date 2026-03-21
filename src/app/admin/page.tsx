@@ -3,7 +3,7 @@
 import { useState, useMemo } from "react";
 import { useFirestore, useCollection } from "@/firebase";
 import { collection, query, orderBy, limit } from "firebase/firestore";
-import { useMemoFirebase } from "@/firebase/use-memo-firebase";
+import { useMemoFirebase } from "@/firebase/provider";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Store, Package, ShoppingCart, AlertCircle, ArrowUpRight, Activity, Loader2, Sparkles, BrainCircuit } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
@@ -23,22 +23,24 @@ export default function AdminOverview() {
 
   const ordersQuery = useMemoFirebase(() => {
     if (!db) return null;
+    // Query global orders if they exist or path to user-specific orders
+    // For this prototype, we'll look at a global orders collection if available
     return query(collection(db, "orders"), orderBy("createdAt", "desc"), limit(10));
   }, [db]);
 
-  const inventoryQuery = useMemoFirebase(() => {
+  const productsQuery = useMemoFirebase(() => {
     if (!db) return null;
-    return collection(db, "inventory");
+    return collection(db, "products");
   }, [db]);
 
-  const { data: stores, loading: storesLoading } = useCollection(storesQuery);
-  const { data: orders, loading: ordersLoading } = useCollection(ordersQuery);
-  const { data: products, loading: inventoryLoading } = useCollection(inventoryQuery);
+  const { data: stores, isLoading: storesLoading } = useCollection(storesQuery);
+  const { data: orders, isLoading: ordersLoading } = useCollection(ordersQuery);
+  const { data: products, isLoading: productsLoading } = useCollection(productsQuery);
 
   const stats = useMemo(() => {
     const pendingStoresCount = stores?.filter(s => s.status === 'pending')?.length || 0;
     const activeOrdersCount = orders?.filter(o => !['delivered', 'cancelled'].includes(o.status))?.length || 0;
-    const lowStockCount = products?.filter(p => p.currentStock < 10)?.length || 0;
+    const lowStockCount = products?.filter(p => (p.stockQuantity || 0) < 10)?.length || 0;
 
     return [
       { label: "Pending Registrations", value: pendingStoresCount.toString(), icon: Store, color: "text-orange-600", bg: "bg-orange-50", trend: "Approval needed" },
@@ -76,10 +78,10 @@ export default function AdminOverview() {
     try {
       const result = await analyzeInventory({
         products: products.map(p => ({
-          name: p.name,
-          currentStock: p.currentStock,
-          category: p.category,
-          mrp: p.mrp
+          name: p.name || "Unknown",
+          currentStock: p.stockQuantity || 0,
+          category: p.category || "General",
+          mrp: p.price || 0
         })),
         recentOrders: orders.map(o => ({
           items: o.items || "Unspecified items",
@@ -95,7 +97,7 @@ export default function AdminOverview() {
     }
   };
 
-  if (storesLoading || ordersLoading || inventoryLoading) {
+  if (storesLoading || ordersLoading || productsLoading) {
     return (
       <div className="flex h-[400px] items-center justify-center">
         <Loader2 className="h-8 w-8 animate-spin text-primary" />
