@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
-import { Mail, Lock, Loader2, ArrowLeft, ShieldAlert, Zap, Globe } from "lucide-react";
+import { Mail, Lock, Loader2, ArrowLeft, ShieldAlert, Zap, Globe, Info } from "lucide-react";
 import { useAuth, useUser } from "@/firebase";
 import { signInWithEmailAndPassword } from "firebase/auth";
 import { toast } from "@/hooks/use-toast";
@@ -34,10 +34,11 @@ export default function AdminLoginPage() {
     e.preventDefault();
     if (!auth) return;
     
+    // Strict Admin Keyword Protocol
     if (!email.toLowerCase().includes("admin")) {
       toast({
         title: "Access Denied",
-        description: "Standard accounts cannot access the Command Portal.",
+        description: "Standard branch accounts cannot access the Command Portal. Use an 'admin' signature.",
         variant: "destructive",
       });
       return;
@@ -54,7 +55,7 @@ export default function AdminLoginPage() {
       setIsLoading(false);
       toast({
         title: "Security Authentication Failure",
-        description: "Invalid admin credentials detected.",
+        description: "Invalid admin credentials or account not registered.",
         variant: "destructive",
       });
     }
@@ -89,7 +90,7 @@ export default function AdminLoginPage() {
         <Card className="border-white/5 bg-slate-900/50 backdrop-blur-3xl rounded-[2.5rem] overflow-hidden shadow-2xl">
           <CardHeader className="p-10 pb-0">
             <CardTitle className="text-xl font-black text-primary uppercase italic tracking-tighter">Identity Protocol</CardTitle>
-            <CardDescription className="text-slate-500 font-medium">Restricted access for North East regional administrators only.</CardDescription>
+            <CardDescription className="text-slate-500 font-medium">Restricted access for North East regional administrators.</CardDescription>
           </CardHeader>
           <CardContent className="p-10">
             <form onSubmit={handleAdminSignIn} className="space-y-8">
@@ -134,15 +135,20 @@ export default function AdminLoginPage() {
               </Button>
             </form>
           </CardContent>
-          <CardFooter className="p-10 pt-0">
+          <CardFooter className="p-10 pt-0 flex flex-col gap-6">
              <div className="bg-white/[0.02] p-6 rounded-3xl border border-white/5 w-full">
                 <p className="text-[9px] font-black text-slate-600 uppercase tracking-widest flex items-center gap-2 mb-2">
-                   SYSTEM ADVISORY
+                   <Info className="h-3 w-3 text-primary" /> SYSTEM ADVISORY
                 </p>
                 <p className="text-[11px] text-slate-400 font-medium leading-relaxed">
-                  Unauthorized attempts to access the regional command grid are logged and reported to the NE Network Authority.
+                  Administrator accounts must include the "admin" keyword. Use the registration page to create an account if you don't have one.
                 </p>
              </div>
+             <Link href="/register" className="w-full">
+               <Button variant="ghost" className="w-full text-slate-500 hover:text-white font-black uppercase tracking-[0.2em] text-[10px]">
+                 Create New Admin Node
+               </Button>
+             </Link>
           </CardFooter>
         </Card>
       </div>
