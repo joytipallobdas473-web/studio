@@ -1,9 +1,8 @@
 "use client";
 
 import { useState, useMemo } from "react";
-import { useFirestore, useCollection, useUser } from "@/firebase";
+import { useFirestore, useCollection, useUser, useMemoFirebase } from "@/firebase";
 import { collection, query, orderBy, limit } from "firebase/firestore";
-import { useMemoFirebase } from "@/firebase/provider";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Store, Package, ShoppingCart, AlertCircle, ArrowUpRight, Activity, Loader2, Sparkles, BrainCircuit, ShieldAlert, Key } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
@@ -96,7 +95,6 @@ export default function AdminOverview() {
     }
   };
 
-  // Graceful error handling for missing permissions
   if (storesError || ordersError) {
     return (
       <div className="flex flex-col items-center justify-center min-h-[60vh] text-center p-6 bg-white rounded-3xl shadow-sm border space-y-6">
@@ -164,11 +162,11 @@ export default function AdminOverview() {
           <CardHeader className="flex flex-row items-center gap-2 border-b">
             <Activity className="h-5 w-5 text-primary" />
             <CardTitle className="text-lg font-bold">Recent System Activity</CardTitle>
-          </CardHeader>
+          </header>
           <CardContent className="p-0">
             <div className="divide-y">
               {recentActivities.length > 0 ? recentActivities.map((item, i) => (
-                <div key={i} className="flex items-center justify-between p-4 hover:bg-muted/30 transition-colors">
+                <div key={i} className="flex items-center justify-between p-4 hover:bg-muted/30 transition-colors gap-4">
                   <div className="flex gap-3 items-start">
                     <div className={`mt-1 h-2 w-2 rounded-full shrink-0 ${item.type === 'store' ? 'bg-orange-400' : 'bg-blue-400'}`} />
                     <div className="min-w-0">

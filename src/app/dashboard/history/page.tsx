@@ -1,9 +1,7 @@
-
 "use client";
 
-import { useFirestore, useCollection } from "@/firebase";
+import { useFirestore, useCollection, useMemoFirebase } from "@/firebase";
 import { collection, query, orderBy } from "firebase/firestore";
-import { useMemoFirebase } from "@/firebase/use-memo-firebase";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
@@ -21,7 +19,7 @@ export default function HistoryPage() {
     return query(collection(db, "orders"), orderBy("createdAt", "desc"));
   }, [db]);
 
-  const { data: orders, loading } = useCollection(historyQuery);
+  const { data: orders, isLoading: loading } = useCollection(historyQuery);
 
   const filteredOrders = orders?.filter(o => 
     o.id.toLowerCase().includes(searchTerm.toLowerCase()) || 

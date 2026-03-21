@@ -1,13 +1,12 @@
 "use client";
 
-import { useFirestore, useCollection, useUser } from "@/firebase";
+import { useFirestore, useCollection, useUser, useMemoFirebase } from "@/firebase";
 import { collection, doc, updateDoc, query, orderBy } from "firebase/firestore";
-import { useMemoFirebase } from "@/firebase/use-memo-firebase";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Check, X, MapPin, User, Loader2, ShieldAlert, Key } from "lucide-react";
+import { Check, X, MapPin, User, Loader2, ShieldAlert } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
 import { errorEmitter } from "@/firebase/error-emitter";
 import { FirestorePermissionError } from "@/firebase/errors";
@@ -21,7 +20,7 @@ export default function StoreManagement() {
     return query(collection(db, "stores"), orderBy("createdAt", "desc"));
   }, [db]);
 
-  const { data: stores, loading, error } = useCollection(storesQuery);
+  const { data: stores, isLoading: loading, error } = useCollection(storesQuery);
 
   const handleAction = (id: string, newStatus: string) => {
     if (!db) return;

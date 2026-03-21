@@ -16,14 +16,12 @@ import {
   CheckCircle, 
   Loader2, 
   Search, 
-  ChevronRight, 
   Filter, 
   Info,
   AlertCircle
 } from "lucide-react";
-import { useFirestore, useCollection, useUser } from "@/firebase";
+import { useFirestore, useCollection, useUser, useMemoFirebase } from "@/firebase";
 import { collection, serverTimestamp, query, orderBy } from "firebase/firestore";
-import { useMemoFirebase } from "@/firebase/use-memo-firebase";
 import { toast } from "@/hooks/use-toast";
 import { addDocumentNonBlocking } from "@/firebase";
 import { cn } from "@/lib/utils";
@@ -90,7 +88,7 @@ export default function NewOrderPage() {
     const orderData = {
       items: selectedProduct.name,
       productId: selectedProduct.id,
-      userId: user.uid, // Required for security rules ownership check
+      userId: user.uid,
       quantity: qty,
       total: (selectedProduct.price || 0) * qty,
       notes: orderNotes,

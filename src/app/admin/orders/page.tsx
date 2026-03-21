@@ -1,10 +1,8 @@
-
 "use client";
 
 import { useState } from "react";
-import { useFirestore, useCollection } from "@/firebase";
+import { useFirestore, useCollection, useMemoFirebase } from "@/firebase";
 import { collection, doc, updateDoc, query, orderBy } from "firebase/firestore";
-import { useMemoFirebase } from "@/firebase/use-memo-firebase";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -26,7 +24,7 @@ export default function AdminOrdersPage() {
     return query(collection(db, "orders"), orderBy("createdAt", "desc"));
   }, [db]);
 
-  const { data: orders, loading } = useCollection(ordersQuery);
+  const { data: orders, isLoading: loading } = useCollection(ordersQuery);
 
   const handleStatusUpdate = (orderId: string, newStatus: string) => {
     if (!db) return;
