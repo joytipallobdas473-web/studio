@@ -9,12 +9,15 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Plus, Search, Edit2, Trash2, Loader2 } from "lucide-react";
+import { Plus, Search, Edit2, Trash2, Loader2, Package } from "lucide-react";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "@/hooks/use-toast";
 import { errorEmitter } from "@/firebase/error-emitter";
 import { FirestorePermissionError } from "@/firebase/errors";
+
+const CATEGORIES = ["Electronics", "Apparel", "Grocery", "Office Supplies"];
 
 export default function InventoryControl() {
   const db = useFirestore();
@@ -45,7 +48,7 @@ export default function InventoryControl() {
         sku: product.sku,
         mrp: product.mrp.toString(),
         currentStock: product.currentStock.toString(),
-        category: product.category
+        category: product.category || "Electronics"
       });
     } else {
       setEditingProduct(null);
@@ -247,12 +250,21 @@ export default function InventoryControl() {
             </div>
             <div className="grid grid-cols-4 items-center gap-4">
               <Label htmlFor="category" className="text-right text-xs">Category</Label>
-              <Input 
-                id="category" 
-                className="col-span-3" 
-                value={formData.category}
-                onChange={(e) => setFormData({...formData, category: e.target.value})}
-              />
+              <div className="col-span-3">
+                <Select 
+                  value={formData.category} 
+                  onValueChange={(val) => setFormData({...formData, category: val})}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select Category" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {CATEGORIES.map((cat) => (
+                      <SelectItem key={cat} value={cat}>{cat}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
             </div>
             <div className="grid grid-cols-4 items-center gap-4">
               <Label htmlFor="mrp" className="text-right text-xs">MRP ($)</Label>
