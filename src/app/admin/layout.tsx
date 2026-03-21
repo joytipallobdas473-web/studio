@@ -1,10 +1,11 @@
 
 "use client";
 
-import { SidebarProvider, Sidebar, SidebarContent, SidebarHeader, SidebarMenu, SidebarMenuItem, SidebarMenuButton, SidebarGroup, SidebarGroupLabel, SidebarGroupContent, SidebarInset, SidebarTrigger } from "@/components/ui/sidebar";
-import { LayoutDashboard, Store, Package, ShoppingCart, LogOut } from "lucide-react";
+import { SidebarProvider, Sidebar, SidebarContent, SidebarHeader, SidebarMenu, SidebarMenuItem, SidebarMenuButton, SidebarGroup, SidebarGroupLabel, SidebarGroupContent, SidebarInset, SidebarTrigger, SidebarFooter } from "@/components/ui/sidebar";
+import { LayoutDashboard, Store, Package, ShoppingCart, LogOut, ShieldCheck } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { cn } from "@/lib/utils";
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
@@ -17,23 +18,25 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   ];
 
   return (
-    <SidebarProvider>
-      <div className="flex min-h-screen w-full">
-        <Sidebar>
-          <SidebarHeader className="p-4 border-b">
-            <div className="flex items-center gap-2 font-bold text-primary">
-              <Package className="h-5 w-5 text-accent" />
-              <span>Admin Portal</span>
-            </div>
+    <SidebarProvider defaultOpen={true}>
+      <div className="flex min-h-svh w-full bg-background">
+        <Sidebar collapsible="icon">
+          <SidebarHeader className="h-16 flex items-center justify-center border-b px-4">
+            <Link href="/admin" className="flex items-center gap-2 font-bold text-primary w-full overflow-hidden">
+              <div className="bg-primary p-1.5 rounded-lg flex-shrink-0">
+                <ShieldCheck className="h-5 w-5 text-primary-foreground" />
+              </div>
+              <span className="truncate group-data-[collapsible=icon]:hidden">Official Admin</span>
+            </Link>
           </SidebarHeader>
           <SidebarContent>
             <SidebarGroup>
-              <SidebarGroupLabel>Management</SidebarGroupLabel>
+              <SidebarGroupLabel className="px-4">System Management</SidebarGroupLabel>
               <SidebarGroupContent>
                 <SidebarMenu>
                   {menuItems.map((item) => (
                     <SidebarMenuItem key={item.title}>
-                      <SidebarMenuButton asChild isActive={pathname === item.href}>
+                      <SidebarMenuButton asChild isActive={pathname === item.href} tooltip={item.title}>
                         <Link href={item.href}>
                           <item.icon className="h-4 w-4" />
                           <span>{item.title}</span>
@@ -45,20 +48,29 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
               </SidebarGroupContent>
             </SidebarGroup>
           </SidebarContent>
-          <div className="mt-auto p-4 border-t">
-            <Link href="/" className="flex items-center gap-2 text-sm text-muted-foreground hover:text-primary transition-colors">
-              <LogOut className="h-4 w-4" />
-              <span>Logout Official</span>
-            </Link>
-          </div>
+          <SidebarFooter className="border-t p-2">
+            <SidebarMenu>
+              <SidebarMenuItem>
+                <SidebarMenuButton asChild>
+                  <Link href="/">
+                    <LogOut className="h-4 w-4" />
+                    <span>Exit Admin Portal</span>
+                  </Link>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+            </SidebarMenu>
+          </SidebarFooter>
         </Sidebar>
-        <SidebarInset className="bg-muted/30">
-          <header className="flex h-16 items-center gap-4 border-b bg-background px-6">
-            <SidebarTrigger />
-            <h2 className="text-lg font-semibold">Official Admin Panel</h2>
+        <SidebarInset className="flex flex-col">
+          <header className="sticky top-0 z-30 flex h-16 shrink-0 items-center gap-4 border-b bg-background/95 backdrop-blur-sm px-4 md:px-6">
+            <SidebarTrigger className="-ml-1" />
+            <div className="h-4 w-[1px] bg-border md:hidden" />
+            <h2 className="text-sm font-semibold truncate md:text-base">Control Center</h2>
           </header>
-          <main className="p-6">
-            {children}
+          <main className="flex-1 overflow-y-auto p-4 md:p-6 lg:p-8">
+            <div className="mx-auto max-w-7xl">
+              {children}
+            </div>
           </main>
         </SidebarInset>
       </div>
