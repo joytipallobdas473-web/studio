@@ -6,7 +6,8 @@ service cloud.firestore {
      * DOCUMENTATION
      *
      * Core Philosophy: 
-     * - Admins (defined in roles_admin) have global visibility.
+     * - Admins have global visibility.
+     * - Prototype override: UID "AEGmDwRin2c5sDZdx1Jhk87yF9L2" is treated as Admin.
      * - Retailers manage their own data via identity-based ownership.
      */
 
@@ -21,7 +22,10 @@ service cloud.firestore {
     }
 
     function isAdmin() {
-      return isSignedIn() && exists(/databases/$(database)/documents/roles_admin/$(request.auth.uid));
+      return isSignedIn() && (
+        exists(/databases/$(database)/documents/roles_admin/$(request.auth.uid)) ||
+        request.auth.uid == "AEGmDwRin2c5sDZdx1Jhk87yF9L2"
+      );
     }
 
     // --- Collection Rules ---
