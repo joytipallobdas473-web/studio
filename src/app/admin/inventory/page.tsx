@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, useMemo } from "react";
@@ -23,7 +24,6 @@ export default function InventoryControl() {
   
   const productsQuery = useMemoFirebase(() => {
     if (!db) return null;
-    // Simple collection reference to ensure standard behavior
     return collection(db, "inventory");
   }, [db]);
 
@@ -102,7 +102,6 @@ export default function InventoryControl() {
           setIsDialogOpen(false);
         })
         .catch(async (err) => {
-          console.error("Stock update error:", err);
           setIsSaving(false);
           errorEmitter.emit('permission-error', new FirestorePermissionError({
             path: docRef.path,
@@ -123,7 +122,6 @@ export default function InventoryControl() {
           setFormData(initialFormState);
         })
         .catch(async (err) => {
-          console.error("Stock save error:", err);
           setIsSaving(false);
           errorEmitter.emit('permission-error', new FirestorePermissionError({
             path: colRef.path,
@@ -155,13 +153,9 @@ export default function InventoryControl() {
 
   const filteredProducts = useMemo(() => {
     if (!products) return [];
-    
-    // Sort products locally to avoid complex composite index requirements
     const sorted = [...products].sort((a, b) => (a.name || "").localeCompare(b.name || ""));
-    
     const lowerQuery = searchQuery.toLowerCase();
     if (!lowerQuery) return sorted;
-    
     return sorted.filter(p => 
       (p.name || "").toLowerCase().includes(lowerQuery) ||
       (p.sku || "").toLowerCase().includes(lowerQuery) ||
