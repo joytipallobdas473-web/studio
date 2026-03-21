@@ -1,18 +1,21 @@
-
 "use client";
 
+import { useState } from "react";
 import { useFirestore, useCollection } from "@/firebase";
 import { collection, query, orderBy, limit } from "firebase/firestore";
 import { useMemoFirebase } from "@/firebase/use-memo-firebase";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Store, Package, ShoppingCart, AlertCircle, ArrowUpRight, Activity, Loader2 } from "lucide-react";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { Store, Package, ShoppingCart, AlertCircle, ArrowUpRight, Activity, Loader2, Sparkles, BrainCircuit } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { format } from "date-fns";
+import { analyzeInventory, type InventoryAnalysisOutput } from "@/ai/flows/inventory-analyst";
 
 export default function AdminOverview() {
   const db = useFirestore();
+  const [isAnalyzing, setIsAnalyzing] = useState(false);
+  const [aiAnalysis, setAiAnalysis] = useState<InventoryAnalysisOutput | null>(null);
 
-  // Stabilize queries to prevent infinite loops and ensure efficient updates
   const storesQuery = useMemoFirebase(() => {
     if (!db) return null;
     return query(collection(db, "stores"), orderBy("createdAt", "desc"));
@@ -35,6 +38,31 @@ export default function AdminOverview() {
   const pendingStoresCount = stores?.filter(s => s.status === 'pending').length || 0;
   const activeOrdersCount = orders?.filter(o => !['delivered', 'cancelled'].includes(o.status)).length || 0;
   const lowStockCount = products?.filter(p => p.currentStock < 10).length || 0;
+
+  const handleRunAIAnalysis = async () => {
+    if (!products || !orders) return;
+    setIsAnalyzing(true);
+    try {
+      const result = await analyzeInventory({
+        products: products.map(p => ({
+          name: p.name,
+          currentStock: p.currentStock,
+          category: p.category,
+          mrp: p.mrp
+        })),
+        recentOrders: orders.map(o => ({
+          items: o.items,
+          status: o.status,
+          total: o.total
+        }))
+      });
+      setAiAnalysis(result);
+    } catch (error) {
+      console.error("AI Analysis failed", error);
+    } finally {
+      setIsAnalyzing(false);
+    }
+  };
 
   const stats = [
     { label: "Pending Registrations", value: pendingStoresCount.toString(), icon: Store, color: "text-orange-600", bg: "bg-orange-50", trend: "Approval needed" },
@@ -125,30 +153,90 @@ export default function AdminOverview() {
           </CardContent>
         </Card>
 
-        <Card className="bg-primary text-primary-foreground shadow-lg border-none">
-          <CardHeader>
-            <CardTitle className="text-lg font-bold">Admin Insights</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="space-y-2">
-              <p className="text-primary-foreground/90 text-sm leading-relaxed">
-                New store registrations require approval to enable warehouse access.
-              </p>
-              <p className="text-primary-foreground/90 text-sm leading-relaxed">
-                Stock levels below 10 units trigger global low-stock alerts.
-              </p>
-            </div>
-            <div className="pt-4 border-t border-primary-foreground/20">
-              <div className="flex items-center justify-between text-xs font-bold">
-                <span>System Health</span>
-                <span className="uppercase tracking-widest">Optimal</span>
+        <div className="space-y-6">
+          <Card className="bg-primary text-primary-foreground shadow-lg border-none">
+            <CardHeader>
+              <div className="flex items-center justify-between">
+                <CardTitle className="text-lg font-bold flex items-center gap-2">
+                  <BrainCircuit className="h-5 w-5" />
+                  AI Smart Analyst
+                </CardTitle>
+                <Sparkles className="h-4 w-4 text-accent animate-pulse" />
               </div>
-              <div className="mt-2 h-1.5 w-full bg-primary-foreground/20 rounded-full overflow-hidden">
-                <div className="h-full w-[98%] bg-accent transition-all duration-1000" />
-              </div>
-            </div>
-          </CardContent>
-        </Card>
+              <CardDescription className="text-primary-foreground/80">
+                Analyze live warehouse and order data for insights.
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              {aiAnalysis ? (
+                <div className="space-y-4 animate-in fade-in slide-in-from-bottom-2">
+                  <div className="bg-white/10 rounded-lg p-3">
+                    <div className="flex items-center justify-between mb-2">
+                      <span className="text-xs font-bold uppercase">Risk Level</span>
+                      <Badge className={
+                        aiAnalysis.riskLevel === 'high' ? 'bg-red-500' : 
+                        aiAnalysis.riskLevel === 'medium' ? 'bg-orange-500' : 'bg-green-500'
+                      }>
+                        {aiAnalysis.riskLevel}
+                      </Badge>
+                    </div>
+                    <p className="text-sm leading-relaxed text-primary-foreground/90 italic">
+                      "{aiAnalysis.summary}"
+                    </p>
+                  </div>
+                  <div className="space-y-2">
+                    <p className="text-xs font-bold uppercase opacity-70">Top Recommendations</p>
+                    {aiAnalysis.recommendations.map((rec, i) => (
+                      <div key={i} className="flex gap-2 items-start text-xs text-primary-foreground/90">
+                        <div className="h-1.5 w-1.5 rounded-full bg-accent mt-1.5 shrink-0" />
+                        <span>{rec}</span>
+                      </div>
+                    ))}
+                  </div>
+                  <Button 
+                    variant="secondary" 
+                    className="w-full text-xs font-bold bg-accent text-accent-foreground hover:bg-accent/90"
+                    onClick={handleRunAIAnalysis}
+                    disabled={isAnalyzing}
+                  >
+                    Refresh Analysis
+                  </Button>
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  <p className="text-primary-foreground/90 text-sm leading-relaxed">
+                    Tap below to generate real-time reorder suggestions based on your current global stock and pending orders.
+                  </p>
+                  <Button 
+                    className="w-full bg-white text-primary hover:bg-white/90 font-bold"
+                    onClick={handleRunAIAnalysis}
+                    disabled={isAnalyzing}
+                  >
+                    {isAnalyzing ? (
+                      <>
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                        Analyzing...
+                      </>
+                    ) : (
+                      "Generate Insights"
+                    )}
+                  </Button>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+
+          <Card className="border-dashed border-2 bg-muted/20">
+            <CardHeader className="pb-2">
+              <CardTitle className="text-sm">Regional Alert</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <p className="text-xs text-muted-foreground">
+                Stock levels below 10 units trigger global alerts. {lowStockCount} items currently at risk.
+              </p>
+            </CardContent>
+          </Card>
+        </div>
       </div>
     </div>
   );
