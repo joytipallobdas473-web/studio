@@ -1,78 +1,281 @@
-
 {
   "entities": {
-    "Store": {
-      "title": "Store",
-      "description": "A retail store location in the network.",
+    "UserProfile": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "UserProfile",
       "type": "object",
+      "description": "Represents a customer's personal information and account details for the retail stock application. This entity stores data relevant to managing a user's profile, distinct from their authentication credentials.",
       "properties": {
-        "name": { "type": "string" },
-        "location": { "type": "string" },
-        "managerName": { "type": "string" },
-        "email": { "type": "string" },
-        "status": { 
-          "type": "string", 
-          "enum": ["pending", "active", "rejected"] 
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the UserProfile entity."
         },
-        "createdAt": { "type": "string", "format": "date-time" }
+        "username": {
+          "type": "string",
+          "description": "A unique username chosen by the user for identification. (Relationship: UserProfile 1:N Order)"
+        },
+        "email": {
+          "type": "string",
+          "description": "The user's primary email address.",
+          "format": "email"
+        },
+        "firstName": {
+          "type": "string",
+          "description": "The user's first name."
+        },
+        "lastName": {
+          "type": "string",
+          "description": "The user's last name."
+        },
+        "phoneNumber": {
+          "type": "string",
+          "description": "The user's contact phone number."
+        },
+        "shippingAddress": {
+          "type": "string",
+          "description": "The user's default shipping address."
+        },
+        "billingAddress": {
+          "type": "string",
+          "description": "The user's default billing address."
+        },
+        "registrationDate": {
+          "type": "string",
+          "description": "The date and time when the user's account was registered.",
+          "format": "date-time"
+        }
       },
-      "required": ["name", "managerName", "email", "status"]
+      "required": [
+        "id",
+        "username",
+        "email",
+        "registrationDate"
+      ]
     },
     "Product": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
       "title": "Product",
-      "description": "An inventory item available for ordering.",
       "type": "object",
+      "description": "Represents an individual item available for purchase in the retail stock application. This entity stores details about each product, such as its description, pricing, and current stock level.",
       "properties": {
-        "name": { "type": "string" },
-        "category": { "type": "string" },
-        "sku": { "type": "string" },
-        "mrp": { "type": "number" },
-        "currentStock": { "type": "number" },
-        "unit": { "type": "string" }
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the Product entity."
+        },
+        "name": {
+          "type": "string",
+          "description": "The name of the product."
+        },
+        "description": {
+          "type": "string",
+          "description": "A detailed description of the product."
+        },
+        "price": {
+          "type": "number",
+          "description": "The current selling price of the product."
+        },
+        "stockQuantity": {
+          "type": "number",
+          "description": "The current number of units of the product available in stock."
+        },
+        "imageUrl": {
+          "type": "string",
+          "description": "URL to an image of the product.",
+          "format": "uri"
+        },
+        "category": {
+          "type": "string",
+          "description": "The category the product belongs to (e.g., 'Electronics', 'Clothing')."
+        }
       },
-      "required": ["name", "sku", "mrp", "currentStock"]
+      "required": [
+        "id",
+        "name",
+        "price",
+        "stockQuantity"
+      ]
     },
     "Order": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
       "title": "Order",
-      "description": "A stock request from a store.",
       "type": "object",
+      "description": "Represents a single order placed by a user in the retail stock application. It aggregates order-level information such as total cost, status, and the user who placed it.",
       "properties": {
-        "storeId": { "type": "string" },
-        "items": {
-          "type": "array",
-          "items": {
-            "type": "object",
-            "properties": {
-              "productId": { "type": "string" },
-              "quantity": { "type": "number" }
-            }
-          }
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the Order entity."
         },
-        "totalAmount": { "type": "number" },
+        "userId": {
+          "type": "string",
+          "description": "Reference to the UserProfile who placed this order. (Relationship: UserProfile 1:N Order)"
+        },
+        "orderDate": {
+          "type": "string",
+          "description": "The date and time when the order was placed.",
+          "format": "date-time"
+        },
+        "totalAmount": {
+          "type": "number",
+          "description": "The total monetary amount of the order, including all items and any taxes/shipping."
+        },
         "status": {
           "type": "string",
-          "enum": ["pending", "processing", "shipped", "delivered", "cancelled"]
+          "description": "The current status of the order (e.g., 'pending', 'processed', 'shipped', 'delivered', 'cancelled')."
         },
-        "priority": { "type": "string", "enum": ["low", "normal", "high"] },
-        "createdAt": { "type": "string", "format": "date-time" }
-      }
+        "shippingAddress": {
+          "type": "string",
+          "description": "The shipping address for this specific order, which may differ from the user's default."
+        },
+        "billingAddress": {
+          "type": "string",
+          "description": "The billing address for this specific order, which may differ from the user's default."
+        }
+      },
+      "required": [
+        "id",
+        "userId",
+        "orderDate",
+        "totalAmount",
+        "status"
+      ]
+    },
+    "OrderItem": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "OrderItem",
+      "type": "object",
+      "description": "Represents a specific line item within an Order, detailing a particular product and its quantity. Each Order can have multiple OrderItems.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the OrderItem entity."
+        },
+        "orderId": {
+          "type": "string",
+          "description": "Reference to the Order this item belongs to. (Relationship: Order 1:N OrderItem)"
+        },
+        "productId": {
+          "type": "string",
+          "description": "Reference to the Product being ordered. (Relationship: Product 1:N OrderItem)"
+        },
+        "quantity": {
+          "type": "number",
+          "description": "The quantity of the product ordered."
+        },
+        "priceAtOrder": {
+          "type": "number",
+          "description": "The price of the product at the time the order was placed. This preserves historical pricing."
+        }
+      },
+      "required": [
+        "id",
+        "orderId",
+        "productId",
+        "quantity",
+        "priceAtOrder"
+      ]
     }
   },
   "auth": {
-    "providers": ["password", "google"]
+    "providers": [
+      "password",
+      "anonymous"
+    ]
   },
   "firestore": {
-    "/stores/{storeId}": {
-      "schema": "#/entities/Store",
-      "description": "Store profiles and registration status."
-    },
-    "/inventory/{productId}": {
-      "schema": "#/entities/Product",
-      "description": "Global inventory and pricing master data."
-    },
-    "/orders/{orderId}": {
-      "schema": "#/entities/Order",
-      "description": "Consolidated order tracking for all stores."
-    }
+    "structure": [
+      {
+        "path": "/users/{userId}",
+        "definition": {
+          "entityName": "UserProfile",
+          "schema": {
+            "$ref": "#/backend/entities/UserProfile"
+          },
+          "description": "Stores individual user profiles. Each document ID (`userId`) corresponds to the Firebase Authentication UID. Access is restricted to the owning user, identified by `request.auth.uid` matching the document ID.",
+          "params": [
+            {
+              "name": "userId",
+              "description": "The unique ID of the user, matching `request.auth.uid`."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/products/{productId}",
+        "definition": {
+          "entityName": "Product",
+          "schema": {
+            "$ref": "#/backend/entities/Product"
+          },
+          "description": "Contains product catalog information. Publicly readable by all users (authenticated or unauthenticated). Write, update, and delete access is restricted to authenticated administrators, as defined by the `/roles_admin` collection.",
+          "params": [
+            {
+              "name": "productId",
+              "description": "The unique ID of the product."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/users/{userId}/orders/{orderId}",
+        "definition": {
+          "entityName": "Order",
+          "schema": {
+            "$ref": "#/backend/entities/Order"
+          },
+          "description": "Stores orders placed by specific users. Each order document includes a `userId` field that matches the path's `userId` for authorization independence. Access is restricted to the owning user (`request.auth.uid == userId`).",
+          "params": [
+            {
+              "name": "userId",
+              "description": "The unique ID of the user who placed the order, matching `request.auth.uid`."
+            },
+            {
+              "name": "orderId",
+              "description": "The unique ID of the order."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/users/{userId}/orders/{orderId}/orderItems/{orderItemId}",
+        "definition": {
+          "entityName": "OrderItem",
+          "schema": {
+            "$ref": "#/backend/entities/OrderItem"
+          },
+          "description": "Stores individual line items within a specific order. Each order item document MUST include a denormalized `userId` field (copied from its parent Order's owner) for authorization independence, eliminating the need for `get()` calls in security rules. Access is restricted to the owning user (`request.auth.uid == userId`).",
+          "params": [
+            {
+              "name": "userId",
+              "description": "The unique ID of the user who owns the parent order, matching `request.auth.uid`."
+            },
+            {
+              "name": "orderId",
+              "description": "The unique ID of the parent order."
+            },
+            {
+              "name": "orderItemId",
+              "description": "The unique ID of the order item."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/roles_admin/{adminUid}",
+        "definition": {
+          "entityName": "AdminRole",
+          "schema": {
+            "$ref": "#/backend/entities/AdminRole"
+          },
+          "description": "Grants administrative privileges. The existence of a document at `/roles_admin/{adminUid}` indicates that the user with `adminUid` is an administrator. This collection is used for Database Access Control (DBAC) in security rules to grant elevated permissions (e.g., write access to `/products` or status updates to orders). Documents in this collection can be empty or contain minimal metadata.",
+          "params": [
+            {
+              "name": "adminUid",
+              "description": "The unique ID of a user designated as an administrator, matching `request.auth.uid`."
+            }
+          ]
+        }
+      }
+    ],
+    "reasoning": "The recommended Firestore data structure adheres to the core design principles by prioritizing Authorization Independence, Structural Segregation, and consistent Access Modeling. Each collection's security posture is clear and explicit, enabling robust and debuggable security rules.\n\n**Authorization Independence (CRITICAL) via Denormalization:**\n\n*   **Order Entity (`/users/{userId}/orders/{orderId}`):** The `Order` entity's schema already includes a `userId` field. This is crucial for Authorization Independence. When a user creates or accesses an order, the security rules can directly check `request.auth.uid == resource.data.userId` without needing to perform a `get()` operation on a parent `UserProfile` document. This allows for atomic operations (e.g., creating an order) and simplifies rule evaluation.\n*   **OrderItem Entity (`/users/{userId}/orders/{orderId}/orderItems/{orderItemId}`):** The `OrderItem` schema does *not* inherently contain `userId`. To achieve Authorization Independence for `OrderItem` documents, the `userId` (derived from the parent `Order`'s owner) MUST be denormalized and stored directly within each `OrderItem` document. This allows security rules to check `request.auth.uid == resource.data.userId` for any `OrderItem` operation without needing to `get()` the parent `Order` document. This is critical for supporting atomic writes (e.g., adding multiple order items to an order in a batch) and ensuring performant security rules.\n\n**QAPs (Rules are not Filters):**\n\n*   **Public Products (`/products`):** The `products` collection is designed to be publicly readable by all users (authenticated or unauthenticated). This allows for efficient `list` operations without requiring any client-side filtering or complex server-side rules, as all documents in this collection are intended to be public. Write access is restricted to administrators via the `/roles_admin` collection.\n*   **User-Specific Data (`/users/{userId}/orders`, `/users/{userId}/orders/{orderId}/orderItems`):** For user-owned collections like `orders` and `orderItems`, the paths themselves enforce the ownership model (`/users/{userId}/...`). Security rules can be written as `allow list: if request.auth.uid == userId;`. Because `userId` is part of the path, Firestore automatically ensures that `list` queries targeting `users/{userId}/orders` (or nested subcollections) can only return documents where `userId` matches `request.auth.uid`. If a user attempts to query for another user's `orders`, the query will fail immediately, enforcing QAPs.\n\n**Structural Segregation:**\n\n*   User profiles are isolated in `/users/{userId}`.\n*   Global, publicly viewable products are in `/products`.\n*   User-specific orders and their items are deeply nested under the user's path, `/users/{userId}/orders/{orderId}/orderItems/{orderItemId}`, clearly separating each user's data.\n*   Admin roles are in a dedicated `/roles_admin` collection, segregating authorization data from application data.\n\nThis structure ensures that security rules are straightforward, focusing on path segment matching (`request.auth.uid == userId`) and checking denormalized fields (`resource.data.userId`) or global roles (`exists(/databases/$(database)/documents/roles_admin/$(request.auth.uid))`)."
   }
 }

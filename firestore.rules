@@ -1,0 +1,139 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    /**
+     * DOCUMENTATION
+     *
+     * Core Philosophy: 
+     * This ruleset implements a strict user-ownership model for personal data (profiles, orders) 
+     * while maintaining a public catalog for products. It utilizes a Role-Based Access Control 
+     * (RBAC) pattern for administrative actions.
+     *
+     * Data Structure:
+     * - /users/{userId}: Private user profiles.
+     * - /products/{productId}: Publicly readable product catalog.
+     * - /users/{userId}/orders/{orderId}: User-specific orders.
+     * - /users/{userId}/orders/{orderId}/orderItems/{orderItemId}: Line items within orders.
+     * - /roles_admin/{adminUid}: A system collection designating administrative users.
+     *
+     * Key Security Decisions:
+     * 1. Authorization Independence: Critical fields like 'userId' are denormalized into 
+     *    nested collections (Orders, OrderItems) to allow rules to verify ownership 
+     *    without expensive cross-document lookups (get() calls).
+     * 2. QAPs (Query-Based Access): User collections are path-scoped (/users/{userId}/...), 
+     *    ensuring that list operations automatically filter to the authenticated user's data.
+     * 3. Admin Privileges: Product management is restricted to users present in the 
+     *    'roles_admin' collection.
+     * 4. Prototyping Flexibility: Rules focus on identity and relational integrity 
+     *    (ensuring data belongs to the right user) rather than strict schema/type validation.
+     */
+
+    // --- Helper Functions ---
+
+    /**
+     * @description Checks if the request is from an authenticated user.
+     */
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    /**
+     * @description Checks if the authenticated user matches the provided ID.
+     */
+    function isOwner(userId) {
+      return isSignedIn() && request.auth.uid == userId;
+    }
+
+    /**
+     * @description Checks if the authenticated user has an entry in the roles_admin collection.
+     */
+    function isAdmin() {
+      return isSignedIn() && exists(/databases/$(database)/documents/roles_admin/$(request.auth.uid));
+    }
+
+    /**
+     * @description Verifies ownership and ensures the document exists for destructive operations.
+     */
+    function isExistingOwner(userId) {
+      return resource != null && isOwner(userId);
+    }
+
+    /**
+     * @description Verifies admin status and ensures the document exists.
+     */
+    function isExistingAdmin() {
+      return resource != null && isAdmin();
+    }
+
+    // --- Collection Rules ---
+
+    /**
+     * @description Rules for user profile documents. Users can only manage their own profile.
+     * @path /users/{userId}
+     * @allow (create) auth.uid: 'abc', data.id: 'abc'
+     * @deny (create) auth.uid: 'abc', data.id: 'xyz'
+     * @principle Ownership and Self-Creation. Enforces path/ID consistency.
+     */
+    match /users/{userId} {
+      allow get, list: if isOwner(userId);
+      allow create: if isOwner(userId) && request.resource.data.id == userId;
+      allow update: if isExistingOwner(userId) && request.resource.data.id == resource.data.id;
+      allow delete: if isExistingOwner(userId);
+    }
+
+    /**
+     * @description Rules for the product catalog. Publicly readable, admin-only writes.
+     * @path /products/{productId}
+     * @allow (get) any user
+     * @allow (create) auth.uid: 'admin_123' (if in roles_admin)
+     * @deny (create) auth.uid: 'customer_123'
+     * @principle Public Read with Admin-Only Writes.
+     */
+    match /products/{productId} {
+      allow get, list: if true;
+      allow create: if isAdmin();
+      allow update, delete: if isExistingAdmin();
+    }
+
+    /**
+     * @description Rules for user orders. Access is strictly scoped to the user's path.
+     * @path /users/{userId}/orders/{orderId}
+     * @allow (list) auth.uid: 'abc' on /users/abc/orders
+     * @deny (list) auth.uid: 'abc' on /users/xyz/orders
+     * @principle Authorization Independence via denormalized userId field.
+     */
+    match /users/{userId}/orders/{orderId} {
+      allow get, list: if isOwner(userId);
+      allow create: if isOwner(userId) && request.resource.data.userId == userId;
+      allow update: if isExistingOwner(userId) && request.resource.data.userId == resource.data.userId;
+      allow delete: if isExistingOwner(userId);
+
+      /**
+       * @description Rules for items within an order. Relies on denormalized userId.
+       * @path /users/{userId}/orders/{orderId}/orderItems/{orderItemId}
+       * @allow (create) auth.uid: 'abc', data.userId: 'abc'
+       * @principle Structural Segregation and Relational Integrity.
+       */
+      match /orderItems/{orderItemId} {
+        allow get, list: if isOwner(userId);
+        allow create: if isOwner(userId) && request.resource.data.userId == userId;
+        allow update: if isExistingOwner(userId) && request.resource.data.userId == resource.data.userId;
+        allow delete: if isExistingOwner(userId);
+      }
+    }
+
+    /**
+     * @description Internal system collection for managing administrative roles.
+     * @path /roles_admin/{adminUid}
+     * @allow (get) signed-in user (to check their own or others' roles)
+     * @deny (list) any user (preventing admin list discovery)
+     * @principle DBAC (Database Access Control) segregation.
+     */
+    match /roles_admin/{adminUid} {
+      allow get: if isSignedIn();
+      allow list: if false;
+      allow create, update, delete: if false; // Admin roles managed via Admin SDK/Console
+    }
+  }
+}

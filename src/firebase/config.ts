@@ -1,9 +1,8 @@
-
 export const firebaseConfig = {
-  apiKey: "AIzaSyAsB-D_G1H-I-J-K-L-M-N-O-P-Q-R-S-T",
-  authDomain: "retails-stocks-dev.firebaseapp.com",
-  projectId: "retails-stocks-dev",
-  storageBucket: "retails-stocks-dev.appspot.com",
-  messagingSenderId: "123456789012",
-  appId: "1:123456789012:web:abcdef1234567890"
+  "projectId": "studio-6247286784-ddd17",
+  "appId": "1:867402979612:web:deee84f66adb85d7bc42d9",
+  "apiKey": "AIzaSyDlxACwSk2alwrSuNnF97h4Al4YOmXWqJM",
+  "authDomain": "studio-6247286784-ddd17.firebaseapp.com",
+  "measurementId": "",
+  "messagingSenderId": "867402979612"
 };
