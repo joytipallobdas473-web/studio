@@ -1,21 +1,22 @@
+
 "use client";
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { 
   Package, 
   ShieldCheck, 
   Loader2, 
   MapPin, 
-  ArrowRight,
-  Boxes
+  Boxes,
+  UserPlus
 } from "lucide-react";
 import { useAuth, useUser } from "@/firebase";
 import { signInAnonymously } from "firebase/auth";
 import { toast } from "@/hooks/use-toast";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { cn } from "@/lib/utils";
 
 export default function Home() {
   const router = useRouter();
@@ -46,7 +47,7 @@ export default function Home() {
 
   if (isUserLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-background">
+      <div className="min-h-screen flex items-center justify-center bg-[#ECF0F5]">
         <Loader2 className="h-8 w-8 animate-spin text-primary" />
       </div>
     );
@@ -114,8 +115,18 @@ export default function Home() {
           </Card>
         </div>
 
+        <div className="flex flex-col items-center space-y-4">
+          <p className="text-slate-500 text-sm font-medium">New to the network?</p>
+          <Link href="/register">
+            <Button variant="link" className="text-primary font-bold flex items-center gap-2 h-auto p-0">
+              <UserPlus className="h-4 w-4" />
+              Register your branch for network access
+            </Button>
+          </Link>
+        </div>
+
         <p className="text-center text-[10px] text-slate-400 font-bold uppercase tracking-[0.3em]">
-          North East Logistics Infrastructure • v2.0
+          North East Logistics Infrastructure • v2.1
         </p>
       </div>
     </div>
