@@ -97,13 +97,15 @@ export default function NewOrderPage() {
       createdAt: serverTimestamp()
     };
 
-    addDocumentNonBlocking(collection(db, "orders"), orderData);
+    addDocumentNonBlocking(collection(db, "orders"), orderData)
+      .then(() => {
+        setSubmitted(true);
+        toast({ title: "Order Placed", description: `Request for ${qty} x ${selectedProduct.name} queued.` });
+        setTimeout(() => router.push("/dashboard"), 2000);
+      })
+      .finally(() => setIsSubmitting(false));
     
     setOrderDialogOpen(false);
-    setSubmitted(true);
-    toast({ title: "Order Placed", description: `Request for ${qty} x ${selectedProduct.name} queued.` });
-    
-    setTimeout(() => router.push("/dashboard"), 2000);
   };
 
   if (submitted) {

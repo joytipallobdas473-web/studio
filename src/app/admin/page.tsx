@@ -53,17 +53,17 @@ export default function AdminOverview() {
       ...(stores?.map(s => ({
         title: "New store registration",
         target: s.name,
-        time: s.createdAt?.toDate ? format(s.createdAt.toDate(), 'MMM dd, h:mm a') : 'Recently',
+        time: (s.createdAt as any)?.toDate ? format((s.createdAt as any).toDate(), 'MMM dd, h:mm a') : 'Recently',
         status: s.status,
-        timestamp: s.createdAt?.toMillis ? s.createdAt.toMillis() : 0,
+        timestamp: (s.createdAt as any)?.toMillis ? (s.createdAt as any).toMillis() : 0,
         type: 'store'
       })) || []),
       ...(orders?.map(o => ({
         title: "New order placed",
         target: `${o.storeName || 'Store'} (${o.items || 'Items'})`,
-        time: o.createdAt?.toDate ? format(o.createdAt.toDate(), 'MMM dd, h:mm a') : 'Recently',
+        time: (o.createdAt as any)?.toDate ? format((o.createdAt as any).toDate(), 'MMM dd, h:mm a') : 'Recently',
         status: o.status,
-        timestamp: o.createdAt?.toMillis ? o.createdAt.toMillis() : 0,
+        timestamp: (o.createdAt as any)?.toMillis ? (o.createdAt as any).toMillis() : 0,
         type: 'order'
       })) || [])
     ];

@@ -1,8 +1,7 @@
 "use client";
 
-import { useFirestore, useCollection } from "@/firebase";
+import { useFirestore, useCollection, useMemoFirebase } from "@/firebase";
 import { collection, query, orderBy, limit } from "firebase/firestore";
-import { useMemoFirebase } from "@/firebase/provider";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Package, ShoppingCart, History, ArrowRight, Clock, Truck, PackageCheck, XCircle, PlusCircle, Activity, Loader2 } from "lucide-react";
@@ -139,7 +138,7 @@ export default function DashboardPage() {
                     <div className="min-w-0">
                       <p className="font-bold text-primary flex items-center gap-2">
                         {order.id.substring(0, 8)}
-                        <span className="text-xs font-normal text-muted-foreground shrink-0">• {order.createdAt?.toDate ? format(order.createdAt.toDate(), 'MMM dd, h:mm a') : 'Recent'}</span>
+                        <span className="text-xs font-normal text-muted-foreground shrink-0">• {(order.createdAt as any)?.toDate ? format((order.createdAt as any).toDate(), 'MMM dd, h:mm a') : 'Recent'}</span>
                       </p>
                       <p className="text-sm text-foreground/80 truncate">{order.items || 'Stock Items'}</p>
                     </div>
