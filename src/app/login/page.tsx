@@ -18,7 +18,7 @@ export default function RetailerLoginPage() {
   const router = useRouter();
   const auth = useAuth();
   const db = useFirestore();
-  const { user } = useUser();
+  const { user, isUserLoading } = useUser();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
@@ -31,14 +31,14 @@ export default function RetailerLoginPage() {
   const { data: store, isLoading: storeLoading } = useDoc(storeRef);
 
   useEffect(() => {
-    if (user && !storeLoading) {
+    if (!isUserLoading && !storeLoading && user) {
       if (store) {
         router.push("/dashboard");
       } else {
         router.push("/register");
       }
     }
-  }, [user, store, storeLoading, router]);
+  }, [user, isUserLoading, store, storeLoading, router]);
 
   const handleSignIn = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -60,6 +60,14 @@ export default function RetailerLoginPage() {
       });
     }
   };
+
+  if (isUserLoading || (user && storeLoading)) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-[#ECF0F5]">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen flex flex-col items-center justify-center p-6 bg-[#ECF0F5]">

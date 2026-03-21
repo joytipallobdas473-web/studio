@@ -1,7 +1,7 @@
 
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
@@ -19,7 +19,7 @@ import {
   CheckCircle2,
   Lock
 } from "lucide-react";
-import { useFirestore, useAuth, setDocumentNonBlocking } from "@/firebase";
+import { useFirestore, useAuth, useUser, useDoc, useMemoFirebase, setDocumentNonBlocking } from "@/firebase";
 import { doc, serverTimestamp } from "firebase/firestore";
 import { createUserWithEmailAndPassword } from "firebase/auth";
 import { toast } from "@/hooks/use-toast";
@@ -29,6 +29,7 @@ export default function RegisterPage() {
   const router = useRouter();
   const db = useFirestore();
   const auth = useAuth();
+  const { user, isUserLoading } = useUser();
   const [isLoading, setIsLoading] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
   
@@ -39,6 +40,19 @@ export default function RegisterPage() {
     storeName: "",
     location: ""
   });
+
+  const storeRef = useMemoFirebase(() => {
+    if (!db || !user) return null;
+    return doc(db, "stores", user.uid);
+  }, [db, user]);
+
+  const { data: store, isLoading: storeLoading } = useDoc(storeRef);
+
+  useEffect(() => {
+    if (!isUserLoading && !storeLoading && user && store) {
+      router.push("/dashboard");
+    }
+  }, [user, isUserLoading, store, storeLoading, router]);
 
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -84,6 +98,14 @@ export default function RegisterPage() {
       });
     }
   };
+
+  if (isUserLoading || (user && storeLoading)) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-[#ECF0F5]">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </div>
+    );
+  }
 
   if (isSuccess) {
     return (
