@@ -2,7 +2,7 @@
 "use client";
 
 import { useFirestore, useCollection, useUser, useMemoFirebase, useDoc } from "@/firebase";
-import { collection, query, orderBy, limit, doc } from "firebase/firestore";
+import { collection, query, orderBy, limit, doc, where } from "firebase/firestore";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Package, ShoppingCart, ArrowRight, Clock, Truck, PackageCheck, XCircle, PlusCircle, Activity, Loader2, AlertCircle } from "lucide-react";
@@ -25,7 +25,12 @@ export default function DashboardPage() {
 
   const ordersQuery = useMemoFirebase(() => {
     if (!db || !user) return null;
-    return query(collection(db, "orders"), orderBy("createdAt", "desc"), limit(10));
+    return query(
+      collection(db, "orders"), 
+      where("userId", "==", user.uid),
+      orderBy("createdAt", "desc"), 
+      limit(10)
+    );
   }, [db, user]);
 
   const productsQuery = useMemoFirebase(() => {
@@ -110,7 +115,7 @@ export default function DashboardPage() {
           </p>
         </div>
         <Link href="/dashboard/order">
-          <Button className="bg-accent text-accent-foreground font-bold hover:bg-accent/90 shadow-md h-12 rounded-xl px-6">
+          <Button className="bg-accent text-primary font-black hover:bg-primary hover:text-white shadow-md h-12 rounded-xl px-6 transition-all uppercase tracking-widest text-xs">
             <PlusCircle className="mr-2 h-5 w-5" />
             Place New Order
           </Button>
@@ -157,14 +162,14 @@ export default function DashboardPage() {
                 <CardTitle className="text-lg font-bold">Live Order Status</CardTitle>
               </div>
               <Badge variant="outline" className="text-[9px] font-black uppercase tracking-tighter animate-pulse bg-emerald-50 text-emerald-700 border-emerald-200">
-                Network Connected
+                Node Synced
               </Badge>
             </div>
             <CardDescription className="font-medium text-slate-500">Real-time status updates from the North East Regional Hub.</CardDescription>
           </CardHeader>
           <CardContent className="p-0">
             <div className="divide-y divide-slate-100">
-              {orders && orders.length > 0 ? orders.slice(0, 5).map((order) => (
+              {orders && orders.length > 0 ? orders.map((order) => (
                 <div key={order.id} className="flex flex-col sm:flex-row sm:items-center justify-between p-5 hover:bg-slate-50 transition-colors gap-4">
                   <div className="flex items-start gap-3">
                     <div className={cn(
@@ -174,16 +179,16 @@ export default function DashboardPage() {
                       'bg-accent animate-pulse'
                     )} />
                     <div className="min-w-0">
-                      <p className="font-bold text-primary flex items-center gap-2">
+                      <p className="font-bold text-primary flex items-center gap-2 uppercase italic text-xs">
                         {order.id.substring(0, 8)}
-                        <span className="text-[10px] font-normal text-slate-400 shrink-0">• {(order.createdAt as any)?.toDate ? format((order.createdAt as any).toDate(), 'MMM dd, h:mm a') : 'SYNCING'}</span>
+                        <span className="text-[9px] font-mono text-slate-400 shrink-0">• {(order.createdAt as any)?.toDate ? format((order.createdAt as any).toDate(), 'MMM dd, h:mm a') : 'SYNCING'}</span>
                       </p>
                       <p className="text-sm font-semibold text-slate-700 truncate">{order.items || 'Stock Items'}</p>
                     </div>
                   </div>
                   <div className="flex items-center justify-between sm:justify-end gap-6">
                     <div className="text-right">
-                      <p className="text-sm font-black text-slate-900">${(order.total || 0).toFixed(2)}</p>
+                      <p className="text-sm font-black text-slate-900 tracking-tight">${(order.total || 0).toFixed(2)}</p>
                     </div>
                     <Badge variant="outline" className={`capitalize flex items-center h-8 px-4 font-bold rounded-xl text-[10px] tracking-wide ${getStatusColor(order.status)}`}>
                       {getStatusIcon(order.status)}
@@ -192,7 +197,7 @@ export default function DashboardPage() {
                   </div>
                 </div>
               )) : (
-                <div className="p-20 text-center text-slate-400 font-medium italic">No recent orders found.</div>
+                <div className="p-20 text-center text-slate-400 font-medium italic">No recent orders found in this branch node.</div>
               )}
             </div>
             <div className="p-4 border-t border-slate-50 bg-slate-50/30">
@@ -208,7 +213,7 @@ export default function DashboardPage() {
         <div className="space-y-6">
           <Card className="bg-primary text-primary-foreground shadow-lg border-none rounded-3xl overflow-hidden">
             <CardHeader className="bg-white/10">
-              <CardTitle className="text-lg font-bold flex items-center gap-2">
+              <CardTitle className="text-lg font-bold flex items-center gap-2 uppercase italic">
                 <Package className="h-5 w-5" />
                 Regional Catalog
               </CardTitle>
@@ -228,7 +233,7 @@ export default function DashboardPage() {
                 <p className="text-xs text-center opacity-70">Catalog synchronization pending...</p>
               )}
               <Link href="/dashboard/order" className="block pt-2">
-                <Button className="w-full bg-accent text-primary font-black hover:bg-white rounded-xl h-12">
+                <Button className="w-full bg-accent text-primary font-black hover:bg-white rounded-xl h-12 uppercase tracking-widest text-xs">
                   View All Products
                 </Button>
               </Link>
