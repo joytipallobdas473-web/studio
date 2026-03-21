@@ -13,7 +13,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   const menuItems = [
     { title: "Overview", icon: LayoutDashboard, href: "/admin" },
     { title: "Stores", icon: Store, href: "/admin/stores" },
-    { title: "Inventory", icon: Package, href: "/admin/inventory" },
+    { title: "Stock Management", icon: Package, href: "/admin/inventory" },
     { title: "All Orders", icon: ShoppingCart, href: "/admin/orders" },
   ];
 

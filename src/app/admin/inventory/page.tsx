@@ -21,8 +21,8 @@ export default function InventoryControl() {
     <div className="space-y-6">
       <div className="flex justify-between items-center">
         <div>
-          <h1 className="text-3xl font-bold text-primary">Inventory & MRP Control</h1>
-          <p className="text-muted-foreground text-sm">Add stock and manage pricing globally.</p>
+          <h1 className="text-3xl font-bold text-primary">Stock & MRP Management</h1>
+          <p className="text-muted-foreground text-sm">Add global stock and manage pricing controls.</p>
         </div>
         <Dialog>
           <DialogTrigger asChild>
@@ -32,7 +32,7 @@ export default function InventoryControl() {
           </DialogTrigger>
           <DialogContent>
             <DialogHeader>
-              <DialogTitle>Add Global Inventory Item</DialogTitle>
+              <DialogTitle>Add Global Stock Item</DialogTitle>
             </DialogHeader>
             <div className="grid gap-4 py-4">
               <div className="grid grid-cols-4 items-center gap-4">
@@ -48,12 +48,12 @@ export default function InventoryControl() {
                 <Input id="mrp" type="number" className="col-span-3" />
               </div>
               <div className="grid grid-cols-4 items-center gap-4">
-                <Label htmlFor="stock" className="text-right text-xs">Stock</Label>
+                <Label htmlFor="stock" className="text-right text-xs">Initial Stock</Label>
                 <Input id="stock" type="number" className="col-span-3" />
               </div>
             </div>
             <DialogFooter>
-              <Button type="submit">Save Item</Button>
+              <Button type="submit">Save Stock Item</Button>
             </DialogFooter>
           </DialogContent>
         </Dialog>
@@ -61,7 +61,7 @@ export default function InventoryControl() {
 
       <div className="relative">
         <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-        <Input placeholder="Search inventory by name, category or SKU..." className="pl-9" />
+        <Input placeholder="Search stocks by name, category or SKU..." className="pl-9" />
       </div>
 
       <Card>
@@ -73,7 +73,7 @@ export default function InventoryControl() {
                 <TableHead>SKU</TableHead>
                 <TableHead>Category</TableHead>
                 <TableHead>MRP ($)</TableHead>
-                <TableHead>Global Stock</TableHead>
+                <TableHead>Current Stock</TableHead>
                 <TableHead className="text-right">Actions</TableHead>
               </TableRow>
             </TableHeader>
