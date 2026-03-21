@@ -2,7 +2,7 @@
 "use client";
 
 import { useFirestore, useCollection } from "@/firebase";
-import { collection, query, orderBy } from "firebase/firestore";
+import { collection, query, orderBy, limit } from "firebase/firestore";
 import { useMemoFirebase } from "@/firebase/use-memo-firebase";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Store, Package, ShoppingCart, AlertCircle, ArrowUpRight, Activity, Loader2 } from "lucide-react";
@@ -12,13 +12,14 @@ import { format } from "date-fns";
 export default function AdminOverview() {
   const db = useFirestore();
 
+  // Stabilize queries to prevent infinite loops and ensure efficient updates
   const storesRef = useMemoFirebase(() => db ? collection(db, "stores") : null, [db]);
-  const ordersRef = useMemoFirebase(() => db ? collection(db, "orders") : null, [db]);
+  const ordersRef = useMemoFirebase(() => db ? query(collection(db, "orders"), orderBy("createdAt", "desc"), limit(10)) : null, [db]);
   const inventoryRef = useMemoFirebase(() => db ? collection(db, "inventory") : null, [db]);
 
   const { data: stores, loading: storesLoading } = useCollection(storesRef);
   const { data: orders, loading: ordersLoading } = useCollection(ordersRef);
-  const { data: products } = useCollection(inventoryRef);
+  const { data: products, loading: inventoryLoading } = useCollection(inventoryRef);
 
   const pendingStoresCount = stores?.filter(s => s.status === 'pending').length || 0;
   const activeOrdersCount = orders?.filter(o => !['delivered', 'cancelled'].includes(o.status)).length || 0;
@@ -31,24 +32,27 @@ export default function AdminOverview() {
     { label: "Low Stock Alerts", value: lowStockCount.toString(), icon: AlertCircle, color: "text-red-600", bg: "bg-red-50", trend: lowStockCount > 0 ? "Action required" : "Healthy" },
   ];
 
+  // Consolidate recent activities from both stores and orders
   const recentActivities = [
     ...(stores?.map(s => ({
       title: "New store registration",
       target: s.name,
       time: s.createdAt?.toDate ? format(s.createdAt.toDate(), 'MMM dd, h:mm a') : 'Recently',
       status: s.status,
-      timestamp: s.createdAt?.toMillis ? s.createdAt.toMillis() : 0
+      timestamp: s.createdAt?.toMillis ? s.createdAt.toMillis() : 0,
+      type: 'store'
     })) || []),
     ...(orders?.map(o => ({
       title: "New order placed",
       target: `${o.storeName || 'Store'} (${o.items || 'Items'})`,
       time: o.createdAt?.toDate ? format(o.createdAt.toDate(), 'MMM dd, h:mm a') : 'Recently',
       status: o.status,
-      timestamp: o.createdAt?.toMillis ? o.createdAt.toMillis() : 0
+      timestamp: o.createdAt?.toMillis ? o.createdAt.toMillis() : 0,
+      type: 'order'
     })) || [])
   ].sort((a, b) => b.timestamp - a.timestamp).slice(0, 5);
 
-  if (storesLoading || ordersLoading) {
+  if (storesLoading || ordersLoading || inventoryLoading) {
     return (
       <div className="flex h-[400px] items-center justify-center">
         <Loader2 className="h-8 w-8 animate-spin text-primary" />
@@ -57,7 +61,7 @@ export default function AdminOverview() {
   }
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-8 animate-in fade-in duration-500">
       <div className="flex flex-col gap-1">
         <h1 className="text-2xl font-bold tracking-tight text-primary md:text-3xl">Administration Overview</h1>
         <p className="text-muted-foreground text-sm md:text-base">Real-time status of your retail network and inventory.</p>
@@ -84,17 +88,17 @@ export default function AdminOverview() {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <Card className="lg:col-span-2 shadow-sm">
+        <Card className="lg:col-span-2 shadow-sm border-none">
           <CardHeader className="flex flex-row items-center gap-2 border-b">
             <Activity className="h-5 w-5 text-primary" />
-            <CardTitle className="text-lg">Recent System Activity</CardTitle>
+            <CardTitle className="text-lg font-bold">Recent System Activity</CardTitle>
           </CardHeader>
           <CardContent className="p-0">
             <div className="divide-y">
               {recentActivities.length > 0 ? recentActivities.map((item, i) => (
                 <div key={i} className="flex items-center justify-between p-4 hover:bg-muted/30 transition-colors">
                   <div className="flex gap-3 items-start">
-                    <div className="mt-1 h-2 w-2 rounded-full bg-accent shrink-0" />
+                    <div className={`mt-1 h-2 w-2 rounded-full shrink-0 ${item.type === 'store' ? 'bg-orange-400' : 'bg-blue-400'}`} />
                     <div className="min-w-0">
                       <p className="text-sm font-semibold truncate">{item.title}: <span className="text-primary">{item.target}</span></p>
                       <p className="text-xs text-muted-foreground">{item.time}</p>
@@ -111,9 +115,9 @@ export default function AdminOverview() {
           </CardContent>
         </Card>
 
-        <Card className="bg-primary text-primary-foreground shadow-lg">
+        <Card className="bg-primary text-primary-foreground shadow-lg border-none">
           <CardHeader>
-            <CardTitle className="text-lg">Admin Quick Tips</CardTitle>
+            <CardTitle className="text-lg font-bold">Admin Quick Tips</CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="space-y-2">
@@ -125,12 +129,12 @@ export default function AdminOverview() {
               </p>
             </div>
             <div className="pt-4 border-t border-primary-foreground/20">
-              <div className="flex items-center justify-between text-xs">
+              <div className="flex items-center justify-between text-xs font-bold">
                 <span>System Health</span>
-                <span className="font-bold">Optimal</span>
+                <span className="uppercase tracking-widest">Optimal</span>
               </div>
               <div className="mt-2 h-1.5 w-full bg-primary-foreground/20 rounded-full overflow-hidden">
-                <div className="h-full w-[95%] bg-accent" />
+                <div className="h-full w-[95%] bg-accent transition-all duration-1000" />
               </div>
             </div>
           </CardContent>
