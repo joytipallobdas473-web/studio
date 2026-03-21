@@ -2,33 +2,38 @@
 
 import { firebaseConfig } from '@/firebase/config';
 import { initializeApp, getApps, getApp, FirebaseApp } from 'firebase/app';
-import { getAuth } from 'firebase/auth';
-import { getFirestore } from 'firebase/firestore'
+import { getAuth, Auth } from 'firebase/auth';
+import { getFirestore, Firestore } from 'firebase/firestore'
 
-// IMPORTANT: DO NOT MODIFY THIS FUNCTION
+// Singleton SDK instances to prevent internal assertion errors
+let authInstance: Auth | null = null;
+let firestoreInstance: Firestore | null = null;
+
 export function initializeFirebase() {
+  let app: FirebaseApp;
+  
   if (!getApps().length) {
-    let firebaseApp;
     try {
-      firebaseApp = initializeApp();
+      app = initializeApp(firebaseConfig);
     } catch (e) {
-      if (process.env.NODE_ENV === "production") {
-        console.warn('Automatic initialization failed. Falling back to firebase config object.', e);
-      }
-      firebaseApp = initializeApp(firebaseConfig);
+      console.error('Firebase initialization failed:', e);
+      app = initializeApp(firebaseConfig);
     }
-
-    return getSdks(firebaseApp);
+  } else {
+    app = getApp();
   }
 
-  return getSdks(getApp());
+  return getSdks(app);
 }
 
 export function getSdks(firebaseApp: FirebaseApp) {
+  if (!authInstance) authInstance = getAuth(firebaseApp);
+  if (!firestoreInstance) firestoreInstance = getFirestore(firebaseApp);
+  
   return {
     firebaseApp,
-    auth: getAuth(firebaseApp),
-    firestore: getFirestore(firebaseApp)
+    auth: authInstance,
+    firestore: firestoreInstance
   };
 }
 
