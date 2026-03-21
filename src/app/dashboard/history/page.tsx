@@ -6,7 +6,7 @@ import { collection, query, orderBy, where } from "firebase/firestore";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
-import { Search, Filter, ArrowUpDown, Clock, Truck, PackageCheck, XCircle, Loader2, Phone } from "lucide-react";
+import { Search, Filter, ArrowUpDown, Clock, Truck, PackageCheck, XCircle, Loader2, Phone, MapPin } from "lucide-react";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { useState } from "react";
 import { format } from "date-fns";
@@ -30,7 +30,8 @@ export default function HistoryPage() {
   const filteredOrders = orders?.filter(o => 
     o.id.toLowerCase().includes(searchTerm.toLowerCase()) || 
     (o.items || "").toLowerCase().includes(searchTerm.toLowerCase()) ||
-    (o.phoneNumber || "").toLowerCase().includes(searchTerm.toLowerCase())
+    (o.phoneNumber || "").toLowerCase().includes(searchTerm.toLowerCase()) ||
+    (o.deliveryAddress || "").toLowerCase().includes(searchTerm.toLowerCase())
   );
 
   const getStatusIcon = (status: string) => {
@@ -66,7 +67,7 @@ export default function HistoryPage() {
   return (
     <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
       <div className="space-y-1">
-        <h1 className="text-3xl font-bold text-primary tracking-tight">Order Registry</h1>
+        <h1 className="text-3xl font-bold text-primary tracking-tight italic uppercase">Order Registry</h1>
         <p className="text-muted-foreground font-medium">Comprehensive history of reorder packets for this node.</p>
       </div>
 
@@ -74,7 +75,7 @@ export default function HistoryPage() {
         <div className="relative flex-1">
           <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
           <Input 
-            placeholder="Filter by Packet ID, Item Name, or Node Phone..." 
+            placeholder="Filter by ID, Item, Phone, or Address..." 
             className="pl-11 h-12 bg-slate-50 border-none rounded-xl font-medium" 
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
@@ -96,7 +97,7 @@ export default function HistoryPage() {
             <TableHeader className="bg-slate-50/50 h-16">
               <TableRow className="border-slate-100">
                 <TableHead className="font-black uppercase text-[10px] tracking-[0.2em] pl-8">Packet Signature</TableHead>
-                <TableHead className="font-black uppercase text-[10px] tracking-[0.2em]">Node Contact</TableHead>
+                <TableHead className="font-black uppercase text-[10px] tracking-[0.2em]">Contact & Location</TableHead>
                 <TableHead className="font-black uppercase text-[10px] tracking-[0.2em]">Payload</TableHead>
                 <TableHead className="font-black uppercase text-[10px] tracking-[0.2em]">Net Value</TableHead>
                 <TableHead className="font-black uppercase text-[10px] tracking-[0.2em] pr-8">Flow Status</TableHead>
@@ -104,7 +105,7 @@ export default function HistoryPage() {
             </TableHeader>
             <TableBody>
               {filteredOrders && filteredOrders.length > 0 ? filteredOrders.map((order) => (
-                <TableRow key={order.id} className="hover:bg-slate-50/50 transition-colors h-20 border-slate-100">
+                <TableRow key={order.id} className="hover:bg-slate-50/50 transition-colors h-24 border-slate-100">
                   <TableCell className="font-mono font-bold text-primary text-[11px] uppercase pl-8">
                     {order.id.substring(0, 8)}
                     <p className="text-[9px] text-slate-400 font-bold uppercase tracking-tighter mt-1">
@@ -112,9 +113,15 @@ export default function HistoryPage() {
                     </p>
                   </TableCell>
                   <TableCell>
-                    <div className="flex items-center gap-2 text-xs font-bold text-slate-600">
-                      <Phone className="h-3 w-3 text-primary opacity-50" />
-                      {order.phoneNumber || "N/A"}
+                    <div className="flex flex-col gap-1 py-4">
+                      <div className="flex items-center gap-2 text-xs font-bold text-slate-600">
+                        <Phone className="h-3 w-3 text-primary opacity-50" />
+                        {order.phoneNumber || "N/A"}
+                      </div>
+                      <div className="flex items-start gap-2 text-[10px] text-slate-400 font-medium max-w-[200px]">
+                        <MapPin className="h-3 w-3 shrink-0 text-accent opacity-50" />
+                        <span className="truncate">{order.deliveryAddress || "Not Provided"}</span>
+                      </div>
                     </div>
                   </TableCell>
                   <TableCell className="font-bold text-slate-800 text-sm uppercase italic">

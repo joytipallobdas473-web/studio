@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, useMemo } from "react";
@@ -7,6 +8,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardFooter } from "@/componen
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { 
@@ -17,7 +19,8 @@ import {
   Search, 
   Filter, 
   Info,
-  Phone
+  Phone,
+  MapPin
 } from "lucide-react";
 import { useFirestore, useCollection, useUser, useMemoFirebase, useDoc } from "@/firebase";
 import { collection, serverTimestamp, query, orderBy, doc } from "firebase/firestore";
@@ -47,6 +50,7 @@ export default function NewOrderPage() {
   const [selectedProduct, setSelectedProduct] = useState<any>(null);
   const [orderQuantity, setOrderQuantity] = useState("1");
   const [phoneNumber, setPhoneNumber] = useState("");
+  const [deliveryAddress, setDeliveryAddress] = useState("");
 
   const storeRef = useMemoFirebase(() => {
     if (!db || !user) return null;
@@ -80,6 +84,7 @@ export default function NewOrderPage() {
     setSelectedProduct(product);
     setOrderQuantity("1");
     setPhoneNumber(store?.phoneNumber || "");
+    setDeliveryAddress(store?.location || "");
     setOrderDialogOpen(true);
   };
 
@@ -94,6 +99,11 @@ export default function NewOrderPage() {
       return;
     }
 
+    if (!deliveryAddress || deliveryAddress.trim().length < 5) {
+      toast({ title: "Validation Error", description: "Full delivery address is required.", variant: "destructive" });
+      return;
+    }
+
     setIsSubmitting(true);
     const qty = parseInt(orderQuantity) || 1;
     const orderData = {
@@ -103,13 +113,13 @@ export default function NewOrderPage() {
       quantity: qty,
       total: (selectedProduct.price || 0) * qty,
       phoneNumber: phoneNumber.trim(),
+      deliveryAddress: deliveryAddress.trim(),
       status: "pending",
       storeName: store?.name || "Retailer Node", 
       location: store?.location || "North East",
       createdAt: serverTimestamp()
     };
 
-    // Save order and redirect
     addDocumentNonBlocking(collection(db, "orders"), orderData)
       .then(() => {
         setSubmitted(true);
@@ -139,7 +149,7 @@ export default function NewOrderPage() {
     <div className="space-y-8 pb-12 animate-in fade-in duration-500">
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 bg-white p-8 rounded-[2rem] shadow-sm border border-slate-100">
         <div className="space-y-1">
-          <h1 className="text-3xl font-bold text-primary tracking-tight">Stock Catalog</h1>
+          <h1 className="text-3xl font-bold text-primary tracking-tight italic uppercase">Stock Catalog</h1>
           <p className="text-muted-foreground font-medium flex items-center gap-2">
             <Info className="h-3.5 w-3.5" /> Select inventory for {store?.name || 'your node'}.
           </p>
@@ -242,7 +252,7 @@ export default function NewOrderPage() {
             <DialogTitle className="text-2xl font-black text-primary uppercase italic tracking-tighter">Finalize Reorder</DialogTitle>
           </DialogHeader>
           {selectedProduct && (
-            <div className="p-10 space-y-8">
+            <div className="p-10 space-y-6">
               <div className="flex gap-6 p-6 bg-slate-50 rounded-3xl border border-slate-100 items-center">
                 <div className="flex-1 space-y-1">
                   <h4 className="font-bold text-slate-900 text-lg uppercase italic">{selectedProduct.name}</h4>
@@ -250,33 +260,47 @@ export default function NewOrderPage() {
                 </div>
               </div>
               
-              <div className="space-y-6">
-                <div className="space-y-3">
+              <div className="space-y-4">
+                <div className="space-y-2">
                   <Label className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 ml-1">Contact Phone Number</Label>
                   <div className="relative">
                     <Phone className="absolute left-5 top-1/2 -translate-y-1/2 h-5 w-5 text-primary opacity-50" />
                     <Input 
                       placeholder="Enter mobile number..." 
-                      className="h-16 pl-14 rounded-2xl bg-slate-50 border-none focus:ring-primary font-bold text-slate-900" 
+                      className="h-14 pl-14 rounded-2xl bg-slate-50 border-none focus:ring-primary font-bold text-slate-900" 
                       value={phoneNumber}
                       onChange={(e) => setPhoneNumber(e.target.value)}
                     />
                   </div>
                 </div>
-                <div className="grid grid-cols-2 gap-6">
-                   <div className="space-y-3">
+
+                <div className="space-y-2">
+                  <Label className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 ml-1">Delivery Address</Label>
+                  <div className="relative">
+                    <MapPin className="absolute left-5 top-5 h-5 w-5 text-primary opacity-50" />
+                    <Textarea 
+                      placeholder="Enter complete delivery address..." 
+                      className="min-h-[100px] pl-14 rounded-2xl bg-slate-50 border-none focus:ring-primary font-bold text-slate-900 text-sm" 
+                      value={deliveryAddress}
+                      onChange={(e) => setDeliveryAddress(e.target.value)}
+                    />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                   <div className="space-y-2">
                      <Label className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 ml-1">Qty</Label>
                      <Input 
                        type="number" 
                        min="1" 
                        value={orderQuantity} 
                        onChange={(e) => setOrderQuantity(e.target.value)} 
-                       className="h-16 text-center font-black rounded-2xl bg-slate-50 border-none text-lg" 
+                       className="h-14 text-center font-black rounded-2xl bg-slate-50 border-none text-lg" 
                      />
                    </div>
-                   <div className="space-y-3">
+                   <div className="space-y-2">
                      <Label className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 ml-1">Total</Label>
-                     <div className="h-16 flex items-center justify-center bg-primary text-white font-black rounded-2xl text-xl">
+                     <div className="h-14 flex items-center justify-center bg-primary text-white font-black rounded-2xl text-xl">
                         ${(parseFloat(orderQuantity || "0") * (selectedProduct.price || 0)).toFixed(2)}
                      </div>
                    </div>
@@ -285,9 +309,9 @@ export default function NewOrderPage() {
             </div>
           )}
           <DialogFooter className="p-10 pt-0 flex gap-4">
-            <Button variant="ghost" onClick={() => setOrderDialogOpen(false)} className="flex-1 h-14 rounded-2xl">Abort</Button>
-            <Button onClick={handleSubmitOrder} className="flex-[2] bg-accent text-primary hover:bg-primary hover:text-white h-14 rounded-2xl font-black uppercase tracking-widest" disabled={isSubmitting}>
-              {isSubmitting ? <Loader2 className="h-5 w-5 animate-spin" /> : "Transmit Reorder"}
+            <Button variant="ghost" onClick={() => setOrderDialogOpen(false)} className="flex-1 h-14 rounded-2xl font-bold uppercase tracking-widest text-xs">Abort</Button>
+            <Button onClick={handleSubmitOrder} className="flex-[2] bg-accent text-primary hover:bg-primary hover:text-white h-14 rounded-2xl font-black uppercase tracking-widest text-xs" disabled={isSubmitting}>
+              {isSubmitting ? <Loader2 className="h-5 w-5 animate-spin" /> : "Transmit Order"}
             </Button>
           </DialogFooter>
         </DialogContent>
