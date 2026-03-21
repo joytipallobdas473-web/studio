@@ -12,6 +12,30 @@
       "description": "Checking retail inventory on a tablet",
       "imageUrl": "https://picsum.photos/seed/retail2/600/400",
       "imageHint": "inventory management"
+    },
+    {
+      "id": "cat-electronics",
+      "description": "Electronics category thumbnail",
+      "imageUrl": "https://picsum.photos/seed/elec/400/300",
+      "imageHint": "electronics devices"
+    },
+    {
+      "id": "cat-apparel",
+      "description": "Apparel category thumbnail",
+      "imageUrl": "https://picsum.photos/seed/apparel/400/300",
+      "imageHint": "clothing fashion"
+    },
+    {
+      "id": "cat-grocery",
+      "description": "Grocery category thumbnail",
+      "imageUrl": "https://picsum.photos/seed/grocery/400/300",
+      "imageHint": "grocery food"
+    },
+    {
+      "id": "cat-office",
+      "description": "Office supplies category thumbnail",
+      "imageUrl": "https://picsum.photos/seed/office/400/300",
+      "imageHint": "office stationery"
     }
   ]
 }
