@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState, useMemo } from "react";
@@ -9,7 +8,6 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
-import { Textarea } from "@/components/ui/textarea";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { 
   Package, 
@@ -19,7 +17,6 @@ import {
   Search, 
   Filter, 
   Info,
-  AlertCircle,
   Phone
 } from "lucide-react";
 import { useFirestore, useCollection, useUser, useMemoFirebase, useDoc } from "@/firebase";
@@ -49,7 +46,6 @@ export default function NewOrderPage() {
   const [orderDialogOpen, setOrderDialogOpen] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState<any>(null);
   const [orderQuantity, setOrderQuantity] = useState("1");
-  const [orderNotes, setOrderNotes] = useState("");
   const [phoneNumber, setPhoneNumber] = useState("");
 
   const storeRef = useMemoFirebase(() => {
@@ -78,19 +74,18 @@ export default function NewOrderPage() {
       
       return matchesSearch && matchesCategory;
     });
-  }, [products, searchQuery, setSelectedCategory]);
+  }, [products, searchQuery, selectedCategory]);
 
   const handleOpenOrderDialog = (product: any) => {
     setSelectedProduct(product);
     setOrderQuantity("1");
-    setOrderNotes("");
     setPhoneNumber(store?.phoneNumber || "");
     setOrderDialogOpen(true);
   };
 
   const handleSubmitOrder = () => {
     if (!db || !selectedProduct || !user) {
-      toast({ title: "Protocol Refused", description: "Identity authentication required.", variant: "destructive" });
+      toast({ title: "Transmission Error", description: "Identity sync required.", variant: "destructive" });
       return;
     }
 
@@ -107,7 +102,6 @@ export default function NewOrderPage() {
       userId: user.uid,
       quantity: qty,
       total: (selectedProduct.price || 0) * qty,
-      notes: orderNotes.trim(),
       phoneNumber: phoneNumber.trim(),
       status: "pending",
       storeName: store?.name || "Retailer Node", 
@@ -115,15 +109,16 @@ export default function NewOrderPage() {
       createdAt: serverTimestamp()
     };
 
+    // Save order and redirect
     addDocumentNonBlocking(collection(db, "orders"), orderData)
       .then(() => {
         setSubmitted(true);
-        toast({ title: "Order Sent", description: `Request for ${qty} x ${selectedProduct.name} saved.` });
+        toast({ title: "Order Sent", description: `Request for ${selectedProduct.name} saved.` });
         setTimeout(() => router.push("/dashboard"), 1500);
       })
       .catch((err) => {
         setIsSubmitting(false);
-        toast({ title: "Transmission Failed", description: "Could not save order. Please try again.", variant: "destructive" });
+        toast({ title: "Protocol Refused", description: "Could not sync order telemetry.", variant: "destructive" });
       });
   };
 
