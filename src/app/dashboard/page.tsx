@@ -3,8 +3,9 @@
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Package, ShoppingCart, History, TrendingUp, ArrowRight } from "lucide-react";
+import { Package, ShoppingCart, History, TrendingUp, ArrowRight, Clock, Truck, PackageCheck, XCircle } from "lucide-react";
 import Link from "next/link";
+import { Badge } from "@/components/ui/badge";
 
 export default function DashboardPage() {
   const stats = [
@@ -14,10 +15,32 @@ export default function DashboardPage() {
   ];
 
   const recentOrders = [
-    { id: "ORD-7721", date: "2024-05-12", total: "$420.00", status: "In Transit" },
-    { id: "ORD-7719", date: "2024-05-10", total: "$1,150.00", status: "Delivered" },
-    { id: "ORD-7715", date: "2024-05-08", total: "$89.50", status: "Processing" },
+    { id: "ORD-9901", date: "2024-05-15", total: "$495.00", status: "pending" },
+    { id: "ORD-9902", date: "2024-05-14", total: "$579.00", status: "processing" },
+    { id: "ORD-9903", date: "2024-05-14", total: "$350.00", status: "shipped" },
   ];
+
+  const getStatusIcon = (status: string) => {
+    switch (status.toLowerCase()) {
+      case "delivered": return <PackageCheck className="h-3 w-3 mr-1" />;
+      case "processing": return <Clock className="h-3 w-3 mr-1" />;
+      case "pending": return <Clock className="h-3 w-3 mr-1" />;
+      case "shipped": return <Truck className="h-3 w-3 mr-1" />;
+      case "cancelled": return <XCircle className="h-3 w-3 mr-1" />;
+      default: return null;
+    }
+  };
+
+  const getStatusColor = (status: string) => {
+    switch (status.toLowerCase()) {
+      case "delivered": return "text-green-700 bg-green-50 border-green-200";
+      case "processing": return "text-blue-700 bg-blue-50 border-blue-200";
+      case "pending": return "text-yellow-700 bg-yellow-50 border-yellow-200";
+      case "shipped": return "text-purple-700 bg-purple-50 border-purple-200";
+      case "cancelled": return "text-red-700 bg-red-50 border-red-200";
+      default: return "text-gray-700 bg-gray-50 border-gray-200";
+    }
+  };
 
   return (
     <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
@@ -64,11 +87,12 @@ export default function DashboardPage() {
                     <p className="font-semibold">{order.id}</p>
                     <p className="text-xs text-muted-foreground">{order.date}</p>
                   </div>
-                  <div className="text-right">
+                  <div className="text-right flex flex-col items-end gap-1">
                     <p className="font-bold text-primary">{order.total}</p>
-                    <span className="text-[10px] uppercase font-bold px-2 py-0.5 rounded-full bg-secondary text-secondary-foreground">
+                    <Badge variant="outline" className={`text-[10px] capitalize px-2 py-0 h-5 flex items-center ${getStatusColor(order.status)}`}>
+                      {getStatusIcon(order.status)}
                       {order.status}
-                    </span>
+                    </Badge>
                   </div>
                 </div>
               ))}

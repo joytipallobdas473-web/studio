@@ -4,26 +4,36 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
-import { Search, Filter, ArrowUpDown } from "lucide-react";
+import { Search, Filter, ArrowUpDown, Clock, Truck, PackageCheck, XCircle } from "lucide-react";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 
 export default function HistoryPage() {
   const orders = [
-    { id: "ORD-7721", date: "2024-05-12", item: "Logitech MX Master 3", qty: 5, total: "$420.00", status: "In Transit" },
-    { id: "ORD-7719", date: "2024-05-10", item: "Dell 27 Monitor", qty: 10, total: "$1,150.00", status: "Delivered" },
-    { id: "ORD-7715", date: "2024-05-08", item: "USB-C Hubs", qty: 25, total: "$89.50", status: "Delivered" },
-    { id: "ORD-7712", date: "2024-05-05", item: "Office Chairs", qty: 2, total: "$550.00", status: "Cancelled" },
-    { id: "ORD-7708", date: "2024-05-01", item: "Paper Reams (A4)", qty: 100, total: "$400.00", status: "Delivered" },
-    { id: "ORD-7699", date: "2024-04-28", item: "Laptop Stands", qty: 15, total: "$320.00", status: "Delivered" },
+    { id: "ORD-9901", date: "2024-05-15", item: "Logitech MX Master 3", qty: 5, total: "$495.00", status: "pending" },
+    { id: "ORD-9902", date: "2024-05-14", item: "Dell 27 Monitor", qty: 2, total: "$579.00", status: "processing" },
+    { id: "ORD-9903", date: "2024-05-14", item: "USB-C Hubs", qty: 10, total: "$350.00", status: "shipped" },
+    { id: "ORD-9904", date: "2024-05-13", item: "Office Chairs", qty: 4, total: "$1,200.00", status: "delivered" },
   ];
+
+  const getStatusIcon = (status: string) => {
+    switch (status.toLowerCase()) {
+      case "delivered": return <PackageCheck className="h-3 w-3 mr-1" />;
+      case "processing": return <Clock className="h-3 w-3 mr-1" />;
+      case "pending": return <Clock className="h-3 w-3 mr-1" />;
+      case "shipped": return <Truck className="h-3 w-3 mr-1" />;
+      case "cancelled": return <XCircle className="h-3 w-3 mr-1" />;
+      default: return null;
+    }
+  };
 
   const getStatusColor = (status: string) => {
     switch (status.toLowerCase()) {
-      case "delivered": return "bg-green-100 text-green-700 hover:bg-green-100";
-      case "in transit": return "bg-blue-100 text-blue-700 hover:bg-blue-100";
-      case "processing": return "bg-yellow-100 text-yellow-700 hover:bg-yellow-100";
-      case "cancelled": return "bg-red-100 text-red-700 hover:bg-red-100";
-      default: return "bg-gray-100 text-gray-700";
+      case "delivered": return "text-green-700 bg-green-50 border-green-200";
+      case "processing": return "text-blue-700 bg-blue-50 border-blue-200";
+      case "pending": return "text-yellow-700 bg-yellow-50 border-yellow-200";
+      case "shipped": return "text-purple-700 bg-purple-50 border-purple-200";
+      case "cancelled": return "text-red-700 bg-red-50 border-red-200";
+      default: return "text-gray-700 bg-gray-50 border-gray-200";
     }
   };
 
@@ -73,7 +83,8 @@ export default function HistoryPage() {
                   <TableCell>{order.qty}</TableCell>
                   <TableCell className="font-bold">{order.total}</TableCell>
                   <TableCell>
-                    <Badge className={getStatusColor(order.status)}>
+                    <Badge variant="outline" className={`capitalize flex items-center w-fit ${getStatusColor(order.status)}`}>
+                      {getStatusIcon(order.status)}
                       {order.status}
                     </Badge>
                   </TableCell>
