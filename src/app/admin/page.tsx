@@ -1,14 +1,16 @@
+
 "use client";
 
 import { useState, useMemo } from "react";
 import { useFirestore, useCollection, useMemoFirebase } from "@/firebase";
 import { collection, query, orderBy, limit } from "firebase/firestore";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { Store, Package, ShoppingCart, AlertCircle, Loader2, BrainCircuit, Activity, Zap } from "lucide-react";
+import { Store, Package, ShoppingCart, AlertCircle, Loader2, BrainCircuit, Activity, Zap, Share2, Network } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { analyzeInventory, type InventoryAnalysisOutput } from "@/ai/flows/inventory-analyst";
 import { cn } from "@/lib/utils";
+import { toast } from "@/hooks/use-toast";
 
 export default function AdminOverview() {
   const db = useFirestore();
@@ -72,6 +74,13 @@ export default function AdminOverview() {
     }
   };
 
+  const handleShareNode = () => {
+    toast({
+      title: "Public Share Readiness",
+      description: "App deployment to Firebase Hosting required for public sharing. Current URL is private.",
+    });
+  };
+
   if (storesLoading || ordersLoading || productsLoading) {
     return (
       <div className="flex h-[60vh] items-center justify-center">
@@ -83,105 +92,110 @@ export default function AdminOverview() {
   return (
     <div className="space-y-8 animate-in fade-in duration-500">
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-        <div>
-          <h1 className="text-3xl font-bold text-slate-900 tracking-tight">Regional Overview</h1>
+        <div className="space-y-1">
+          <h1 className="text-4xl font-black text-slate-900 tracking-tighter uppercase italic">Command Central</h1>
           <p className="text-slate-500 text-sm font-medium">Monitoring {stores?.length || 0} North East branch nodes.</p>
         </div>
-        <Button className="font-bold bg-primary">
-          <Zap className="mr-2 h-4 w-4" /> System Sync
-        </Button>
+        <div className="flex gap-3 w-full md:w-auto">
+          <Button variant="outline" className="flex-1 md:flex-none h-12 rounded-xl font-bold border-slate-200" onClick={handleShareNode}>
+            <Share2 className="mr-2 h-4 w-4" /> Share Hub
+          </Button>
+          <Button className="flex-1 md:flex-none h-12 rounded-xl font-bold bg-primary px-8">
+            <Zap className="mr-2 h-4 w-4" /> System Sync
+          </Button>
+        </div>
       </div>
       
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
         {stats.map((stat, i) => (
-          <Card key={i} className="border-none shadow-sm rounded-2xl overflow-hidden">
+          <Card key={i} className="border-none shadow-sm rounded-3xl overflow-hidden bg-white">
             <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
-              <CardTitle className="text-xs font-bold uppercase tracking-wider text-slate-400">{stat.label}</CardTitle>
+              <CardTitle className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">{stat.label}</CardTitle>
               <div className={cn(stat.bg, stat.color, "p-2 rounded-xl")}>
-                <stat.icon className="h-5 w-5" />
+                <stat.icon className="h-4 w-4" />
               </div>
             </CardHeader>
             <CardContent>
-              <div className="text-3xl font-bold text-slate-800 tracking-tight">{stat.value}</div>
+              <div className="text-3xl font-black text-slate-800 tracking-tighter">{stat.value}</div>
             </CardContent>
           </Card>
         ))}
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        <Card className="lg:col-span-2 shadow-sm rounded-3xl border-none">
-          <CardHeader className="border-b pb-6">
+        <Card className="lg:col-span-2 shadow-sm rounded-[2.5rem] border-none bg-white overflow-hidden">
+          <CardHeader className="border-b bg-slate-50/50 py-8 px-10">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-3">
                 <Activity className="h-5 w-5 text-primary" />
-                <CardTitle className="text-lg font-bold">Recent Transit Activity</CardTitle>
+                <CardTitle className="text-xl font-black uppercase italic tracking-tighter text-slate-900">Live Traffic Logs</CardTitle>
               </div>
-              <Badge variant="secondary" className="text-[10px] font-bold uppercase">Live Data</Badge>
+              <Badge variant="secondary" className="text-[9px] font-black uppercase tracking-widest bg-primary/10 text-primary border-none px-4 py-1">Node Sync Active</Badge>
             </div>
           </CardHeader>
           <CardContent className="p-0">
-            <div className="divide-y">
+            <div className="divide-y divide-slate-50">
               {orders && orders.length > 0 ? orders.slice(0, 5).map((order, i) => (
-                <div key={i} className="flex items-center justify-between px-6 py-5 hover:bg-slate-50 transition-colors">
-                  <div className="flex items-center gap-4">
+                <div key={i} className="flex items-center justify-between px-10 py-6 hover:bg-slate-50 transition-all group">
+                  <div className="flex items-center gap-5">
                     <div className={cn(
-                      "h-2 w-2 rounded-full",
+                      "h-1.5 w-1.5 rounded-full transition-all group-hover:scale-150",
                       order.status === 'delivered' ? 'bg-emerald-500' : 'bg-primary'
                     )} />
                     <div>
-                      <p className="text-sm font-bold text-slate-800">{order.storeName || 'Branch Node'}</p>
-                      <p className="text-[10px] text-slate-500 font-medium uppercase tracking-tight">{order.items || 'Restock Payload'}</p>
+                      <p className="text-sm font-black text-slate-900 uppercase italic tracking-tight">{order.storeName || 'Branch Node'}</p>
+                      <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest mt-1">{order.items || 'Restock Payload'}</p>
                     </div>
                   </div>
                   <div className="text-right">
-                    <p className="text-sm font-bold text-slate-800">${(order.total || 0).toFixed(2)}</p>
-                    <span className="text-[10px] font-bold text-primary uppercase">{order.status}</span>
+                    <p className="text-sm font-black text-primary font-mono">${(order.total || 0).toFixed(2)}</p>
+                    <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest">{order.status}</span>
                   </div>
                 </div>
               )) : (
-                <div className="py-20 text-center text-slate-400 text-sm">No recent activity detected.</div>
+                <div className="py-24 text-center text-slate-400 italic font-medium">No recent packet activity detected.</div>
               )}
             </div>
           </CardContent>
         </Card>
 
         <div className="space-y-6">
-          <Card className="bg-primary text-white shadow-lg border-none rounded-3xl overflow-hidden p-6">
-            <div className="flex items-center gap-3 mb-6">
+          <Card className="bg-primary text-white shadow-xl border-none rounded-[2.5rem] overflow-hidden p-8">
+            <div className="flex items-center gap-3 mb-8">
               <BrainCircuit className="h-6 w-6 text-accent" />
-              <CardTitle className="text-xl font-bold tracking-tight">Regional Intel</CardTitle>
+              <CardTitle className="text-2xl font-black uppercase italic tracking-tighter">Regional Intel</CardTitle>
             </div>
             {aiAnalysis ? (
-              <div className="space-y-4">
-                <p className="text-sm leading-relaxed opacity-90 italic">"{aiAnalysis.summary}"</p>
-                <Button variant="secondary" className="w-full font-bold text-xs" onClick={handleRunAIAnalysis} disabled={isAnalyzing}>
-                  Refresh Intel
+              <div className="space-y-6">
+                <p className="text-sm leading-relaxed opacity-90 italic font-medium">"{aiAnalysis.summary}"</p>
+                <Button variant="secondary" className="w-full h-14 rounded-2xl font-black text-[10px] uppercase tracking-widest bg-white text-primary hover:bg-accent hover:text-primary transition-all" onClick={handleRunAIAnalysis} disabled={isAnalyzing}>
+                  Recalculate Intel
                 </Button>
               </div>
             ) : (
-              <div className="space-y-4">
-                <p className="text-xs opacity-70">Run AI synthesis for stock health and reordering insights.</p>
+              <div className="space-y-6">
+                <p className="text-xs opacity-70 font-medium leading-relaxed">Synthesize regional stock health and branch reordering patterns for actionable insights.</p>
                 <Button 
-                  className="w-full bg-accent text-primary hover:bg-white font-bold rounded-xl"
+                  className="w-full h-14 bg-accent text-primary hover:bg-white font-black rounded-2xl shadow-lg transition-all uppercase tracking-widest text-[10px]"
                   onClick={handleRunAIAnalysis}
                   disabled={isAnalyzing}
                 >
-                  {isAnalyzing ? <Loader2 className="h-4 w-4 animate-spin" /> : "Generate Analysis"}
+                  {isAnalyzing ? <Loader2 className="h-5 w-5 animate-spin" /> : "Generate Synthesis"}
                 </Button>
               </div>
             )}
           </Card>
 
-          <Card className="border-none shadow-sm rounded-3xl p-6">
-            <h3 className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-4">Grid Health</h3>
-            <div className="space-y-3">
-              <div className="flex justify-between items-center text-sm">
-                <span className="text-slate-500">Service Status</span>
-                <span className="text-emerald-500 font-bold">Online</span>
+          <Card className="border-none shadow-sm rounded-[2rem] p-8 bg-white space-y-4">
+            <h3 className="text-[10px] font-black text-slate-400 uppercase tracking-[0.3em]">Grid Telemetry</h3>
+            <div className="space-y-4">
+              <div className="flex justify-between items-center text-sm border-b border-slate-50 pb-3">
+                <span className="text-slate-500 font-medium">Network Status</span>
+                <Badge className="bg-emerald-50 text-emerald-600 border-none font-black text-[9px] px-3">ACTIVE</Badge>
               </div>
               <div className="flex justify-between items-center text-sm">
-                <span className="text-slate-500">Sync Latency</span>
-                <span className="font-bold text-primary">24ms</span>
+                <span className="text-slate-500 font-medium">Node Latency</span>
+                <span className="font-black text-primary font-mono tracking-tighter">14ms</span>
               </div>
             </div>
           </Card>

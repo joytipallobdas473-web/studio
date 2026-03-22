@@ -13,7 +13,9 @@ import {
   ArrowRight,
   ChevronRight,
   ShieldAlert,
-  LayoutDashboard
+  Globe,
+  Zap,
+  Network
 } from "lucide-react";
 import { useUser } from "@/firebase";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
@@ -52,7 +54,7 @@ export default function Home() {
                 <UserPlus className="h-10 w-10" />
               </div>
               <CardTitle className="text-2xl font-black pt-6 uppercase italic tracking-tight">Branch Portal</CardTitle>
-              <CardDescription className="px-8 font-medium">Compulsory registration and inventory requests for retailer nodes.</CardDescription>
+              <CardDescription className="px-8 font-medium text-slate-500">Compulsory registration and inventory requests for retailer nodes.</CardDescription>
             </CardHeader>
             <CardContent className="pb-12 px-12 space-y-4">
               <Link href="/register">
@@ -85,13 +87,27 @@ export default function Home() {
           </Card>
         </div>
 
-        <div className="flex flex-col items-center space-y-6 pt-12">
-          <div className="flex items-center gap-12 text-[10px] text-slate-400 font-black uppercase tracking-[0.4em]">
-             <span className="flex items-center gap-3"><ShieldCheck className="h-4 w-4 text-emerald-500" /> Secure Grid</span>
-             <span className="flex items-center gap-3"><MapPin className="h-4 w-4 text-accent" /> NE Cluster</span>
-          </div>
-          <p className="text-center text-[9px] text-slate-400 font-black uppercase tracking-widest opacity-40">
-            Proprietary Logistics Architecture • v2.8 PRD
+        <div className="bg-white/50 backdrop-blur-sm rounded-[2.5rem] p-8 md:p-12 border border-white/50 space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-1000 delay-300">
+           <div className="flex flex-col md:flex-row items-center justify-between gap-8">
+              <div className="flex items-center gap-4">
+                <div className="h-12 w-12 rounded-2xl bg-primary/10 flex items-center justify-center">
+                  <Network className="h-6 w-6 text-primary" />
+                </div>
+                <div>
+                  <h4 className="font-black text-slate-900 uppercase italic tracking-tight">Regional Integrity</h4>
+                  <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Global Synchronization Active</p>
+                </div>
+              </div>
+              <div className="flex gap-12 text-[10px] text-slate-400 font-black uppercase tracking-[0.4em]">
+                <span className="flex items-center gap-3"><ShieldCheck className="h-4 w-4 text-emerald-500" /> Secure Grid</span>
+                <span className="flex items-center gap-3"><Globe className="h-4 w-4 text-accent" /> NE Cluster</span>
+              </div>
+           </div>
+        </div>
+
+        <div className="text-center">
+          <p className="text-[9px] text-slate-400 font-black uppercase tracking-[0.4em] opacity-40">
+            Proprietary Logistics Architecture • v2.8 PRD • North East Regional Grid
           </p>
         </div>
       </div>
