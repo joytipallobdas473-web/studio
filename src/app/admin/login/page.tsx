@@ -37,7 +37,6 @@ export default function AdminLoginPage() {
     setError(null);
     if (!auth) return;
     
-    // Strict Admin Keyword Protocol check for login
     if (!email.toLowerCase().includes("admin")) {
       toast({
         title: "Access Denied",
@@ -122,7 +121,8 @@ export default function AdminLoginPage() {
                     className="pl-14 h-16 bg-black/40 border-white/5 rounded-2xl focus:ring-primary font-bold text-white placeholder:text-slate-700" 
                     required 
                     value={email}
-                    onChange={(e) => setEmail(e.target.value.toLowerCase())}
+                    autoComplete="email"
+                    onChange={(e) => setEmail(e.target.value)}
                   />
                 </div>
               </div>
@@ -137,6 +137,7 @@ export default function AdminLoginPage() {
                     className="pl-14 h-16 bg-black/40 border-white/5 rounded-2xl focus:ring-primary font-bold text-white" 
                     required 
                     value={password}
+                    autoComplete="current-password"
                     onChange={(e) => setPassword(e.target.value)}
                   />
                 </div>
@@ -155,7 +156,7 @@ export default function AdminLoginPage() {
           </CardContent>
           <div className="p-10 pt-0 text-center space-y-4">
             <p className="text-[11px] text-slate-600 font-medium italic">
-              Unrecognized identity? Administrator nodes must be pre-registered by the network owner.
+              Unrecognized identity? Administrator nodes must be pre-registered via the Regional Registry.
             </p>
           </div>
         </Card>

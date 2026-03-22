@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, useMemo } from "react";
@@ -210,6 +211,7 @@ export default function NewOrderPage() {
                       src={`https://picsum.photos/seed/${product.id}/600/400`}
                       alt={product.name}
                       fill
+                      data-ai-hint="retail stock"
                       className="object-cover group-hover:scale-110 transition-transform duration-700"
                     />
                     <div className="absolute top-4 left-4">
