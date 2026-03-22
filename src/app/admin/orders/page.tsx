@@ -9,7 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Download, Search, FileText, Filter, Loader2, Globe, Phone, MapPin, Mail } from "lucide-react";
+import { Download, Search, FileText, Filter, Loader2, Globe, Phone, MapPin, Mail, ExternalLink } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
 import { format } from "date-fns";
 import { errorEmitter } from "@/firebase/error-emitter";
@@ -101,33 +101,33 @@ export default function AdminOrdersPage() {
   }
 
   return (
-    <div className="space-y-12 animate-in fade-in duration-700">
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-8">
+    <div className="space-y-8 md:space-y-12 animate-in fade-in duration-700">
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-6 md:gap-8">
         <div className="space-y-3">
           <div className="flex items-center gap-3">
              <div className="h-2 w-2 rounded-full bg-primary" />
              <span className="text-[10px] font-black tracking-[0.4em] text-primary uppercase">Traffic Controller</span>
           </div>
-          <h1 className="text-5xl font-black tracking-tighter text-slate-900 uppercase italic">Global Orders</h1>
-          <p className="text-slate-500 font-medium text-sm tracking-wide">Real-time restock orchestration across the regional logistics grid.</p>
+          <h1 className="text-4xl md:text-5xl font-black tracking-tighter text-slate-900 uppercase italic leading-none">Global Orders</h1>
+          <p className="text-slate-500 font-medium text-sm tracking-wide">Real-time restock orchestration across the regional grid.</p>
         </div>
-        <Button onClick={() => downloadPO()} className="h-16 px-8 rounded-2xl bg-white border border-slate-200 text-slate-600 hover:text-primary transition-all font-black uppercase tracking-widest text-xs shadow-sm">
+        <Button onClick={() => downloadPO()} className="w-full md:w-auto h-14 md:h-16 px-8 rounded-2xl bg-white border border-slate-200 text-slate-600 hover:text-primary transition-all font-black uppercase tracking-widest text-[10px] md:text-xs shadow-sm">
           <Download className="mr-3 h-5 w-5" /> Export All Logs
         </Button>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6">
         <div className="md:col-span-2 relative">
           <Search className="absolute left-6 top-1/2 -translate-y-1/2 h-5 w-5 text-slate-400" />
           <Input 
-            placeholder="Search by Node, Email, Phone, or Address..." 
-            className="pl-16 h-16 bg-white border-slate-200 text-slate-900 placeholder:text-slate-400 rounded-[1.5rem] focus:ring-primary text-base font-medium" 
+            placeholder="Search Node, Email, Phone..." 
+            className="pl-16 h-14 md:h-16 bg-white border-slate-200 text-slate-900 placeholder:text-slate-400 rounded-2xl md:rounded-[1.5rem] focus:ring-primary text-sm md:text-base font-medium" 
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
           />
         </div>
         <Select value={storeFilter} onValueChange={setStoreFilter}>
-          <SelectTrigger className="h-16 bg-white border-slate-200 text-slate-900 rounded-[1.5rem] px-6">
+          <SelectTrigger className="h-14 md:h-16 bg-white border-slate-200 text-slate-900 rounded-2xl md:rounded-[1.5rem] px-6">
             <div className="flex items-center gap-3">
               <Filter className="h-5 w-5 text-slate-400" />
               <SelectValue placeholder="Node Selection" />
@@ -142,7 +142,8 @@ export default function AdminOrdersPage() {
         </Select>
       </div>
 
-      <Card className="border-none bg-white rounded-[2.5rem] overflow-hidden shadow-sm">
+      {/* Desktop View Table */}
+      <Card className="hidden md:block border-none bg-white rounded-[2.5rem] overflow-hidden shadow-sm">
         <CardContent className="p-0">
           <Table>
             <TableHeader className="bg-slate-50/50">
@@ -186,9 +187,7 @@ export default function AdminOrdersPage() {
                         <span className="text-xs font-bold text-slate-700 truncate max-w-[180px] uppercase tracking-tight">{order.items || 'Logistics Cluster'}</span>
                         <div className="flex items-center gap-2">
                            <span className="text-[10px] font-black text-primary tracking-widest">${(order.total || 0).toFixed(2)}</span>
-                           <span className="text-[9px] text-slate-400 font-mono">
-                            Qty: {order.quantity || 1}
-                          </span>
+                           <span className="text-[9px] text-slate-400 font-mono">Qty: {order.quantity || 1}</span>
                         </div>
                         <span className="text-[9px] text-slate-400 font-mono">
                           {order.createdAt?.toDate ? format(order.createdAt.toDate(), 'MMM dd • HH:mm') : 'SYNCING'}
@@ -245,6 +244,74 @@ export default function AdminOrdersPage() {
           </Table>
         </CardContent>
       </Card>
+
+      {/* Mobile View Cards */}
+      <div className="md:hidden space-y-4">
+        {filteredOrders?.length ? (
+          filteredOrders.map((order) => (
+            <Card key={order.id} className="border-none bg-white rounded-3xl shadow-sm overflow-hidden p-6 space-y-6">
+              <div className="flex justify-between items-start">
+                <div className="flex items-center gap-2">
+                  <div className="h-1.5 w-1.5 rounded-full bg-primary" />
+                  <span className="font-mono text-[10px] font-black text-slate-400 uppercase tracking-widest">{order.id.substring(0, 8)}</span>
+                </div>
+                <Badge className={cn(
+                  "rounded-xl px-4 py-1 text-[9px] font-black uppercase tracking-widest border-none",
+                  order.status === 'delivered' ? 'bg-emerald-100 text-emerald-700' :
+                  order.status === 'cancelled' ? 'bg-rose-100 text-rose-700' :
+                  'bg-amber-100 text-amber-700'
+                )}>
+                  {order.status}
+                </Badge>
+              </div>
+
+              <div className="space-y-4">
+                <div className="space-y-1">
+                  <h3 className="font-black text-slate-900 text-base uppercase italic tracking-tight">{order.storeName || 'ROOT_SYSTEM'}</h3>
+                  <div className="flex flex-col gap-1.5">
+                    <span className="flex items-center gap-2 text-[10px] text-primary font-bold"><Mail className="h-3 w-3" /> {order.email || 'N/A'}</span>
+                    <span className="flex items-center gap-2 text-[10px] text-slate-600 font-bold"><Phone className="h-3 w-3" /> {order.phoneNumber || 'N/A'}</span>
+                    <span className="flex items-center gap-2 text-[10px] text-slate-400 font-medium"><MapPin className="h-3 w-3" /> {order.deliveryAddress || 'N/A'}</span>
+                  </div>
+                </div>
+
+                <div className="bg-slate-50 rounded-2xl p-4 flex justify-between items-center">
+                  <div className="space-y-0.5">
+                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Payload</p>
+                    <p className="text-xs font-bold text-slate-700">{order.items || 'Logistics Cluster'}</p>
+                  </div>
+                  <div className="text-right">
+                    <p className="text-sm font-black text-primary">${(order.total || 0).toFixed(2)}</p>
+                    <p className="text-[10px] font-mono text-slate-400">Qty: {order.quantity || 1}</p>
+                  </div>
+                </div>
+              </div>
+
+              <div className="flex gap-3">
+                <Select defaultValue={order.status} onValueChange={(val) => handleStatusUpdate(order.id, val)}>
+                  <SelectTrigger className="flex-1 h-12 rounded-2xl border-slate-100 bg-slate-50 text-[10px] font-black uppercase tracking-widest">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent className="rounded-2xl">
+                    <SelectItem value="pending">PENDING</SelectItem>
+                    <SelectItem value="processing">PROCESSING</SelectItem>
+                    <SelectItem value="shipped">SHIPPED</SelectItem>
+                    <SelectItem value="delivered">DELIVERED</SelectItem>
+                    <SelectItem value="cancelled">CANCELLED</SelectItem>
+                  </SelectContent>
+                </Select>
+                <Button variant="ghost" className="h-12 w-12 rounded-2xl border border-slate-100 text-slate-400" onClick={() => downloadPO(order.id)}>
+                  <Download className="h-5 w-5" />
+                </Button>
+              </div>
+            </Card>
+          ))
+        ) : (
+          <div className="text-center py-20 bg-white rounded-3xl text-slate-400 italic font-black uppercase text-[10px] tracking-widest">
+            Awaiting telemetry...
+          </div>
+        )}
+      </div>
     </div>
   );
 }

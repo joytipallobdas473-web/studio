@@ -124,36 +124,36 @@ export default function InventoryControl() {
   }
 
   return (
-    <div className="space-y-12 animate-in fade-in duration-700">
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-8">
+    <div className="space-y-8 md:space-y-12 animate-in fade-in duration-700">
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-6 md:gap-8">
         <div className="space-y-3">
           <div className="flex items-center gap-3">
              <div className="h-2 w-2 rounded-full bg-primary" />
              <span className="text-[10px] font-black tracking-[0.4em] text-primary uppercase">Logistics Engine</span>
           </div>
-          <h1 className="text-5xl font-black tracking-tighter text-slate-900 uppercase italic">Inventory Hub</h1>
-          <p className="text-slate-500 font-medium text-sm tracking-wide">Central product registry and real-time stock orchestration.</p>
+          <h1 className="text-4xl md:text-5xl font-black tracking-tighter text-slate-900 uppercase italic leading-none">Inventory Hub</h1>
+          <p className="text-slate-500 font-medium text-sm tracking-wide">Central product registry and stock orchestration.</p>
         </div>
         <Button 
           onClick={() => handleOpenDialog()}
-          className="h-16 px-10 rounded-2xl bg-primary text-white font-black shadow-lg hover:scale-105 transition-all uppercase tracking-widest"
+          className="w-full md:w-auto h-14 md:h-16 px-10 rounded-2xl bg-primary text-white font-black shadow-lg hover:scale-105 transition-all uppercase tracking-widest text-xs"
         >
           <Plus className="mr-3 h-6 w-6" /> Provision SKU
         </Button>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-4 md:gap-6">
         <div className="md:col-span-3 relative">
           <Search className="absolute left-6 top-1/2 -translate-y-1/2 h-5 w-5 text-slate-400" />
           <Input 
             placeholder="Query SKU Identity or Payload Name..." 
-            className="pl-16 h-16 bg-white border-slate-200 text-slate-900 placeholder:text-slate-400 rounded-[1.5rem] focus:ring-primary text-base font-medium" 
+            className="pl-16 h-14 md:h-16 bg-white border-slate-200 text-slate-900 placeholder:text-slate-400 rounded-2xl md:rounded-[1.5rem] focus:ring-primary text-sm md:text-base font-medium" 
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
           />
         </div>
         <Select value={filterCategory} onValueChange={setFilterCategory}>
-          <SelectTrigger className="h-16 bg-white border-slate-200 text-slate-900 rounded-[1.5rem] px-6">
+          <SelectTrigger className="h-14 md:h-16 bg-white border-slate-200 text-slate-900 rounded-2xl md:rounded-[1.5rem] px-6">
             <div className="flex items-center gap-3">
               <Filter className="h-5 w-5 text-slate-400" />
               <SelectValue placeholder="All Clusters" />
@@ -166,7 +166,8 @@ export default function InventoryControl() {
         </Select>
       </div>
 
-      <Card className="border-none bg-white rounded-[2.5rem] overflow-hidden shadow-sm">
+      {/* Desktop Table View */}
+      <Card className="hidden md:block border-none bg-white rounded-[2.5rem] overflow-hidden shadow-sm">
         <CardContent className="p-0">
           <Table>
             <TableHeader className="bg-slate-50/50">
@@ -247,14 +248,66 @@ export default function InventoryControl() {
         </CardContent>
       </Card>
 
+      {/* Mobile Grid View */}
+      <div className="md:hidden space-y-4">
+        {filteredProducts.length ? (
+          filteredProducts.map((product) => (
+            <Card key={product.id} className="border-none bg-white rounded-3xl shadow-sm p-6 space-y-6">
+              <div className="flex justify-between items-start">
+                <div className="space-y-1">
+                  <h3 className="font-black text-slate-900 text-base uppercase italic tracking-tight leading-none">{product.name}</h3>
+                  <p className="text-[10px] font-mono text-slate-400 uppercase tracking-widest">{product.sku}</p>
+                </div>
+                <Badge variant="outline" className="text-[9px] font-black uppercase tracking-widest border-slate-100 px-3 py-1 rounded-xl">
+                  {product.category}
+                </Badge>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4 bg-slate-50 rounded-2xl p-4">
+                <div className="space-y-0.5">
+                  <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Density</p>
+                  <div className="flex items-center gap-2">
+                    <div className={cn("h-1.5 w-1.5 rounded-full", (product.stockQuantity || 0) < 10 ? "bg-rose-500 animate-pulse" : "bg-emerald-500")} />
+                    <span className={cn("text-sm font-black font-mono", (product.stockQuantity || 0) < 10 ? "text-rose-500" : "text-emerald-500")}>
+                      {product.stockQuantity || 0}
+                    </span>
+                  </div>
+                </div>
+                <div className="space-y-0.5 text-right">
+                  <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Valuation</p>
+                  <p className="text-sm font-black text-primary font-mono">${(product.price || 0).toFixed(2)}</p>
+                </div>
+              </div>
+
+              <div className="flex gap-3">
+                <Button className="flex-1 h-12 rounded-2xl bg-slate-50 text-slate-600 font-bold uppercase tracking-widest text-[10px] hover:bg-slate-100" onClick={() => handleOpenDialog(product)}>
+                   <Edit2 className="h-4 w-4 mr-2" /> Protocol
+                </Button>
+                <Button className="h-12 w-12 rounded-2xl bg-rose-50 text-rose-500 hover:bg-rose-100" onClick={() => {
+                  const docRef = doc(db!, "products", product.id);
+                  deleteDocumentNonBlocking(docRef);
+                  toast({ title: "Node Deprovisioned", variant: "destructive" });
+                }}>
+                   <Trash2 className="h-4 w-4" />
+                </Button>
+              </div>
+            </Card>
+          ))
+        ) : (
+          <div className="text-center py-20 bg-white rounded-3xl text-slate-400 italic font-black uppercase text-[10px] tracking-widest">
+            Cluster empty...
+          </div>
+        )}
+      </div>
+
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-        <DialogContent className="sm:max-w-[600px] bg-white border-none text-slate-900 rounded-[2.5rem] p-10 shadow-2xl">
+        <DialogContent className="sm:max-w-[600px] w-[95vw] bg-white border-none text-slate-900 rounded-[2.5rem] p-6 md:p-10 shadow-2xl overflow-y-auto max-h-[90vh]">
           <DialogHeader>
-            <DialogTitle className="text-3xl font-black tracking-tighter uppercase italic text-primary">
+            <DialogTitle className="text-2xl md:text-3xl font-black tracking-tighter uppercase italic text-primary">
               {editingProduct ? "Modify SKU Node" : "Provision Cluster"}
             </DialogTitle>
           </DialogHeader>
-          <div className="grid gap-8 py-10">
+          <div className="grid gap-6 md:gap-8 py-6 md:py-10">
             <div className="space-y-3">
               <Label className="text-[10px] font-black uppercase tracking-[0.3em] text-slate-400 pl-1">Identity Tag</Label>
               <Input 
@@ -264,7 +317,7 @@ export default function InventoryControl() {
                 placeholder="Item designation..."
               />
             </div>
-            <div className="grid grid-cols-2 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div className="space-y-3">
                 <Label className="text-[10px] font-black uppercase tracking-[0.3em] text-slate-400 pl-1">Registry SKU</Label>
                 <Input 
@@ -290,7 +343,7 @@ export default function InventoryControl() {
             </div>
             <div className="grid grid-cols-2 gap-6">
               <div className="space-y-3">
-                <Label className="text-[10px] font-black uppercase tracking-[0.3em] text-slate-400 pl-1">Unit Valuation ($)</Label>
+                <Label className="text-[10px] font-black uppercase tracking-[0.3em] text-slate-400 pl-1">Unit Val ($)</Label>
                 <Input 
                   type="number" 
                   value={formData.price}
@@ -299,7 +352,7 @@ export default function InventoryControl() {
                 />
               </div>
               <div className="space-y-3">
-                <Label className="text-[10px] font-black uppercase tracking-[0.3em] text-slate-400 pl-1">Initial Density</Label>
+                <Label className="text-[10px] font-black uppercase tracking-[0.3em] text-slate-400 pl-1">Density</Label>
                 <Input 
                   type="number" 
                   value={formData.stockQuantity}
@@ -309,9 +362,9 @@ export default function InventoryControl() {
               </div>
             </div>
           </div>
-          <DialogFooter className="gap-4">
-            <Button variant="ghost" onClick={() => setIsDialogOpen(false)} className="h-14 px-8 rounded-2xl text-slate-400 hover:text-slate-900 hover:bg-slate-50 font-bold uppercase tracking-widest">Abort</Button>
-            <Button onClick={handleSave} className="bg-primary h-14 px-10 rounded-2xl text-white font-black shadow-lg uppercase tracking-widest hover:scale-105 transition-all">
+          <DialogFooter className="flex-col md:flex-row gap-4">
+            <Button variant="ghost" onClick={() => setIsDialogOpen(false)} className="w-full md:w-auto h-14 px-8 rounded-2xl text-slate-400 hover:text-slate-900 hover:bg-slate-50 font-bold uppercase tracking-widest">Abort</Button>
+            <Button onClick={handleSave} className="w-full md:w-auto bg-primary h-14 px-10 rounded-2xl text-white font-black shadow-lg uppercase tracking-widest hover:scale-105 transition-all">
               <CheckCircle2 className="mr-3 h-6 w-6" />
               {editingProduct ? "Apply Protocol" : "Initialize Node"}
             </Button>
