@@ -142,7 +142,6 @@ export default function AdminOrdersPage() {
         </Select>
       </div>
 
-      {/* Desktop View Table */}
       <Card className="hidden md:block border-none bg-white rounded-[2.5rem] overflow-hidden shadow-sm">
         <CardContent className="p-0">
           <Table>
@@ -245,7 +244,6 @@ export default function AdminOrdersPage() {
         </CardContent>
       </Card>
 
-      {/* Mobile View Cards */}
       <div className="md:hidden space-y-4">
         {filteredOrders?.length ? (
           filteredOrders.map((order) => (

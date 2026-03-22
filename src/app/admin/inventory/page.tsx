@@ -166,7 +166,6 @@ export default function InventoryControl() {
         </Select>
       </div>
 
-      {/* Desktop Table View */}
       <Card className="hidden md:block border-none bg-white rounded-[2.5rem] overflow-hidden shadow-sm">
         <CardContent className="p-0">
           <Table>
@@ -248,7 +247,6 @@ export default function InventoryControl() {
         </CardContent>
       </Card>
 
-      {/* Mobile Grid View */}
       <div className="md:hidden space-y-4">
         {filteredProducts.length ? (
           filteredProducts.map((product) => (
