@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, useMemo } from "react";
@@ -7,7 +8,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Plus, Search, Edit2, Trash2, Loader2, Filter, Boxes, CheckCircle2, ChevronRight } from "lucide-react";
+import { Plus, Search, Edit2, Trash2, Loader2, Filter, Boxes, CheckCircle2 } from "lucide-react";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -130,46 +131,46 @@ export default function InventoryControl() {
              <div className="h-2 w-2 rounded-full bg-primary" />
              <span className="text-[10px] font-black tracking-[0.4em] text-primary uppercase">Logistics Engine</span>
           </div>
-          <h1 className="text-5xl font-black tracking-tighter text-white uppercase italic">Inventory Engine</h1>
+          <h1 className="text-5xl font-black tracking-tighter text-slate-900 uppercase italic">Inventory Hub</h1>
           <p className="text-slate-500 font-medium text-sm tracking-wide">Central product registry and real-time stock orchestration.</p>
         </div>
         <Button 
           onClick={() => handleOpenDialog()}
-          className="h-16 px-10 rounded-2xl bg-primary text-white font-black shadow-[0_15px_30px_rgba(var(--primary),0.3)] hover:scale-105 transition-all uppercase tracking-widest"
+          className="h-16 px-10 rounded-2xl bg-primary text-white font-black shadow-lg hover:scale-105 transition-all uppercase tracking-widest"
         >
-          <Plus className="mr-3 h-6 w-6" /> Provision New SKU
+          <Plus className="mr-3 h-6 w-6" /> Provision SKU
         </Button>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
         <div className="md:col-span-3 relative">
-          <Search className="absolute left-6 top-1/2 -translate-y-1/2 h-5 w-5 text-slate-500" />
+          <Search className="absolute left-6 top-1/2 -translate-y-1/2 h-5 w-5 text-slate-400" />
           <Input 
             placeholder="Query SKU Identity or Payload Name..." 
-            className="pl-16 h-16 bg-slate-950/50 border-white/5 text-white placeholder:text-slate-600 rounded-[1.5rem] focus:ring-primary text-base font-medium" 
+            className="pl-16 h-16 bg-white border-slate-200 text-slate-900 placeholder:text-slate-400 rounded-[1.5rem] focus:ring-primary text-base font-medium" 
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
           />
         </div>
         <Select value={filterCategory} onValueChange={setFilterCategory}>
-          <SelectTrigger className="h-16 bg-slate-950/50 border-white/5 text-white rounded-[1.5rem] px-6">
+          <SelectTrigger className="h-16 bg-white border-slate-200 text-slate-900 rounded-[1.5rem] px-6">
             <div className="flex items-center gap-3">
-              <Filter className="h-5 w-5 text-slate-500" />
+              <Filter className="h-5 w-5 text-slate-400" />
               <SelectValue placeholder="All Clusters" />
             </div>
           </SelectTrigger>
-          <SelectContent className="bg-slate-950 border-white/10 text-white rounded-2xl">
+          <SelectContent className="bg-white border-slate-200 text-slate-900 rounded-2xl">
             <SelectItem value="all" className="font-bold uppercase tracking-widest text-[10px]">All Clusters</SelectItem>
             {CATEGORIES.map(c => <SelectItem key={c} value={c} className="font-bold uppercase tracking-widest text-[10px]">{c}</SelectItem>)}
           </SelectContent>
         </Select>
       </div>
 
-      <Card className="border-white/5 bg-slate-950/30 backdrop-blur-3xl rounded-[2.5rem] overflow-hidden shadow-2xl">
+      <Card className="border-none bg-white rounded-[2.5rem] overflow-hidden shadow-sm">
         <CardContent className="p-0">
           <Table>
-            <TableHeader className="bg-white/[0.02]">
-              <TableRow className="hover:bg-transparent border-white/5 h-20">
+            <TableHeader className="bg-slate-50/50">
+              <TableRow className="border-slate-100 h-20">
                 <TableHead className="text-slate-500 uppercase text-[10px] font-black tracking-[0.3em] pl-10">Identity Package</TableHead>
                 <TableHead className="text-slate-500 uppercase text-[10px] font-black tracking-[0.3em]">Data Cluster</TableHead>
                 <TableHead className="text-slate-500 uppercase text-[10px] font-black tracking-[0.3em]">Unit Value</TableHead>
@@ -180,18 +181,18 @@ export default function InventoryControl() {
             <TableBody>
               {filteredProducts.length ? (
                 filteredProducts.map((product) => (
-                  <TableRow key={product.id} className="border-white/5 hover:bg-white/[0.03] transition-all group h-24">
+                  <TableRow key={product.id} className="border-slate-50 hover:bg-slate-50/50 transition-all group h-24">
                     <TableCell className="pl-10">
                       <div className="flex flex-col gap-1">
-                        <span className="font-black text-white text-sm uppercase tracking-tight italic">{product.name}</span>
-                        <span className="text-[10px] font-mono text-slate-500 uppercase tracking-widest flex items-center gap-2">
-                           <div className="h-1 w-1 rounded-full bg-slate-800" />
+                        <span className="font-black text-slate-900 text-sm uppercase tracking-tight italic">{product.name}</span>
+                        <span className="text-[10px] font-mono text-slate-400 uppercase tracking-widest flex items-center gap-2">
+                           <div className="h-1 w-1 rounded-full bg-slate-200" />
                            {product.sku}
                         </span>
                       </div>
                     </TableCell>
                     <TableCell>
-                      <Badge variant="outline" className="bg-black/40 border-white/5 text-slate-400 text-[9px] uppercase font-black tracking-widest rounded-xl px-3 py-1">
+                      <Badge variant="outline" className="bg-slate-50 border-slate-100 text-slate-500 text-[9px] uppercase font-black tracking-widest rounded-xl px-3 py-1">
                         {product.category}
                       </Badge>
                     </TableCell>
@@ -201,12 +202,12 @@ export default function InventoryControl() {
                     <TableCell>
                       <div className="flex items-center gap-4">
                         <div className={cn(
-                          "h-2 w-24 rounded-full overflow-hidden bg-slate-900 border border-white/5",
-                          (product.stockQuantity || 0) < 10 ? "border-rose-500/20" : ""
+                          "h-2 w-24 rounded-full overflow-hidden bg-slate-100",
+                          (product.stockQuantity || 0) < 10 ? "bg-rose-100" : ""
                         )}>
                            <div className={cn(
                              "h-full transition-all duration-1000",
-                             (product.stockQuantity || 0) < 10 ? "bg-rose-500 w-[15%] shadow-[0_0_10px_rgba(244,63,94,0.5)]" : "bg-emerald-500 w-[85%] shadow-[0_0_10px_rgba(16,185,129,0.5)]"
+                             (product.stockQuantity || 0) < 10 ? "bg-rose-500 w-[15%]" : "bg-emerald-500 w-[85%]"
                            )} />
                         </div>
                         <span className={cn(
@@ -219,10 +220,10 @@ export default function InventoryControl() {
                     </TableCell>
                     <TableCell className="text-right pr-10">
                       <div className="flex justify-end gap-3 opacity-0 group-hover:opacity-100 transition-all duration-300">
-                        <Button size="icon" variant="ghost" className="h-11 w-11 rounded-2xl hover:bg-white/5 text-slate-500 hover:text-white" onClick={() => handleOpenDialog(product)}>
+                        <Button size="icon" variant="ghost" className="h-11 w-11 rounded-2xl hover:bg-slate-50 text-slate-400 hover:text-primary" onClick={() => handleOpenDialog(product)}>
                           <Edit2 className="h-5 w-5" />
                         </Button>
-                        <Button size="icon" variant="ghost" className="h-11 w-11 rounded-2xl hover:bg-rose-500/10 text-rose-500" onClick={() => {
+                        <Button size="icon" variant="ghost" className="h-11 w-11 rounded-2xl hover:bg-rose-50 text-rose-500" onClick={() => {
                           const docRef = doc(db!, "products", product.id);
                           deleteDocumentNonBlocking(docRef);
                           toast({ title: "Node Deprovisioned", variant: "destructive" });
@@ -235,7 +236,7 @@ export default function InventoryControl() {
                 ))
               ) : (
                 <TableRow>
-                  <TableCell colSpan={5} className="text-center py-40 text-slate-600">
+                  <TableCell colSpan={5} className="text-center py-40 text-slate-400">
                     <Boxes className="h-20 w-20 mx-auto mb-6 opacity-5 animate-pulse" />
                     <p className="font-black uppercase tracking-[0.3em] text-xs italic">Awaiting data cluster provision...</p>
                   </TableCell>
@@ -247,39 +248,39 @@ export default function InventoryControl() {
       </Card>
 
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-        <DialogContent className="sm:max-w-[600px] bg-slate-950 border-white/10 text-white rounded-[2.5rem] p-10 shadow-[0_30px_60px_rgba(0,0,0,0.5)]">
+        <DialogContent className="sm:max-w-[600px] bg-white border-none text-slate-900 rounded-[2.5rem] p-10 shadow-2xl">
           <DialogHeader>
-            <DialogTitle className="text-3xl font-black tracking-tighter uppercase italic">
+            <DialogTitle className="text-3xl font-black tracking-tighter uppercase italic text-primary">
               {editingProduct ? "Modify SKU Node" : "Provision Cluster"}
             </DialogTitle>
           </DialogHeader>
           <div className="grid gap-8 py-10">
             <div className="space-y-3">
-              <Label className="text-[10px] font-black uppercase tracking-[0.3em] text-slate-500 pl-1">Identity Tag</Label>
+              <Label className="text-[10px] font-black uppercase tracking-[0.3em] text-slate-400 pl-1">Identity Tag</Label>
               <Input 
                 value={formData.name}
                 onChange={(e) => setFormData({...formData, name: e.target.value})}
-                className="bg-black/40 border-white/5 h-14 rounded-2xl focus:ring-primary text-base"
+                className="bg-slate-50 border-none h-14 rounded-2xl focus:ring-primary text-base font-medium"
                 placeholder="Item designation..."
               />
             </div>
             <div className="grid grid-cols-2 gap-6">
               <div className="space-y-3">
-                <Label className="text-[10px] font-black uppercase tracking-[0.3em] text-slate-500 pl-1">Registry SKU</Label>
+                <Label className="text-[10px] font-black uppercase tracking-[0.3em] text-slate-400 pl-1">Registry SKU</Label>
                 <Input 
                   value={formData.sku}
                   onChange={(e) => setFormData({...formData, sku: e.target.value})}
-                  className="bg-black/40 border-white/5 h-14 rounded-2xl font-mono uppercase text-primary font-bold"
+                  className="bg-slate-50 border-none h-14 rounded-2xl font-mono uppercase text-primary font-bold"
                   placeholder="SKU-XXXX-YY"
                 />
               </div>
               <div className="space-y-3">
-                <Label className="text-[10px] font-black uppercase tracking-[0.3em] text-slate-500 pl-1">Node Sector</Label>
+                <Label className="text-[10px] font-black uppercase tracking-[0.3em] text-slate-400 pl-1">Node Sector</Label>
                 <Select value={formData.category} onValueChange={(val) => setFormData({...formData, category: val})}>
-                  <SelectTrigger className="bg-black/40 border-white/5 h-14 rounded-2xl px-5">
+                  <SelectTrigger className="bg-slate-50 border-none h-14 rounded-2xl px-5">
                     <SelectValue />
                   </SelectTrigger>
-                  <SelectContent className="bg-slate-950 border-white/10 text-white rounded-2xl">
+                  <SelectContent className="bg-white border-slate-100 text-slate-900 rounded-2xl">
                     {CATEGORIES.map((cat) => (
                       <SelectItem key={cat} value={cat} className="font-bold uppercase tracking-widest text-[10px]">{cat}</SelectItem>
                     ))}
@@ -289,28 +290,28 @@ export default function InventoryControl() {
             </div>
             <div className="grid grid-cols-2 gap-6">
               <div className="space-y-3">
-                <Label className="text-[10px] font-black uppercase tracking-[0.3em] text-slate-500 pl-1">Unit Valuation ($)</Label>
+                <Label className="text-[10px] font-black uppercase tracking-[0.3em] text-slate-400 pl-1">Unit Valuation ($)</Label>
                 <Input 
                   type="number" 
                   value={formData.price}
                   onChange={(e) => setFormData({...formData, price: e.target.value})}
-                  className="bg-black/40 border-white/5 h-14 rounded-2xl font-mono text-emerald-500 font-bold"
+                  className="bg-slate-50 border-none h-14 rounded-2xl font-mono text-emerald-600 font-bold"
                 />
               </div>
               <div className="space-y-3">
-                <Label className="text-[10px] font-black uppercase tracking-[0.3em] text-slate-500 pl-1">Initial Density</Label>
+                <Label className="text-[10px] font-black uppercase tracking-[0.3em] text-slate-400 pl-1">Initial Density</Label>
                 <Input 
                   type="number" 
                   value={formData.stockQuantity}
                   onChange={(e) => setFormData({...formData, stockQuantity: e.target.value})}
-                  className="bg-black/40 border-white/5 h-14 rounded-2xl font-mono text-blue-500 font-bold"
+                  className="bg-slate-50 border-none h-14 rounded-2xl font-mono text-blue-600 font-bold"
                 />
               </div>
             </div>
           </div>
           <DialogFooter className="gap-4">
-            <Button variant="ghost" onClick={() => setIsDialogOpen(false)} className="h-14 px-8 rounded-2xl text-slate-500 hover:text-white hover:bg-white/5 font-bold uppercase tracking-widest">Abort</Button>
-            <Button onClick={handleSave} className="bg-primary h-14 px-10 rounded-2xl text-white font-black shadow-2xl uppercase tracking-widest hover:scale-105 transition-all">
+            <Button variant="ghost" onClick={() => setIsDialogOpen(false)} className="h-14 px-8 rounded-2xl text-slate-400 hover:text-slate-900 hover:bg-slate-50 font-bold uppercase tracking-widest">Abort</Button>
+            <Button onClick={handleSave} className="bg-primary h-14 px-10 rounded-2xl text-white font-black shadow-lg uppercase tracking-widest hover:scale-105 transition-all">
               <CheckCircle2 className="mr-3 h-6 w-6" />
               {editingProduct ? "Apply Protocol" : "Initialize Node"}
             </Button>

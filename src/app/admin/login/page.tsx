@@ -57,13 +57,13 @@ export default function AdminLoginPage() {
       });
     } catch (error: any) {
       setIsLoading(false);
-      const isAuthError = error.code === 'auth/invalid-credential' || error.code === 'auth/user-not-found';
+      const isAuthError = error.code === 'auth/invalid-credential' || error.code === 'auth/user-not-found' || error.code === 'auth/invalid-email';
       
-      setError(isAuthError ? "Identity not recognized. Please verify your controller credentials." : "Security Authentication Failure.");
+      setError(isAuthError ? "Identity not recognized. Please ensure your administrator account is registered." : "Security Authentication Failure.");
       
       toast({
-        title: "Security Authentication Failure",
-        description: isAuthError ? "Administrator account not found." : "Invalid credentials.",
+        title: "Authentication Failed",
+        description: "Invalid credentials or unregistered node.",
         variant: "destructive",
       });
     }
@@ -86,7 +86,7 @@ export default function AdminLoginPage() {
         </Link>
 
         <div className="text-center space-y-3">
-          <div className="bg-primary p-4 rounded-[2rem] shadow-[0_0_50px_rgba(var(--primary),0.3)] inline-block mb-2">
+          <div className="bg-primary p-4 rounded-[2rem] shadow-xl inline-block mb-2">
             <ShieldAlert className="h-8 w-8 text-white" />
           </div>
           <h1 className="text-4xl font-black text-white tracking-tighter uppercase italic">Command Portal</h1>
@@ -122,7 +122,8 @@ export default function AdminLoginPage() {
                     className="pl-14 h-16 bg-black/40 border-white/5 rounded-2xl focus:ring-primary font-bold text-white placeholder:text-slate-700" 
                     required 
                     value={email}
-                    onChange={(e) => setEmail(e.target.value)}
+                    onChange={(e) => setEmail(email.toLowerCase())}
+                    onInput={(e: any) => setEmail(e.target.value)}
                   />
                 </div>
               </div>
@@ -153,9 +154,9 @@ export default function AdminLoginPage() {
               </Button>
             </form>
           </CardContent>
-          <div className="p-10 pt-0 text-center">
+          <div className="p-10 pt-0 text-center space-y-4">
             <p className="text-[11px] text-slate-600 font-medium italic">
-              Access is restricted to pre-authorized regional controllers. Contact headquarters for node activation.
+              Unrecognized identity? Administrator nodes must be pre-registered by the network owner.
             </p>
           </div>
         </Card>

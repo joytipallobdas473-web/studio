@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState } from "react";
@@ -60,7 +61,7 @@ export default function AdminOrdersPage() {
     const ordersToExport = orderId ? orders?.filter(o => o.id === orderId) : filteredOrders;
     if (!ordersToExport || ordersToExport.length === 0) return;
 
-    const headers = ["Packet ID", "Node", "Email", "Contact", "Address", "Timestamp", "Payload", "Value ($)", "Status"];
+    const headers = ["Packet ID", "Node", "Gmail", "Phone", "Delivery Address", "Timestamp", "Items", "Quantity", "Total ($)", "Status"];
     const csvContent = [
       headers,
       ...ordersToExport.map(o => [
@@ -71,6 +72,7 @@ export default function AdminOrdersPage() {
         o.deliveryAddress?.replace(/,/g, ' ') || 'N/A',
         o.createdAt?.toDate ? format(o.createdAt.toDate(), 'yyyy-MM-dd HH:mm') : 'PENDING',
         `"${o.items || 'Restock'}"`,
+        o.quantity || 1,
         (o.total || 0).toFixed(2),
         o.status
       ])
@@ -107,7 +109,7 @@ export default function AdminOrdersPage() {
              <span className="text-[10px] font-black tracking-[0.4em] text-primary uppercase">Traffic Controller</span>
           </div>
           <h1 className="text-5xl font-black tracking-tighter text-slate-900 uppercase italic">Global Orders</h1>
-          <p className="text-slate-500 font-medium text-sm tracking-wide">Real-time restock orchestration across the retail infrastructure.</p>
+          <p className="text-slate-500 font-medium text-sm tracking-wide">Real-time restock orchestration across the regional logistics grid.</p>
         </div>
         <Button onClick={() => downloadPO()} className="h-16 px-8 rounded-2xl bg-white border border-slate-200 text-slate-600 hover:text-primary transition-all font-black uppercase tracking-widest text-xs shadow-sm">
           <Download className="mr-3 h-5 w-5" /> Export All Logs
@@ -119,7 +121,7 @@ export default function AdminOrdersPage() {
           <Search className="absolute left-6 top-1/2 -translate-y-1/2 h-5 w-5 text-slate-400" />
           <Input 
             placeholder="Search by Node, Email, Phone, or Address..." 
-            className="pl-16 h-16 bg-white border-slate-200 text-slate-900 placeholder:text-slate-400 rounded-[1.5rem] focus:ring-primary text-base" 
+            className="pl-16 h-16 bg-white border-slate-200 text-slate-900 placeholder:text-slate-400 rounded-[1.5rem] focus:ring-primary text-base font-medium" 
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
           />
@@ -185,9 +187,12 @@ export default function AdminOrdersPage() {
                         <div className="flex items-center gap-2">
                            <span className="text-[10px] font-black text-primary tracking-widest">${(order.total || 0).toFixed(2)}</span>
                            <span className="text-[9px] text-slate-400 font-mono">
-                            {order.createdAt?.toDate ? format(order.createdAt.toDate(), 'MMM dd • HH:mm') : 'SYNCING'}
+                            Qty: {order.quantity || 1}
                           </span>
                         </div>
+                        <span className="text-[9px] text-slate-400 font-mono">
+                          {order.createdAt?.toDate ? format(order.createdAt.toDate(), 'MMM dd • HH:mm') : 'SYNCING'}
+                        </span>
                       </div>
                     </TableCell>
                     <TableCell>

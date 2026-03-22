@@ -35,9 +35,11 @@
         "id": { "type": "string" },
         "userId": { "type": "string" },
         "items": { "type": "string" },
+        "quantity": { "type": "number" },
         "total": { "type": "number" },
         "status": { "type": "string", "enum": ["pending", "processing", "shipped", "delivered", "cancelled"] },
         "storeName": { "type": "string" },
+        "email": { "type": "string", "format": "email" },
         "phoneNumber": { "type": "string" },
         "deliveryAddress": { "type": "string" },
         "createdAt": { "type": "string", "format": "date-time" }
@@ -53,6 +55,7 @@
         "name": { "type": "string" },
         "managerName": { "type": "string" },
         "location": { "type": "string" },
+        "email": { "type": "string", "format": "email" },
         "status": { "type": "string", "enum": ["pending", "active", "rejected"] }
       },
       "required": ["id", "name", "status"]
