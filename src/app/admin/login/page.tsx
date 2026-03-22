@@ -122,8 +122,7 @@ export default function AdminLoginPage() {
                     className="pl-14 h-16 bg-black/40 border-white/5 rounded-2xl focus:ring-primary font-bold text-white placeholder:text-slate-700" 
                     required 
                     value={email}
-                    onChange={(e) => setEmail(email.toLowerCase())}
-                    onInput={(e: any) => setEmail(e.target.value)}
+                    onChange={(e) => setEmail(e.target.value.toLowerCase())}
                   />
                 </div>
               </div>
