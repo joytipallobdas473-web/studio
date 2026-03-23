@@ -47,7 +47,6 @@ export default function Home() {
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-          {/* Branch/Retailer Access */}
           <Card className="border-none shadow-sm hover:shadow-2xl transition-all duration-500 bg-white rounded-[3rem] overflow-hidden group">
             <CardHeader className="pt-12 text-center">
               <div className="mx-auto bg-primary/5 p-6 rounded-3xl text-primary group-hover:scale-110 transition-transform">
@@ -68,7 +67,6 @@ export default function Home() {
             </CardContent>
           </Card>
 
-          {/* Admin Command Access */}
           <Card className="border-none shadow-sm hover:shadow-2xl transition-all duration-500 bg-slate-900 rounded-[3rem] overflow-hidden group">
             <CardHeader className="pt-12 text-center">
               <div className="mx-auto bg-white/5 p-6 rounded-3xl text-accent group-hover:rotate-12 transition-transform">

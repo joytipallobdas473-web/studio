@@ -37,7 +37,6 @@ export default function AdminLoginPage() {
     setError(null);
     if (!auth) return;
     
-    // Authorization check before attempting sign-in
     if (!email.toLowerCase().includes("admin")) {
       toast({
         title: "Access Denied",
