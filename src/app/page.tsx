@@ -15,13 +15,24 @@ import {
   ShieldAlert,
   Globe,
   Zap,
-  Network
+  Network,
+  Share2
 } from "lucide-react";
 import { useUser } from "@/firebase";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { toast } from "@/hooks/use-toast";
 
 export default function Home() {
   const { isUserLoading } = useUser();
+
+  const handleShareSystem = () => {
+    const url = window.location.href;
+    navigator.clipboard.writeText(url);
+    toast({
+      title: "Protocol Link Copied",
+      description: "Regional hub address saved to clipboard.",
+    });
+  };
 
   if (isUserLoading) {
     return (
@@ -96,9 +107,12 @@ export default function Home() {
                   <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Global Synchronization Active</p>
                 </div>
               </div>
-              <div className="flex gap-12 text-[10px] text-slate-400 font-black uppercase tracking-[0.4em]">
+              <div className="flex flex-wrap justify-center gap-8 text-[10px] text-slate-400 font-black uppercase tracking-[0.4em]">
                 <span className="flex items-center gap-3"><ShieldCheck className="h-4 w-4 text-emerald-500" /> Secure Grid</span>
                 <span className="flex items-center gap-3"><Globe className="h-4 w-4 text-accent" /> NE Cluster</span>
+                <button onClick={handleShareSystem} className="flex items-center gap-3 hover:text-primary transition-colors">
+                  <Share2 className="h-4 w-4" /> Share Hub
+                </button>
               </div>
            </div>
         </div>
