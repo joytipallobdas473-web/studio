@@ -37,7 +37,9 @@ export default function AdminLoginPage() {
     setError(null);
     if (!auth) return;
     
-    if (!email.toLowerCase().includes("admin")) {
+    const lowerEmail = email.toLowerCase().trim();
+    
+    if (!lowerEmail.includes("admin")) {
       toast({
         title: "Access Denied",
         description: "Branch accounts cannot access the Command Portal. Use a regional admin signature.",
@@ -49,7 +51,7 @@ export default function AdminLoginPage() {
 
     setIsLoading(true);
     try {
-      await signInWithEmailAndPassword(auth, email.toLowerCase(), password);
+      await signInWithEmailAndPassword(auth, lowerEmail, password);
       toast({
         title: "Command Access Authorized",
         description: "Synchronizing regional telemetry...",
@@ -156,7 +158,7 @@ export default function AdminLoginPage() {
           </CardContent>
           <div className="px-8 md:px-10 pb-10 text-center">
             <p className="text-[10px] text-slate-600 font-medium italic">
-              Unrecognized identity? Controller nodes must be pre-registered by regional grid management.
+              Unrecognized identity? Controller nodes must be pre-registered.
             </p>
           </div>
         </Card>

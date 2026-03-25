@@ -1,3 +1,4 @@
+
 import type {Metadata} from 'next';
 import './globals.css';
 import { FirebaseClientProvider } from '@/firebase/client-provider';
@@ -5,8 +6,8 @@ import { Toaster } from '@/components/ui/toaster';
 import { FirebaseErrorListener } from '@/components/FirebaseErrorListener';
 
 export const metadata: Metadata = {
-  title: 'Retails Stocks | Professional Inventory Management',
-  description: 'Secure retail stock ordering and management platform.',
+  title: 'NE Retail Hub | Professional Inventory Grid',
+  description: 'Secure regional retail stock ordering and management platform.',
 };
 
 export default function RootLayout({
