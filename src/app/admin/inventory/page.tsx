@@ -1,7 +1,7 @@
 
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useRef, useEffect } from "react";
 import Image from "next/image";
 import { useFirestore, useCollection, useMemoFirebase } from "@/firebase";
 import { collection, doc, serverTimestamp } from "firebase/firestore";
@@ -9,7 +9,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Plus, Search, Edit2, Trash2, Loader2, Filter, Boxes, CheckCircle2, ImageIcon } from "lucide-react";
+import { Plus, Search, Edit2, Trash2, Loader2, Filter, Boxes, CheckCircle2, ImageIcon, Camera, CameraOff, Sparkles } from "lucide-react";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -17,11 +17,15 @@ import { toast } from "@/hooks/use-toast";
 import { addDocumentNonBlocking, updateDocumentNonBlocking, deleteDocumentNonBlocking } from "@/firebase";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 
 const CATEGORIES = ["Electronics", "Apparel", "Grocery", "Office Supplies"];
 
 export default function InventoryControl() {
   const db = useFirestore();
+  const videoRef = useRef<HTMLVideoElement>(null);
+  const [hasCameraPermission, setHasCameraPermission] = useState<boolean | null>(null);
+  const [isCameraActive, setIsCameraActive] = useState(false);
   
   const productsQuery = useMemoFirebase(() => {
     if (!db) return null;
@@ -65,6 +69,57 @@ export default function InventoryControl() {
     }
     setIsDialogOpen(true);
   };
+
+  const startCamera = async () => {
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+      setHasCameraPermission(true);
+      setIsCameraActive(true);
+      if (videoRef.current) {
+        videoRef.current.srcObject = stream;
+      }
+    } catch (error) {
+      console.error('Error accessing camera:', error);
+      setHasCameraPermission(false);
+      toast({
+        variant: 'destructive',
+        title: 'Camera Access Denied',
+        description: 'Please enable camera permissions in your browser settings.',
+      });
+    }
+  };
+
+  const stopCamera = () => {
+    if (videoRef.current && videoRef.current.srcObject) {
+      const stream = videoRef.current.srcObject as MediaStream;
+      const tracks = stream.getTracks();
+      tracks.forEach(track => track.stop());
+      videoRef.current.srcObject = null;
+    }
+    setIsCameraActive(false);
+  };
+
+  const capturePhoto = () => {
+    if (videoRef.current) {
+      const canvas = document.createElement('canvas');
+      canvas.width = videoRef.current.videoWidth;
+      canvas.height = videoRef.current.videoHeight;
+      const ctx = canvas.getContext('2d');
+      if (ctx) {
+        ctx.drawImage(videoRef.current, 0, 0, canvas.width, canvas.height);
+        const dataUri = canvas.toDataURL('image/jpeg');
+        setFormData({ ...formData, imageUrl: dataUri });
+        stopCamera();
+        toast({ title: "Visual ID Captured", description: "Real-time photo attached to node." });
+      }
+    }
+  };
+
+  useEffect(() => {
+    if (!isDialogOpen) {
+      stopCamera();
+    }
+  }, [isDialogOpen]);
 
   const handleSave = () => {
     if (!db) return;
@@ -327,7 +382,7 @@ export default function InventoryControl() {
       </div>
 
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-        <DialogContent className="sm:max-w-[650px] w-[95vw] bg-white border-none text-slate-900 rounded-[2.5rem] p-6 md:p-10 shadow-2xl overflow-y-auto max-h-[90vh]">
+        <DialogContent className="sm:max-w-[750px] w-[95vw] bg-white border-none text-slate-900 rounded-[2.5rem] p-6 md:p-10 shadow-2xl overflow-y-auto max-h-[90vh]">
           <DialogHeader>
             <DialogTitle className="text-2xl md:text-3xl font-black tracking-tighter uppercase italic text-primary">
               {editingProduct ? "Modify SKU Node" : "Provision Cluster"}
@@ -356,23 +411,55 @@ export default function InventoryControl() {
                 </div>
                </div>
                <div className="space-y-3">
-                 <Label className="text-[10px] font-black uppercase tracking-[0.3em] text-slate-400 pl-1 text-center block">Visual ID Preview</Label>
-                 <div className="aspect-video relative rounded-[1.5rem] bg-slate-50 border-2 border-dashed border-slate-200 overflow-hidden flex items-center justify-center">
-                   {formData.imageUrl ? (
+                 <Label className="text-[10px] font-black uppercase tracking-[0.3em] text-slate-400 pl-1 text-center block">Visual ID Capture</Label>
+                 <div className="aspect-video relative rounded-[1.5rem] bg-slate-900 border-2 border-primary/20 overflow-hidden flex items-center justify-center group">
+                   {isCameraActive ? (
+                     <video ref={videoRef} className="w-full h-full object-cover" autoPlay muted playsInline />
+                   ) : formData.imageUrl ? (
                      <Image src={formData.imageUrl} alt="Preview" fill className="object-cover" />
                    ) : (
-                     <div className="flex flex-col items-center gap-2 opacity-20">
+                     <div className="flex flex-col items-center gap-2 opacity-20 text-white">
                        <ImageIcon className="h-10 w-10" />
-                       <span className="text-[9px] font-black uppercase tracking-widest">Awaiting Payload</span>
+                       <span className="text-[9px] font-black uppercase tracking-widest">No Payload</span>
                      </div>
                    )}
+                   
+                   <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-4">
+                     {!isCameraActive ? (
+                       <Button size="sm" className="bg-primary text-white font-black rounded-xl" onClick={startCamera}>
+                         <Camera className="h-4 w-4 mr-2" /> Start Lens
+                       </Button>
+                     ) : (
+                       <>
+                        <Button size="sm" className="bg-emerald-500 text-white font-black rounded-xl" onClick={capturePhoto}>
+                          <Sparkles className="h-4 w-4 mr-2" /> Capture
+                        </Button>
+                        <Button size="sm" variant="destructive" className="font-black rounded-xl" onClick={stopCamera}>
+                          <CameraOff className="h-4 w-4 mr-2" /> Abort
+                        </Button>
+                       </>
+                     )}
+                   </div>
                  </div>
-                 <Input 
-                    value={formData.imageUrl}
-                    onChange={(e) => setFormData({...formData, imageUrl: e.target.value})}
-                    className="mt-4 bg-slate-50 border-none h-12 rounded-xl text-xs font-mono"
-                    placeholder="Identity Image URL (https://...)"
-                  />
+                 
+                 {hasCameraPermission === false && (
+                    <Alert variant="destructive" className="mt-4 rounded-2xl">
+                        <AlertTitle className="text-xs font-black uppercase">Camera Access Required</AlertTitle>
+                        <AlertDescription className="text-[10px]">
+                          Enable browser permissions to use live ID capture.
+                        </AlertDescription>
+                    </Alert>
+                 )}
+
+                 <div className="mt-4 space-y-2">
+                    <Label className="text-[9px] font-black uppercase text-slate-400 pl-1">Payload Address</Label>
+                    <Input 
+                        value={formData.imageUrl}
+                        onChange={(e) => setFormData({...formData, imageUrl: e.target.value})}
+                        className="bg-slate-50 border-none h-10 rounded-xl text-[10px] font-mono"
+                        placeholder="Public Image URL or Captured Data..."
+                    />
+                 </div>
                </div>
             </div>
 
