@@ -1,6 +1,7 @@
+
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
@@ -22,7 +23,7 @@ import {
   PhoneCall
 } from "lucide-react";
 import { useFirestore, useCollection, useUser, useMemoFirebase, useDoc } from "@/firebase";
-import { collection, serverTimestamp, query, orderBy, doc } from "firebase/firestore";
+import { collection, serverTimestamp, query, doc } from "firebase/firestore";
 import { toast } from "@/hooks/use-toast";
 import { addDocumentNonBlocking } from "@/firebase";
 import { cn } from "@/lib/utils";
@@ -45,12 +46,17 @@ export default function NewOrderPage() {
   const [selectedCategory, setSelectedCategory] = useState("all");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
+  const [isClient, setIsClient] = useState(false);
   
   const [orderDialogOpen, setOrderDialogOpen] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState<any>(null);
   const [orderQuantity, setOrderQuantity] = useState("1");
   const [phoneNumber, setPhoneNumber] = useState("");
   const [deliveryAddress, setDeliveryAddress] = useState("");
+
+  useEffect(() => {
+    setIsClient(true);
+  }, []);
 
   const storeRef = useMemoFirebase(() => {
     if (!db || !user) return null;
@@ -59,16 +65,25 @@ export default function NewOrderPage() {
 
   const { data: store } = useDoc(storeRef);
 
+  useEffect(() => {
+    if (store) {
+      setPhoneNumber(store.phoneNumber || "");
+      setDeliveryAddress(store.location || "");
+    }
+  }, [store]);
+
   const productsQuery = useMemoFirebase(() => {
     if (!db) return null;
-    return query(collection(db, "products"), orderBy("name"));
+    return query(collection(db, "products"));
   }, [db]);
 
   const { data: products, isLoading: loading } = useCollection(productsQuery);
 
   const filteredProducts = useMemo(() => {
     if (!products) return [];
-    return products.filter(p => {
+    let list = [...products].sort((a, b) => (a.name || "").localeCompare(b.name || ""));
+    
+    return list.filter(p => {
       const name = (p.name || "").toLowerCase();
       const sku = (p.sku || "").toLowerCase();
       const pCat = p.category || "";
@@ -83,8 +98,6 @@ export default function NewOrderPage() {
   const handleOpenOrderDialog = (product: any) => {
     setSelectedProduct(product);
     setOrderQuantity("1");
-    setPhoneNumber(store?.phoneNumber || "");
-    setDeliveryAddress(store?.location || "");
     setOrderDialogOpen(true);
   };
 
@@ -94,7 +107,7 @@ export default function NewOrderPage() {
       return;
     }
 
-    if (!phoneNumber || phoneNumber.trim().length < 10) {
+    if (!phoneNumber || phoneNumber.trim().length < 8) {
       toast({ title: "Validation Error", description: "Valid contact phone is required.", variant: "destructive" });
       return;
     }
@@ -125,8 +138,8 @@ export default function NewOrderPage() {
       .then(() => {
         setIsSubmitting(false);
         setSubmitted(true);
-        toast({ title: "Order Sent", description: `Request for ${selectedProduct.name} saved.` });
-        setTimeout(() => router.push("/dashboard"), 1500);
+        toast({ title: "Order Transmitted", description: `Reorder request for ${selectedProduct.name} saved.` });
+        setTimeout(() => router.push("/dashboard"), 2000);
       })
       .catch((err) => {
         setIsSubmitting(false);
@@ -136,13 +149,21 @@ export default function NewOrderPage() {
 
   if (submitted) {
     return (
-      <div className="flex flex-col items-center justify-center min-h-[60vh] text-center space-y-4 animate-in zoom-in duration-300">
+      <div className="flex flex-col items-center justify-center min-h-[60vh] text-center space-y-6 animate-in zoom-in duration-300">
         <div className="bg-emerald-100 p-8 rounded-full shadow-lg"><CheckCircle className="h-20 w-20 text-emerald-500" /></div>
         <div className="space-y-2">
-          <h2 className="text-3xl font-bold text-primary">Order Transmitted</h2>
-          <p className="text-muted-foreground font-medium">Logistics node has successfully registered your reorder request.</p>
+          <h2 className="text-3xl font-black text-primary tracking-tighter uppercase italic">Order Logged</h2>
+          <p className="text-slate-500 font-medium">Logistics node has registered your regional reorder request.</p>
         </div>
-        <Button variant="outline" onClick={() => router.push("/dashboard")} className="h-12 rounded-xl px-8 border-slate-200">Return to Portal</Button>
+        <Button variant="outline" onClick={() => router.push("/dashboard")} className="h-14 rounded-2xl px-10 border-slate-200 font-black uppercase tracking-widest text-[10px]">Return to Portal</Button>
+      </div>
+    );
+  }
+
+  if (!isClient) {
+    return (
+      <div className="flex h-[400px] items-center justify-center">
+        <Loader2 className="h-10 w-10 animate-spin text-primary opacity-50" />
       </div>
     );
   }
@@ -151,7 +172,7 @@ export default function NewOrderPage() {
     <div className="space-y-8 pb-12 animate-in fade-in duration-500">
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 bg-white p-8 rounded-[2rem] shadow-sm border border-slate-100">
         <div className="space-y-1">
-          <h1 className="text-3xl font-bold text-primary tracking-tight italic uppercase">Stock Catalog</h1>
+          <h1 className="text-3xl font-black text-primary tracking-tight italic uppercase">Stock Catalog</h1>
           <p className="text-muted-foreground font-medium flex items-center gap-2">
             <span className="h-1.5 w-1.5 rounded-full bg-accent animate-pulse" />
             Select inventory for {store?.name || 'your node'}.
@@ -161,18 +182,18 @@ export default function NewOrderPage() {
           <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-slate-400" />
           <Input 
             placeholder="Search regional items..." 
-            className="pl-12 h-14 bg-slate-50 border-none rounded-2xl focus:ring-primary text-base" 
+            className="pl-12 h-14 bg-slate-50 border-none rounded-2xl focus:ring-primary text-base font-medium" 
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
           />
         </div>
       </div>
 
-      <Alert className="bg-white border-primary/20 rounded-[2rem] shadow-sm">
+      <Alert className="bg-white border-primary/20 rounded-[2rem] shadow-sm py-6">
         <PhoneCall className="h-5 w-5 text-primary" />
         <AlertTitle className="text-xs font-black uppercase tracking-widest text-primary">Support Node Active</AlertTitle>
         <AlertDescription className="text-sm font-medium text-slate-600">
-          For help with your order, contact the regional manager node at <span className="font-black text-primary">9085067897</span>.
+          For help with your order or node verification, contact the regional support node at <span className="font-black text-primary text-lg ml-2">9085067897</span>.
         </AlertDescription>
       </Alert>
 
@@ -181,7 +202,7 @@ export default function NewOrderPage() {
           <Card className="border-none shadow-sm overflow-hidden bg-white rounded-3xl">
             <CardHeader className="bg-slate-50/50 py-5">
               <CardTitle className="text-[10px] font-black flex items-center gap-2 uppercase tracking-[0.3em] text-primary/60">
-                <Filter className="h-3.5 w-3.5" /> Sectors
+                <Filter className="h-3.5 w-3.5" /> Sector Grid
               </CardTitle>
             </CardHeader>
             <CardContent className="p-0">
@@ -191,8 +212,8 @@ export default function NewOrderPage() {
                     key={cat.id}
                     onClick={() => setSelectedCategory(cat.id)}
                     className={cn(
-                      "flex items-center justify-between px-6 py-4 text-sm transition-all hover:bg-slate-50 text-left border-l-4",
-                      selectedCategory === cat.id ? "border-primary bg-primary/5 font-bold text-primary" : "border-transparent text-slate-500"
+                      "flex items-center justify-between px-6 py-4 text-sm transition-all hover:bg-slate-50 text-left border-l-4 font-black uppercase tracking-widest text-[10px]",
+                      selectedCategory === cat.id ? "border-primary bg-primary/5 text-primary" : "border-transparent text-slate-500"
                     )}
                   >
                     <span className="flex items-center gap-3"><cat.icon className="h-4 w-4 opacity-50" />{cat.name}</span>
@@ -207,7 +228,7 @@ export default function NewOrderPage() {
           {loading ? (
             <div className="flex flex-col items-center justify-center py-32 gap-4">
               <Loader2 className="h-12 w-12 animate-spin text-primary opacity-50" />
-              <p className="text-xs font-bold uppercase tracking-widest text-slate-400">Syncing Catalog...</p>
+              <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">Syncing Catalog...</p>
             </div>
           ) : filteredProducts.length > 0 ? (
             <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-6">
@@ -218,7 +239,7 @@ export default function NewOrderPage() {
                       src={product.imageUrl || `https://picsum.photos/seed/${product.id}/600/400`}
                       alt={product.name}
                       fill
-                      data-ai-hint="retail stock"
+                      data-ai-hint="retail product"
                       className="object-cover group-hover:scale-110 transition-transform duration-700"
                     />
                     <div className="absolute top-4 left-4">
@@ -229,20 +250,20 @@ export default function NewOrderPage() {
                   </div>
                   <CardContent className="p-6 flex-1 space-y-4">
                     <div className="space-y-1">
-                      <h3 className="font-bold text-lg text-slate-900 leading-tight group-hover:text-primary transition-colors italic uppercase">{product.name}</h3>
-                      <p className="text-[10px] text-slate-400 font-mono font-bold tracking-widest">SKU: {product.sku}</p>
+                      <h3 className="font-black text-base text-slate-900 leading-tight group-hover:text-primary transition-colors italic uppercase">{product.name}</h3>
+                      <p className="text-[9px] text-slate-400 font-mono font-bold tracking-widest uppercase">SKU: {product.sku}</p>
                     </div>
                     <div className="flex items-end justify-between">
-                      <p className="text-3xl font-black text-primary tracking-tighter">${(product.price || 0).toFixed(2)}</p>
+                      <p className="text-3xl font-black text-primary tracking-tighter font-mono">${(product.price || 0).toFixed(2)}</p>
                     </div>
                   </CardContent>
                   <CardFooter className="p-6 pt-0">
                     <Button 
-                      className="w-full h-12 bg-accent text-primary hover:bg-primary hover:text-white font-black rounded-xl shadow-sm transition-all text-xs uppercase tracking-widest" 
+                      className="w-full h-14 bg-accent text-primary hover:bg-primary hover:text-white font-black rounded-2xl shadow-sm transition-all text-[10px] uppercase tracking-widest" 
                       onClick={() => handleOpenOrderDialog(product)} 
                       disabled={!product.stockQuantity || product.stockQuantity <= 0}
                     >
-                      {!product.stockQuantity || product.stockQuantity <= 0 ? "Out of Stock" : "Request Stock"}
+                      {!product.stockQuantity || product.stockQuantity <= 0 ? "Node Depleted" : "Request Stock"}
                     </Button>
                   </CardFooter>
                 </Card>
@@ -250,9 +271,9 @@ export default function NewOrderPage() {
             </div>
           ) : (
             <div className="text-center py-32 bg-white rounded-[2.5rem] border-2 border-dashed border-slate-100">
-              <Package className="h-20 w-20 text-slate-100 mx-auto mb-6" />
-              <h3 className="font-bold text-slate-900">No items detected in this sector</h3>
-              <p className="text-sm text-slate-500 mt-2">Try adjusting your filters.</p>
+              <Package className="h-20 w-20 text-slate-100 mx-auto mb-6 opacity-20" />
+              <h3 className="font-black text-slate-900 uppercase italic tracking-tighter">No items detected in this sector</h3>
+              <p className="text-[10px] text-slate-400 mt-2 uppercase font-bold tracking-widest">Adjust filters to reveal inventory payload.</p>
             </div>
           )}
         </main>
@@ -264,21 +285,21 @@ export default function NewOrderPage() {
             <DialogTitle className="text-2xl font-black text-primary uppercase italic tracking-tighter">Finalize Reorder</DialogTitle>
           </DialogHeader>
           {selectedProduct && (
-            <div className="p-10 space-y-6">
+            <div className="p-10 space-y-8">
               <div className="flex gap-6 p-6 bg-slate-50 rounded-3xl border border-slate-100 items-center">
                 <div className="flex-1 space-y-1">
-                  <h4 className="font-bold text-slate-900 text-lg uppercase italic">{selectedProduct.name}</h4>
-                  <p className="text-xl font-black text-primary">${(selectedProduct.price || 0).toFixed(2)}</p>
+                  <h4 className="font-black text-slate-900 text-lg uppercase italic tracking-tight">{selectedProduct.name}</h4>
+                  <p className="text-xl font-black text-primary font-mono">${(selectedProduct.price || 0).toFixed(2)} / Unit</p>
                 </div>
               </div>
               
-              <div className="space-y-4">
-                <div className="space-y-2">
-                  <Label className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 ml-1">Contact Phone Number</Label>
+              <div className="space-y-6">
+                <div className="space-y-3">
+                  <Label className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 ml-1">Contact Phone Node</Label>
                   <div className="relative">
                     <Phone className="absolute left-5 top-1/2 -translate-y-1/2 h-5 w-5 text-primary opacity-50" />
                     <Input 
-                      placeholder="Enter mobile number..." 
+                      placeholder="Enter mobile signature..." 
                       className="h-14 pl-14 rounded-2xl bg-slate-50 border-none focus:ring-primary font-bold text-slate-900" 
                       value={phoneNumber}
                       onChange={(e) => setPhoneNumber(e.target.value)}
@@ -286,33 +307,33 @@ export default function NewOrderPage() {
                   </div>
                 </div>
 
-                <div className="space-y-2">
-                  <Label className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 ml-1">Delivery Address</Label>
+                <div className="space-y-3">
+                  <Label className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 ml-1">Payload Destination</Label>
                   <div className="relative">
                     <MapPin className="absolute left-5 top-5 h-5 w-5 text-primary opacity-50" />
                     <Textarea 
-                      placeholder="Enter complete delivery address..." 
-                      className="min-h-[100px] pl-14 rounded-2xl bg-slate-50 border-none focus:ring-primary font-bold text-slate-900 text-sm" 
+                      placeholder="Enter complete delivery coordinates..." 
+                      className="min-h-[120px] pl-14 pt-4 rounded-2xl bg-slate-50 border-none focus:ring-primary font-bold text-slate-900 text-sm" 
                       value={deliveryAddress}
                       onChange={(e) => setDeliveryAddress(e.target.value)}
                     />
                   </div>
                 </div>
 
-                <div className="grid grid-cols-2 gap-4">
-                   <div className="space-y-2">
-                     <Label className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 ml-1">Qty</Label>
+                <div className="grid grid-cols-2 gap-6">
+                   <div className="space-y-3">
+                     <Label className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 ml-1">Node Density</Label>
                      <Input 
                        type="number" 
                        min="1" 
                        value={orderQuantity} 
                        onChange={(e) => setOrderQuantity(e.target.value)} 
-                       className="h-14 text-center font-black rounded-2xl bg-slate-50 border-none text-lg" 
+                       className="h-16 text-center font-black rounded-2xl bg-slate-50 border-none text-xl" 
                      />
                    </div>
-                   <div className="space-y-2">
-                     <Label className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 ml-1">Total</Label>
-                     <div className="h-14 flex items-center justify-center bg-primary text-white font-black rounded-2xl text-xl">
+                   <div className="space-y-3">
+                     <Label className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 ml-1">Net Value</Label>
+                     <div className="h-16 flex items-center justify-center bg-primary text-white font-black rounded-2xl text-xl font-mono">
                         ${(parseFloat(orderQuantity || "0") * (selectedProduct.price || 0)).toFixed(2)}
                      </div>
                    </div>
@@ -321,9 +342,9 @@ export default function NewOrderPage() {
             </div>
           )}
           <DialogFooter className="p-10 pt-0 flex gap-4">
-            <Button variant="ghost" onClick={() => setOrderDialogOpen(false)} className="flex-1 h-14 rounded-2xl font-bold uppercase tracking-widest text-xs">Abort</Button>
-            <Button onClick={handleSubmitOrder} className="flex-[2] bg-accent text-primary hover:bg-primary hover:text-white h-14 rounded-2xl font-black uppercase tracking-widest text-xs" disabled={isSubmitting}>
-              {isSubmitting ? <Loader2 className="h-5 w-5 animate-spin" /> : "Transmit Order"}
+            <Button variant="ghost" onClick={() => setOrderDialogOpen(false)} className="flex-1 h-14 rounded-2xl font-black uppercase tracking-widest text-[10px]">Abort</Button>
+            <Button onClick={handleSubmitOrder} className="flex-[2] bg-accent text-primary hover:bg-primary hover:text-white h-14 rounded-2xl font-black uppercase tracking-widest text-[10px]" disabled={isSubmitting}>
+              {isSubmitting ? <Loader2 className="h-5 w-5 animate-spin" /> : "Transmit Request"}
             </Button>
           </DialogFooter>
         </DialogContent>

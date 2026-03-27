@@ -1,15 +1,15 @@
 
 "use client";
 
-import { useState } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { useFirestore, useCollection, useMemoFirebase } from "@/firebase";
-import { collection, doc, updateDoc, query, orderBy } from "firebase/firestore";
+import { collection, doc, updateDoc, query } from "firebase/firestore";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Download, Search, FileText, Filter, Loader2, Globe, Phone, MapPin, Mail, ChevronRight } from "lucide-react";
+import { Download, Search, FileText, Filter, Loader2, Phone, MapPin, Mail, Globe } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
 import { format } from "date-fns";
 import { errorEmitter } from "@/firebase/error-emitter";
@@ -21,20 +21,27 @@ export default function AdminOrdersPage() {
   const db = useFirestore();
   const [storeFilter, setStoreFilter] = useState("all");
   const [searchQuery, setSearchQuery] = useState("");
+  const [isClient, setIsClient] = useState(false);
+
+  useEffect(() => {
+    setIsClient(true);
+  }, []);
 
   const ordersQuery = useMemoFirebase(() => {
     if (!db) return null;
-    // Removing strict orderBy temporarily to ensure visibility if indexes aren't fully ready
     return query(collection(db, "orders"));
   }, [db]);
 
   const { data: rawOrders, isLoading: loading } = useCollection(ordersQuery);
 
-  const orders = rawOrders?.sort((a, b) => {
-    const dateA = a.createdAt?.toDate ? a.createdAt.toDate().getTime() : 0;
-    const dateB = b.createdAt?.toDate ? b.createdAt.toDate().getTime() : 0;
-    return dateB - dateA;
-  });
+  const orders = useMemo(() => {
+    if (!rawOrders) return [];
+    return [...rawOrders].sort((a, b) => {
+      const dateA = a.createdAt?.seconds || 0;
+      const dateB = b.createdAt?.seconds || 0;
+      return dateB - dateA;
+    });
+  }, [rawOrders]);
 
   const handleStatusUpdate = (orderId: string, newStatus: string) => {
     if (!db) return;
@@ -53,7 +60,7 @@ export default function AdminOrdersPage() {
       });
   };
 
-  const filteredOrders = orders?.filter(order => {
+  const filteredOrders = orders.filter(order => {
     const matchesStore = storeFilter === "all" || order.storeName === storeFilter;
     const matchesSearch = 
       order.id.toLowerCase().includes(searchQuery.toLowerCase()) || 
@@ -65,7 +72,7 @@ export default function AdminOrdersPage() {
   });
 
   const downloadPO = (orderId?: string) => {
-    const ordersToExport = orderId ? orders?.filter(o => o.id === orderId) : filteredOrders;
+    const ordersToExport = orderId ? orders.filter(o => o.id === orderId) : filteredOrders;
     if (!ordersToExport || ordersToExport.length === 0) return;
 
     const headers = ["Packet ID", "Node", "Gmail", "Phone", "Delivery Address", "Timestamp", "Items", "Quantity", "Total ($)", "Status"];
@@ -77,7 +84,7 @@ export default function AdminOrdersPage() {
         o.email || 'N/A',
         o.phoneNumber || 'N/A',
         `"${o.deliveryAddress?.replace(/,/g, ' ') || 'N/A'}"`,
-        o.createdAt?.toDate ? format(o.createdAt.toDate(), 'yyyy-MM-dd HH:mm') : 'PENDING',
+        o.createdAt?.seconds ? format(o.createdAt.seconds * 1000, 'yyyy-MM-dd HH:mm') : 'PENDING',
         `"${o.items || 'Restock'}"`,
         o.quantity || 1,
         (o.total || 0).toFixed(2),
@@ -99,7 +106,7 @@ export default function AdminOrdersPage() {
     });
   };
 
-  if (loading) {
+  if (loading || !isClient) {
     return (
       <div className="flex h-[70vh] items-center justify-center">
         <Loader2 className="h-12 w-12 animate-spin text-primary opacity-50" />
@@ -142,7 +149,7 @@ export default function AdminOrdersPage() {
           </SelectTrigger>
           <SelectContent className="bg-white border-slate-200 text-slate-900 rounded-2xl">
             <SelectItem value="all" className="font-bold uppercase tracking-widest text-[10px]">All Active Nodes</SelectItem>
-            {Array.from(new Set(orders?.map(o => o.storeName).filter(Boolean) || [])).map(store => (
+            {Array.from(new Set(orders.map(o => o.storeName).filter(Boolean) || [])).map(store => (
               <SelectItem key={store} value={store} className="font-bold uppercase tracking-widest text-[10px]">{store}</SelectItem>
             ))}
           </SelectContent>
@@ -162,7 +169,7 @@ export default function AdminOrdersPage() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {filteredOrders?.length ? (
+              {filteredOrders.length ? (
                 filteredOrders.map((order) => (
                   <TableRow key={order.id} className="border-slate-50 hover:bg-slate-50/50 transition-all group h-32">
                     <TableCell className="pl-10">
@@ -196,7 +203,7 @@ export default function AdminOrdersPage() {
                            <span className="text-[9px] text-slate-400 font-mono">Qty: {order.quantity || 1}</span>
                         </div>
                         <span className="text-[9px] text-slate-400 font-mono">
-                          {order.createdAt?.toDate ? format(order.createdAt.toDate(), 'MMM dd • HH:mm') : 'SYNCING'}
+                          {order.createdAt?.seconds ? format(order.createdAt.seconds * 1000, 'MMM dd • HH:mm') : 'SYNCING'}
                         </span>
                       </div>
                     </TableCell>
@@ -250,6 +257,44 @@ export default function AdminOrdersPage() {
           </Table>
         </CardContent>
       </Card>
+
+      <div className="md:hidden space-y-4">
+        {filteredOrders.map((order) => (
+          <Card key={order.id} className="border-none bg-white rounded-3xl p-6 shadow-sm space-y-6">
+            <div className="flex justify-between items-start">
+               <div>
+                 <p className="text-[10px] font-black text-primary uppercase italic tracking-tighter mb-1">{order.id.substring(0, 8)}</p>
+                 <h3 className="font-black text-slate-900 text-sm uppercase italic">{order.storeName || 'Branch Node'}</h3>
+               </div>
+               <Badge className={cn(
+                  "rounded-xl px-4 py-1 text-[8px] font-black uppercase tracking-widest border-none",
+                  order.status === 'delivered' ? 'bg-emerald-50 text-emerald-600' : 'bg-amber-50 text-amber-600'
+               )}>{order.status}</Badge>
+            </div>
+            
+            <div className="space-y-3 bg-slate-50 p-4 rounded-2xl">
+               <div className="flex items-center gap-3 text-xs font-bold text-slate-600">
+                  <Phone className="h-3 w-3 text-primary opacity-50" />
+                  {order.phoneNumber || 'N/A'}
+               </div>
+               <div className="flex items-start gap-3 text-[10px] text-slate-500 font-medium">
+                  <MapPin className="h-3 w-3 text-accent shrink-0 mt-0.5" />
+                  <span>{order.deliveryAddress || 'NO_ADDRESS'}</span>
+               </div>
+            </div>
+
+            <div className="flex items-center justify-between border-t border-slate-50 pt-4">
+               <div className="space-y-0.5">
+                  <p className="text-xs font-black text-primary font-mono">${(order.total || 0).toFixed(2)}</p>
+                  <p className="text-[9px] text-slate-400 font-mono">{order.items || 'Payload'}</p>
+               </div>
+               <Button size="sm" variant="outline" className="h-10 rounded-xl font-black text-[9px] uppercase tracking-widest" onClick={() => downloadPO(order.id)}>
+                 <Download className="h-3 w-3 mr-2" /> PO
+               </Button>
+            </div>
+          </Card>
+        ))}
+      </div>
     </div>
   );
 }
