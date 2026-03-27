@@ -9,7 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Download, Search, FileText, Filter, Loader2, Globe, Phone, MapPin, Mail } from "lucide-react";
+import { Download, Search, FileText, Filter, Loader2, Globe, Phone, MapPin, Mail, ChevronRight } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
 import { format } from "date-fns";
 import { errorEmitter } from "@/firebase/error-emitter";
@@ -24,10 +24,17 @@ export default function AdminOrdersPage() {
 
   const ordersQuery = useMemoFirebase(() => {
     if (!db) return null;
-    return query(collection(db, "orders"), orderBy("createdAt", "desc"));
+    // Removing strict orderBy temporarily to ensure visibility if indexes aren't fully ready
+    return query(collection(db, "orders"));
   }, [db]);
 
-  const { data: orders, isLoading: loading } = useCollection(ordersQuery);
+  const { data: rawOrders, isLoading: loading } = useCollection(ordersQuery);
+
+  const orders = rawOrders?.sort((a, b) => {
+    const dateA = a.createdAt?.toDate ? a.createdAt.toDate().getTime() : 0;
+    const dateB = b.createdAt?.toDate ? b.createdAt.toDate().getTime() : 0;
+    return dateB - dateA;
+  });
 
   const handleStatusUpdate = (orderId: string, newStatus: string) => {
     if (!db) return;
@@ -243,8 +250,6 @@ export default function AdminOrdersPage() {
           </Table>
         </CardContent>
       </Card>
-      
-      {/* Mobile view omitted for brevity but follows similar data binding as above */}
     </div>
   );
 }

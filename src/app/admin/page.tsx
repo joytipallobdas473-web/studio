@@ -17,14 +17,16 @@ export default function AdminOverview() {
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [aiAnalysis, setAiAnalysis] = useState<InventoryAnalysisOutput | null>(null);
 
+  // Fetch all stores for accurate counting
   const storesQuery = useMemoFirebase(() => {
     if (!db) return null;
     return query(collection(db, "stores"), orderBy("createdAt", "desc"));
   }, [db]);
 
-  const ordersQuery = useMemoFirebase(() => {
+  // Fetch all orders to ensure "Active Orders" count is accurate across the whole grid
+  const allOrdersQuery = useMemoFirebase(() => {
     if (!db) return null;
-    return query(collection(db, "orders"), orderBy("createdAt", "desc"), limit(10));
+    return query(collection(db, "orders"), orderBy("createdAt", "desc"));
   }, [db]);
 
   const productsQuery = useMemoFirebase(() => {
@@ -33,11 +35,12 @@ export default function AdminOverview() {
   }, [db]);
 
   const { data: stores, isLoading: storesLoading } = useCollection(storesQuery);
-  const { data: orders, isLoading: ordersLoading } = useCollection(ordersQuery);
+  const { data: orders, isLoading: ordersLoading } = useCollection(allOrdersQuery);
   const { data: products, isLoading: productsLoading } = useCollection(productsQuery);
 
   const stats = useMemo(() => {
     const pendingStoresCount = stores?.filter(s => s.status === 'pending')?.length || 0;
+    // Count all orders that aren't finalized (delivered or cancelled)
     const activeOrdersCount = orders?.filter(o => !['delivered', 'cancelled'].includes(o.status))?.length || 0;
     const lowStockCount = products?.filter(p => (p.stockQuantity || 0) < 10)?.length || 0;
 
@@ -60,7 +63,7 @@ export default function AdminOverview() {
           category: p.category || "General",
           mrp: p.price || 0
         })),
-        recentOrders: orders.map(o => ({
+        recentOrders: orders.slice(0, 20).map(o => ({
           items: o.items || "Unspecified items",
           status: o.status || "pending",
           total: o.total || 0
@@ -69,15 +72,18 @@ export default function AdminOverview() {
       setAiAnalysis(result);
     } catch (error) {
       console.error("AI Analysis failed", error);
+      toast({ title: "Analysis Failed", description: "Could not synthesize regional intel.", variant: "destructive" });
     } finally {
       setIsAnalyzing(false);
     }
   };
 
   const handleShareNode = () => {
+    const url = typeof window !== 'undefined' ? window.location.origin : '';
+    navigator.clipboard.writeText(url);
     toast({
-      title: "Public Share Readiness",
-      description: "App deployment to Firebase Hosting required for public sharing. Current URL is private.",
+      title: "Protocol Link Copied",
+      description: "Regional hub address saved to clipboard.",
     });
   };
 
@@ -135,12 +141,13 @@ export default function AdminOverview() {
           </CardHeader>
           <CardContent className="p-0">
             <div className="divide-y divide-slate-50">
-              {orders && orders.length > 0 ? orders.slice(0, 5).map((order, i) => (
+              {orders && orders.length > 0 ? orders.slice(0, 10).map((order, i) => (
                 <div key={i} className="flex items-center justify-between px-10 py-6 hover:bg-slate-50 transition-all group">
                   <div className="flex items-center gap-5">
                     <div className={cn(
                       "h-1.5 w-1.5 rounded-full transition-all group-hover:scale-150",
-                      order.status === 'delivered' ? 'bg-emerald-500' : 'bg-primary'
+                      order.status === 'delivered' ? 'bg-emerald-500' : 
+                      order.status === 'cancelled' ? 'bg-rose-500' : 'bg-primary'
                     )} />
                     <div>
                       <p className="text-sm font-black text-slate-900 uppercase italic tracking-tight">{order.storeName || 'Branch Node'}</p>
@@ -149,7 +156,11 @@ export default function AdminOverview() {
                   </div>
                   <div className="text-right">
                     <p className="text-sm font-black text-primary font-mono">${(order.total || 0).toFixed(2)}</p>
-                    <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest">{order.status}</span>
+                    <span className={cn(
+                      "text-[9px] font-black uppercase tracking-widest",
+                      order.status === 'delivered' ? 'text-emerald-500' : 
+                      order.status === 'cancelled' ? 'text-rose-500' : 'text-slate-400'
+                    )}>{order.status}</span>
                   </div>
                 </div>
               )) : (
@@ -168,6 +179,14 @@ export default function AdminOverview() {
             {aiAnalysis ? (
               <div className="space-y-6">
                 <p className="text-sm leading-relaxed opacity-90 italic font-medium">"{aiAnalysis.summary}"</p>
+                <div className="space-y-2">
+                   {aiAnalysis.recommendations.slice(0, 2).map((rec, idx) => (
+                     <div key={idx} className="flex gap-2 items-start text-[10px] opacity-80 font-bold uppercase">
+                        <Zap className="h-3 w-3 text-accent shrink-0 mt-0.5" />
+                        {rec}
+                     </div>
+                   ))}
+                </div>
                 <Button variant="secondary" className="w-full h-14 rounded-2xl font-black text-[10px] uppercase tracking-widest bg-white text-primary hover:bg-accent hover:text-primary transition-all" onClick={handleRunAIAnalysis} disabled={isAnalyzing}>
                   Recalculate Intel
                 </Button>
@@ -194,8 +213,8 @@ export default function AdminOverview() {
                 <Badge className="bg-emerald-50 text-emerald-600 border-none font-black text-[9px] px-3">ACTIVE</Badge>
               </div>
               <div className="flex justify-between items-center text-sm">
-                <span className="text-slate-500 font-medium">Node Latency</span>
-                <span className="font-black text-primary font-mono tracking-tighter">14ms</span>
+                <span className="text-slate-500 font-medium">Active Nodes</span>
+                <span className="font-black text-primary font-mono tracking-tighter">{stores?.length || 0}</span>
               </div>
             </div>
           </Card>
