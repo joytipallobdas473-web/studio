@@ -23,7 +23,8 @@
         "sku": { "type": "string" },
         "price": { "type": "number" },
         "stockQuantity": { "type": "number" },
-        "category": { "type": "string" }
+        "category": { "type": "string" },
+        "imageUrl": { "type": "string", "description": "Public URL for the product identity image." }
       },
       "required": ["id", "name", "price", "stockQuantity"]
     },

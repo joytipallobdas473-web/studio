@@ -2,13 +2,14 @@
 "use client";
 
 import { useState, useMemo } from "react";
+import Image from "next/image";
 import { useFirestore, useCollection, useMemoFirebase } from "@/firebase";
 import { collection, doc, serverTimestamp } from "firebase/firestore";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Plus, Search, Edit2, Trash2, Loader2, Filter, Boxes, CheckCircle2 } from "lucide-react";
+import { Plus, Search, Edit2, Trash2, Loader2, Filter, Boxes, CheckCircle2, ImageIcon } from "lucide-react";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -40,7 +41,8 @@ export default function InventoryControl() {
     price: "",
     stockQuantity: "0",
     category: "Electronics",
-    description: ""
+    description: "",
+    imageUrl: ""
   };
 
   const [formData, setFormData] = useState(initialFormState);
@@ -54,7 +56,8 @@ export default function InventoryControl() {
         price: (product.price || 0).toString(),
         stockQuantity: (product.stockQuantity || 0).toString(),
         category: product.category || "Electronics",
-        description: product.description || ""
+        description: product.description || "",
+        imageUrl: product.imageUrl || ""
       });
     } else {
       setEditingProduct(null);
@@ -81,6 +84,7 @@ export default function InventoryControl() {
       stockQuantity: stockNum,
       category: formData.category,
       description: formData.description.trim(),
+      imageUrl: formData.imageUrl.trim() || `https://picsum.photos/seed/${formData.sku || Date.now()}/600/400`,
       updatedAt: serverTimestamp()
     };
 
@@ -183,12 +187,23 @@ export default function InventoryControl() {
                 filteredProducts.map((product) => (
                   <TableRow key={product.id} className="border-slate-50 hover:bg-slate-50/50 transition-all group h-24">
                     <TableCell className="pl-10">
-                      <div className="flex flex-col gap-1">
-                        <span className="font-black text-slate-900 text-sm uppercase tracking-tight italic">{product.name}</span>
-                        <span className="text-[10px] font-mono text-slate-400 uppercase tracking-widest flex items-center gap-2">
-                           <div className="h-1 w-1 rounded-full bg-slate-200" />
-                           {product.sku}
-                        </span>
+                      <div className="flex items-center gap-6">
+                        <div className="relative h-14 w-14 rounded-2xl overflow-hidden bg-slate-100 flex-shrink-0 border border-slate-100">
+                          <Image 
+                            src={product.imageUrl || `https://picsum.photos/seed/${product.sku}/100/100`}
+                            alt={product.name}
+                            fill
+                            className="object-cover"
+                            data-ai-hint="retail product"
+                          />
+                        </div>
+                        <div className="flex flex-col gap-1">
+                          <span className="font-black text-slate-900 text-sm uppercase tracking-tight italic">{product.name}</span>
+                          <span className="text-[10px] font-mono text-slate-400 uppercase tracking-widest flex items-center gap-2">
+                             <div className="h-1 w-1 rounded-full bg-slate-200" />
+                             {product.sku}
+                          </span>
+                        </div>
                       </div>
                     </TableCell>
                     <TableCell>
@@ -250,45 +265,58 @@ export default function InventoryControl() {
       <div className="md:hidden space-y-4">
         {filteredProducts.length ? (
           filteredProducts.map((product) => (
-            <Card key={product.id} className="border-none bg-white rounded-3xl shadow-sm p-6 space-y-6">
-              <div className="flex justify-between items-start">
-                <div className="space-y-1">
-                  <h3 className="font-black text-slate-900 text-base uppercase italic tracking-tight leading-none">{product.name}</h3>
-                  <p className="text-[10px] font-mono text-slate-400 uppercase tracking-widest">{product.sku}</p>
+            <Card key={product.id} className="border-none bg-white rounded-3xl shadow-sm overflow-hidden group">
+              <div className="relative h-48 w-full">
+                <Image 
+                  src={product.imageUrl || `https://picsum.photos/seed/${product.sku}/600/400`}
+                  alt={product.name}
+                  fill
+                  className="object-cover"
+                  data-ai-hint="retail product"
+                />
+                <div className="absolute top-4 left-4">
+                  <Badge className="bg-white/90 backdrop-blur-md text-primary border-none text-[9px] font-black uppercase tracking-widest px-3 py-1 rounded-xl">
+                    {product.category}
+                  </Badge>
                 </div>
-                <Badge variant="outline" className="text-[9px] font-black uppercase tracking-widest border-slate-100 px-3 py-1 rounded-xl">
-                  {product.category}
-                </Badge>
               </div>
-
-              <div className="grid grid-cols-2 gap-4 bg-slate-50 rounded-2xl p-4">
-                <div className="space-y-0.5">
-                  <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Density</p>
-                  <div className="flex items-center gap-2">
-                    <div className={cn("h-1.5 w-1.5 rounded-full", (product.stockQuantity || 0) < 10 ? "bg-rose-500 animate-pulse" : "bg-emerald-500")} />
-                    <span className={cn("text-sm font-black font-mono", (product.stockQuantity || 0) < 10 ? "text-rose-500" : "text-emerald-500")}>
-                      {product.stockQuantity || 0}
-                    </span>
+              <CardContent className="p-6 space-y-6">
+                <div className="flex justify-between items-start">
+                  <div className="space-y-1">
+                    <h3 className="font-black text-slate-900 text-base uppercase italic tracking-tight leading-none">{product.name}</h3>
+                    <p className="text-[10px] font-mono text-slate-400 uppercase tracking-widest">{product.sku}</p>
                   </div>
                 </div>
-                <div className="space-y-0.5 text-right">
-                  <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Valuation</p>
-                  <p className="text-sm font-black text-primary font-mono">${(product.price || 0).toFixed(2)}</p>
-                </div>
-              </div>
 
-              <div className="flex gap-3">
-                <Button className="flex-1 h-12 rounded-2xl bg-slate-50 text-slate-600 font-bold uppercase tracking-widest text-[10px] hover:bg-slate-100" onClick={() => handleOpenDialog(product)}>
-                   <Edit2 className="h-4 w-4 mr-2" /> Protocol
-                </Button>
-                <Button className="h-12 w-12 rounded-2xl bg-rose-50 text-rose-500 hover:bg-rose-100" onClick={() => {
-                  const docRef = doc(db!, "products", product.id);
-                  deleteDocumentNonBlocking(docRef);
-                  toast({ title: "Node Deprovisioned", variant: "destructive" });
-                }}>
-                   <Trash2 className="h-4 w-4" />
-                </Button>
-              </div>
+                <div className="grid grid-cols-2 gap-4 bg-slate-50 rounded-2xl p-4">
+                  <div className="space-y-0.5">
+                    <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Density</p>
+                    <div className="flex items-center gap-2">
+                      <div className={cn("h-1.5 w-1.5 rounded-full", (product.stockQuantity || 0) < 10 ? "bg-rose-500 animate-pulse" : "bg-emerald-500")} />
+                      <span className={cn("text-sm font-black font-mono", (product.stockQuantity || 0) < 10 ? "text-rose-500" : "text-emerald-500")}>
+                        {product.stockQuantity || 0}
+                      </span>
+                    </div>
+                  </div>
+                  <div className="space-y-0.5 text-right">
+                    <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Valuation</p>
+                    <p className="text-sm font-black text-primary font-mono">${(product.price || 0).toFixed(2)}</p>
+                  </div>
+                </div>
+
+                <div className="flex gap-3">
+                  <Button className="flex-1 h-12 rounded-2xl bg-slate-50 text-slate-600 font-bold uppercase tracking-widest text-[10px] hover:bg-slate-100" onClick={() => handleOpenDialog(product)}>
+                     <Edit2 className="h-4 w-4 mr-2" /> Protocol
+                  </Button>
+                  <Button className="h-12 w-12 rounded-2xl bg-rose-50 text-rose-500 hover:bg-rose-100" onClick={() => {
+                    const docRef = doc(db!, "products", product.id);
+                    deleteDocumentNonBlocking(docRef);
+                    toast({ title: "Node Deprovisioned", variant: "destructive" });
+                  }}>
+                     <Trash2 className="h-4 w-4" />
+                  </Button>
+                </div>
+              </CardContent>
             </Card>
           ))
         ) : (
@@ -299,32 +327,56 @@ export default function InventoryControl() {
       </div>
 
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-        <DialogContent className="sm:max-w-[600px] w-[95vw] bg-white border-none text-slate-900 rounded-[2.5rem] p-6 md:p-10 shadow-2xl overflow-y-auto max-h-[90vh]">
+        <DialogContent className="sm:max-w-[650px] w-[95vw] bg-white border-none text-slate-900 rounded-[2.5rem] p-6 md:p-10 shadow-2xl overflow-y-auto max-h-[90vh]">
           <DialogHeader>
             <DialogTitle className="text-2xl md:text-3xl font-black tracking-tighter uppercase italic text-primary">
               {editingProduct ? "Modify SKU Node" : "Provision Cluster"}
             </DialogTitle>
           </DialogHeader>
           <div className="grid gap-6 md:gap-8 py-6 md:py-10">
-            <div className="space-y-3">
-              <Label className="text-[10px] font-black uppercase tracking-[0.3em] text-slate-400 pl-1">Identity Tag</Label>
-              <Input 
-                value={formData.name}
-                onChange={(e) => setFormData({...formData, name: e.target.value})}
-                className="bg-slate-50 border-none h-14 rounded-2xl focus:ring-primary text-base font-medium"
-                placeholder="Item designation..."
-              />
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-8 items-start">
+               <div className="space-y-6">
+                <div className="space-y-3">
+                  <Label className="text-[10px] font-black uppercase tracking-[0.3em] text-slate-400 pl-1">Identity Tag</Label>
+                  <Input 
+                    value={formData.name}
+                    onChange={(e) => setFormData({...formData, name: e.target.value})}
+                    className="bg-slate-50 border-none h-14 rounded-2xl focus:ring-primary text-base font-medium"
+                    placeholder="Item designation..."
+                  />
+                </div>
+                <div className="space-y-3">
+                  <Label className="text-[10px] font-black uppercase tracking-[0.3em] text-slate-400 pl-1">Registry SKU</Label>
+                  <Input 
+                    value={formData.sku}
+                    onChange={(e) => setFormData({...formData, sku: e.target.value})}
+                    className="bg-slate-50 border-none h-14 rounded-2xl font-mono uppercase text-primary font-bold"
+                    placeholder="SKU-XXXX-YY"
+                  />
+                </div>
+               </div>
+               <div className="space-y-3">
+                 <Label className="text-[10px] font-black uppercase tracking-[0.3em] text-slate-400 pl-1 text-center block">Visual ID Preview</Label>
+                 <div className="aspect-video relative rounded-[1.5rem] bg-slate-50 border-2 border-dashed border-slate-200 overflow-hidden flex items-center justify-center">
+                   {formData.imageUrl ? (
+                     <Image src={formData.imageUrl} alt="Preview" fill className="object-cover" />
+                   ) : (
+                     <div className="flex flex-col items-center gap-2 opacity-20">
+                       <ImageIcon className="h-10 w-10" />
+                       <span className="text-[9px] font-black uppercase tracking-widest">Awaiting Payload</span>
+                     </div>
+                   )}
+                 </div>
+                 <Input 
+                    value={formData.imageUrl}
+                    onChange={(e) => setFormData({...formData, imageUrl: e.target.value})}
+                    className="mt-4 bg-slate-50 border-none h-12 rounded-xl text-xs font-mono"
+                    placeholder="Identity Image URL (https://...)"
+                  />
+               </div>
             </div>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div className="space-y-3">
-                <Label className="text-[10px] font-black uppercase tracking-[0.3em] text-slate-400 pl-1">Registry SKU</Label>
-                <Input 
-                  value={formData.sku}
-                  onChange={(e) => setFormData({...formData, sku: e.target.value})}
-                  className="bg-slate-50 border-none h-14 rounded-2xl font-mono uppercase text-primary font-bold"
-                  placeholder="SKU-XXXX-YY"
-                />
-              </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
               <div className="space-y-3">
                 <Label className="text-[10px] font-black uppercase tracking-[0.3em] text-slate-400 pl-1">Node Sector</Label>
                 <Select value={formData.category} onValueChange={(val) => setFormData({...formData, category: val})}>
@@ -338,8 +390,6 @@ export default function InventoryControl() {
                   </SelectContent>
                 </Select>
               </div>
-            </div>
-            <div className="grid grid-cols-2 gap-6">
               <div className="space-y-3">
                 <Label className="text-[10px] font-black uppercase tracking-[0.3em] text-slate-400 pl-1">Unit Val ($)</Label>
                 <Input 
