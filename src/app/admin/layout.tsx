@@ -3,7 +3,7 @@
 
 import { useEffect } from "react";
 import { SidebarProvider, Sidebar, SidebarContent, SidebarHeader, SidebarMenu, SidebarMenuItem, SidebarMenuButton, SidebarGroup, SidebarGroupLabel, SidebarGroupContent, SidebarInset, SidebarTrigger, SidebarFooter } from "@/components/ui/sidebar";
-import { LayoutDashboard, Store, Package, ShoppingCart, LogOut, MapPin, Boxes, UserCircle, Loader2 } from "lucide-react";
+import { LayoutDashboard, Store, Package, ShoppingCart, LogOut, MapPin, Boxes, UserCircle, Loader2, Settings } from "lucide-react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { cn } from "@/lib/utils";
@@ -21,6 +21,7 @@ function AdminSidebar() {
     { title: "Retailers", icon: Store, href: "/admin/stores" },
     { title: "Inventory", icon: Package, href: "/admin/inventory" },
     { title: "Orders", icon: ShoppingCart, href: "/admin/orders" },
+    { title: "Settings", icon: Settings, href: "/admin/settings" },
   ];
 
   return (
