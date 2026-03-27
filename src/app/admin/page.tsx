@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState, useMemo } from "react";
@@ -17,16 +16,14 @@ export default function AdminOverview() {
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [aiAnalysis, setAiAnalysis] = useState<InventoryAnalysisOutput | null>(null);
 
-  // Fetch all stores for accurate counting
   const storesQuery = useMemoFirebase(() => {
     if (!db) return null;
-    return query(collection(db, "stores"), orderBy("createdAt", "desc"));
+    return query(collection(db, "stores"));
   }, [db]);
 
-  // Fetch all orders to ensure "Active Orders" count is accurate across the whole grid
   const allOrdersQuery = useMemoFirebase(() => {
     if (!db) return null;
-    return query(collection(db, "orders"), orderBy("createdAt", "desc"));
+    return query(collection(db, "orders"));
   }, [db]);
 
   const productsQuery = useMemoFirebase(() => {
@@ -40,7 +37,6 @@ export default function AdminOverview() {
 
   const stats = useMemo(() => {
     const pendingStoresCount = stores?.filter(s => s.status === 'pending')?.length || 0;
-    // Count all orders that aren't finalized (delivered or cancelled)
     const activeOrdersCount = orders?.filter(o => !['delivered', 'cancelled'].includes(o.status))?.length || 0;
     const lowStockCount = products?.filter(p => (p.stockQuantity || 0) < 10)?.length || 0;
 
@@ -141,7 +137,7 @@ export default function AdminOverview() {
           </CardHeader>
           <CardContent className="p-0">
             <div className="divide-y divide-slate-50">
-              {orders && orders.length > 0 ? orders.slice(0, 10).map((order, i) => (
+              {orders && orders.length > 0 ? [...orders].sort((a,b) => (b.createdAt?.seconds || 0) - (a.createdAt?.seconds || 0)).slice(0, 10).map((order, i) => (
                 <div key={i} className="flex items-center justify-between px-10 py-6 hover:bg-slate-50 transition-all group">
                   <div className="flex items-center gap-5">
                     <div className={cn(
