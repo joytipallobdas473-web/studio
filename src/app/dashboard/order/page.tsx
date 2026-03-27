@@ -18,16 +18,16 @@ import {
   Loader2, 
   Search, 
   Filter, 
-  Info,
   Phone,
   MapPin,
-  Mail
+  PhoneCall
 } from "lucide-react";
 import { useFirestore, useCollection, useUser, useMemoFirebase, useDoc } from "@/firebase";
 import { collection, serverTimestamp, query, orderBy, doc } from "firebase/firestore";
 import { toast } from "@/hooks/use-toast";
 import { addDocumentNonBlocking } from "@/firebase";
 import { cn } from "@/lib/utils";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 
 const CATEGORIES = [
   { id: "all", name: "All Categories", icon: ShoppingBag },
@@ -169,6 +169,14 @@ export default function NewOrderPage() {
         </div>
       </div>
 
+      <Alert className="bg-white border-primary/20 rounded-[2rem] shadow-sm">
+        <PhoneCall className="h-5 w-5 text-primary" />
+        <AlertTitle className="text-xs font-black uppercase tracking-widest text-primary">Support Node Active</AlertTitle>
+        <AlertDescription className="text-sm font-medium text-slate-600">
+          For help with your order, contact the regional manager node at <span className="font-black text-primary">9085067897</span>.
+        </AlertDescription>
+      </Alert>
+
       <div className="flex flex-col lg:flex-row gap-8">
         <aside className="w-full lg:w-72 shrink-0 space-y-6">
           <Card className="border-none shadow-sm overflow-hidden bg-white rounded-3xl">
@@ -208,7 +216,7 @@ export default function NewOrderPage() {
                 <Card key={product.id} className="group overflow-hidden border-none shadow-sm hover:shadow-xl transition-all flex flex-col bg-white rounded-[2rem]">
                   <div className="relative h-48 w-full bg-slate-100 overflow-hidden">
                     <Image 
-                      src={`https://picsum.photos/seed/${product.id}/600/400`}
+                      src={product.imageUrl || `https://picsum.photos/seed/${product.id}/600/400`}
                       alt={product.name}
                       fill
                       data-ai-hint="retail stock"

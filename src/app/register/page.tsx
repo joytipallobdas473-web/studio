@@ -18,13 +18,14 @@ import {
   ChevronRight,
   CheckCircle2,
   Lock,
-  Info
+  PhoneCall
 } from "lucide-react";
 import { useFirestore, useAuth, useUser, useDoc, useMemoFirebase, setDocumentNonBlocking } from "@/firebase";
 import { doc, serverTimestamp } from "firebase/firestore";
 import { createUserWithEmailAndPassword } from "firebase/auth";
 import { toast } from "@/hooks/use-toast";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 
 export default function RegisterPage() {
   const router = useRouter();
@@ -137,7 +138,7 @@ export default function RegisterPage() {
 
   return (
     <div className="min-h-screen flex flex-col items-center justify-center p-6 bg-[#ECF0F5]">
-      <div className="w-full max-w-xl space-y-8">
+      <div className="w-full max-w-xl space-y-8 pb-12">
         <Link href="/" className="flex items-center gap-2 text-slate-500 hover:text-primary transition-colors font-bold text-sm group">
           <ArrowLeft className="h-4 w-4 group-hover:-translate-x-1 transition-transform" />
           Back to Selection
@@ -148,10 +149,18 @@ export default function RegisterPage() {
             <Boxes className="h-8 w-8 text-white" />
           </div>
           <h1 className="text-3xl font-black text-slate-900 tracking-tighter uppercase italic">Regional Onboarding</h1>
-          <p className="text-slate-500 font-bold flex items-center justify-center gap-2 text-[10px] uppercase tracking-[0.3em]">
+          <p className="text-slate-500 font-bold flex items-center justify-center gap-2 text-[10px] uppercase tracking-[0.4em]">
              <MapPin className="h-3 w-3 text-accent" /> North East Network Registry
           </p>
         </div>
+
+        <Alert className="bg-white border-primary/20 rounded-[1.5rem] shadow-sm animate-in slide-in-from-top-4 duration-500">
+          <PhoneCall className="h-5 w-5 text-primary" />
+          <AlertTitle className="text-xs font-black uppercase tracking-widest text-primary">Support Protocol</AlertTitle>
+          <AlertDescription className="text-[11px] font-medium text-slate-600">
+            For registration assistance or manager inquiries, contact our regional support node at <span className="font-black text-primary">9085067897</span>.
+          </AlertDescription>
+        </Alert>
 
         <Card className="border-none shadow-sm rounded-[2.5rem] bg-white overflow-hidden">
           <CardHeader className="p-10 pb-0 bg-slate-50/50">
