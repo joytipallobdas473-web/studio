@@ -79,7 +79,6 @@ export default function InventoryControl() {
         videoRef.current.srcObject = stream;
       }
     } catch (error) {
-      console.error('Error accessing camera:', error);
       setHasCameraPermission(false);
       toast({
         variant: 'destructive',
@@ -110,15 +109,13 @@ export default function InventoryControl() {
         const dataUri = canvas.toDataURL('image/jpeg');
         setFormData({ ...formData, imageUrl: dataUri });
         stopCamera();
-        toast({ title: "Visual ID Captured", description: "Real-time photo attached to node." });
+        toast({ title: "Visual ID Captured" });
       }
     }
   };
 
   useEffect(() => {
-    if (!isDialogOpen) {
-      stopCamera();
-    }
+    if (!isDialogOpen) stopCamera();
   }, [isDialogOpen]);
 
   const handleSave = () => {
@@ -128,7 +125,7 @@ export default function InventoryControl() {
     const stockNum = parseInt(formData.stockQuantity);
 
     if (!formData.name.trim() || isNaN(priceNum) || isNaN(stockNum)) {
-      toast({ title: "Validation Protocol Failure", description: "Critical data missing.", variant: "destructive" });
+      toast({ title: "Validation Failure", description: "Critical data missing.", variant: "destructive" });
       return;
     }
 
@@ -146,11 +143,11 @@ export default function InventoryControl() {
     if (editingProduct) {
       const docRef = doc(db, "products", editingProduct.id);
       updateDocumentNonBlocking(docRef, productData);
-      toast({ title: "Node Updated", description: "SKU configuration applied." });
+      toast({ title: "Node Updated" });
     } else {
       const colRef = collection(db, "products");
       addDocumentNonBlocking(colRef, productData);
-      toast({ title: "Node Registered", description: "New SKU added to cluster." });
+      toast({ title: "Node Registered" });
     }
     
     setIsDialogOpen(false);
@@ -160,10 +157,7 @@ export default function InventoryControl() {
     if (!products) return [];
     let list = [...products].sort((a, b) => (a.name || "").localeCompare(b.name || ""));
     
-    if (filterCategory !== "all") {
-      list = list.filter(p => p.category === filterCategory);
-    }
-
+    if (filterCategory !== "all") list = list.filter(p => p.category === filterCategory);
     if (searchQuery) {
       const lowerQuery = searchQuery.toLowerCase();
       list = list.filter(p => 
@@ -183,20 +177,17 @@ export default function InventoryControl() {
   }
 
   return (
-    <div className="space-y-8 md:space-y-12 animate-in fade-in duration-700">
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-6 md:gap-8">
+    <div className="space-y-8 animate-in fade-in duration-700">
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-6">
         <div className="space-y-3">
           <div className="flex items-center gap-3">
              <div className="h-2 w-2 rounded-full bg-primary" />
              <span className="text-[10px] font-black tracking-[0.4em] text-primary uppercase">Logistics Engine</span>
           </div>
-          <h1 className="text-4xl md:text-5xl font-black tracking-tighter text-slate-900 uppercase italic leading-none">Inventory Hub</h1>
+          <h1 className="text-4xl font-black tracking-tighter text-slate-900 uppercase italic leading-none">Inventory Hub</h1>
           <p className="text-slate-500 font-medium text-sm tracking-wide">Central product registry and stock orchestration.</p>
         </div>
-        <Button 
-          onClick={() => handleOpenDialog()}
-          className="w-full md:w-auto h-14 md:h-16 px-10 rounded-2xl bg-primary text-white font-black shadow-lg hover:scale-105 transition-all uppercase tracking-widest text-xs"
-        >
+        <Button onClick={() => handleOpenDialog()} className="h-14 px-10 rounded-2xl bg-primary text-white font-black shadow-lg hover:scale-105 transition-all uppercase tracking-widest text-xs">
           <Plus className="mr-3 h-6 w-6" /> Provision SKU
         </Button>
       </div>
@@ -205,22 +196,22 @@ export default function InventoryControl() {
         <div className="md:col-span-3 relative">
           <Search className="absolute left-6 top-1/2 -translate-y-1/2 h-5 w-5 text-slate-400" />
           <Input 
-            placeholder="Query SKU Identity or Payload Name..." 
-            className="pl-16 h-14 md:h-16 bg-white border-slate-200 text-slate-900 placeholder:text-slate-400 rounded-2xl md:rounded-[1.5rem] focus:ring-primary text-sm md:text-base font-medium" 
+            placeholder="Query SKU Identity..." 
+            className="pl-16 h-14 bg-white border-slate-200 text-slate-900 rounded-2xl" 
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
           />
         </div>
         <Select value={filterCategory} onValueChange={setFilterCategory}>
-          <SelectTrigger className="h-14 md:h-16 bg-white border-slate-200 text-slate-900 rounded-2xl md:rounded-[1.5rem] px-6">
+          <SelectTrigger className="h-14 bg-white border-slate-200 text-slate-900 rounded-2xl">
             <div className="flex items-center gap-3">
               <Filter className="h-5 w-5 text-slate-400" />
               <SelectValue placeholder="All Clusters" />
             </div>
           </SelectTrigger>
-          <SelectContent className="bg-white border-slate-200 text-slate-900 rounded-2xl">
-            <SelectItem value="all" className="font-bold uppercase tracking-widest text-[10px]">All Clusters</SelectItem>
-            {CATEGORIES.map(c => <SelectItem key={c} value={c} className="font-bold uppercase tracking-widest text-[10px]">{c}</SelectItem>)}
+          <SelectContent>
+            <SelectItem value="all">All Clusters</SelectItem>
+            {CATEGORIES.map(c => <SelectItem key={c} value={c}>{c}</SelectItem>)}
           </SelectContent>
         </Select>
       </div>
@@ -229,279 +220,141 @@ export default function InventoryControl() {
         <CardContent className="p-0">
           <Table>
             <TableHeader className="bg-slate-50/50">
-              <TableRow className="border-slate-100 h-20">
-                <TableHead className="text-slate-500 uppercase text-[10px] font-black tracking-[0.3em] pl-10">Identity Package</TableHead>
-                <TableHead className="text-slate-500 uppercase text-[10px] font-black tracking-[0.3em]">Data Cluster</TableHead>
-                <TableHead className="text-slate-500 uppercase text-[10px] font-black tracking-[0.3em]">Unit Value</TableHead>
-                <TableHead className="text-slate-500 uppercase text-[10px] font-black tracking-[0.3em]">Node Density</TableHead>
-                <TableHead className="text-slate-500 uppercase text-[10px] font-black tracking-[0.3em] text-right pr-10">Protocol</TableHead>
+              <TableRow className="h-20 border-slate-100">
+                <TableHead className="pl-10 uppercase text-[10px] font-black tracking-widest">Identity Package</TableHead>
+                <TableHead className="uppercase text-[10px] font-black tracking-widest">Cluster</TableHead>
+                <TableHead className="uppercase text-[10px] font-black tracking-widest">Valuation</TableHead>
+                <TableHead className="uppercase text-[10px] font-black tracking-widest">Density</TableHead>
+                <TableHead className="text-right pr-10 uppercase text-[10px] font-black tracking-widest">Protocol</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
-              {filteredProducts.length ? (
-                filteredProducts.map((product) => (
-                  <TableRow key={product.id} className="border-slate-50 hover:bg-slate-50/50 transition-all group h-24">
-                    <TableCell className="pl-10">
-                      <div className="flex items-center gap-6">
-                        <div className="relative h-14 w-14 rounded-2xl overflow-hidden bg-slate-100 flex-shrink-0 border border-slate-100">
-                          <Image 
-                            src={product.imageUrl || `https://picsum.photos/seed/${product.sku}/100/100`}
-                            alt={product.name}
-                            fill
-                            className="object-cover"
-                            data-ai-hint="retail product"
-                          />
-                        </div>
-                        <div className="flex flex-col gap-1">
-                          <span className="font-black text-slate-900 text-sm uppercase tracking-tight italic">{product.name}</span>
-                          <span className="text-[10px] font-mono text-slate-400 uppercase tracking-widest flex items-center gap-2">
-                             <div className="h-1 w-1 rounded-full bg-slate-200" />
-                             {product.sku}
-                          </span>
-                        </div>
+              {filteredProducts.map((product) => (
+                <TableRow key={product.id} className="h-24 hover:bg-slate-50 transition-all group border-slate-50">
+                  <TableCell className="pl-10">
+                    <div className="flex items-center gap-6">
+                      <div className="relative h-14 w-14 rounded-2xl overflow-hidden bg-slate-100 border border-slate-100">
+                        <Image src={product.imageUrl || `https://picsum.photos/seed/${product.sku}/100/100`} alt={product.name} fill className="object-cover" />
                       </div>
-                    </TableCell>
-                    <TableCell>
-                      <Badge variant="outline" className="bg-slate-50 border-slate-100 text-slate-500 text-[9px] uppercase font-black tracking-widest rounded-xl px-3 py-1">
-                        {product.category}
-                      </Badge>
-                    </TableCell>
-                    <TableCell className="font-mono text-sm text-primary font-black">
-                      ${(product.price || 0).toFixed(2)}
-                    </TableCell>
-                    <TableCell>
-                      <div className="flex items-center gap-4">
-                        <div className={cn(
-                          "h-2 w-24 rounded-full overflow-hidden bg-slate-100",
-                          (product.stockQuantity || 0) < 10 ? "bg-rose-100" : ""
-                        )}>
-                           <div className={cn(
-                             "h-full transition-all duration-1000",
-                             (product.stockQuantity || 0) < 10 ? "bg-rose-500 w-[15%]" : "bg-emerald-500 w-[85%]"
-                           )} />
-                        </div>
-                        <span className={cn(
-                          "text-xs font-black font-mono",
-                          (product.stockQuantity || 0) < 10 ? "text-rose-500" : "text-emerald-500"
-                        )}>
-                          {product.stockQuantity || 0}
-                        </span>
+                      <div className="flex flex-col">
+                        <span className="font-black text-slate-900 text-sm uppercase italic">{product.name}</span>
+                        <span className="text-[10px] font-mono text-slate-400 uppercase">{product.sku}</span>
                       </div>
-                    </TableCell>
-                    <TableCell className="text-right pr-10">
-                      <div className="flex justify-end gap-3 opacity-0 group-hover:opacity-100 transition-all duration-300">
-                        <Button size="icon" variant="ghost" className="h-11 w-11 rounded-2xl hover:bg-slate-50 text-slate-400 hover:text-primary" onClick={() => handleOpenDialog(product)}>
-                          <Edit2 className="h-5 w-5" />
-                        </Button>
-                        <Button size="icon" variant="ghost" className="h-11 w-11 rounded-2xl hover:bg-rose-50 text-rose-500" onClick={() => {
-                          const docRef = doc(db!, "products", product.id);
-                          deleteDocumentNonBlocking(docRef);
-                          toast({ title: "Node Deprovisioned", variant: "destructive" });
-                        }}>
-                          <Trash2 className="h-5 w-5" />
-                        </Button>
+                    </div>
+                  </TableCell>
+                  <TableCell>
+                    <Badge variant="outline" className="text-[9px] uppercase font-black px-3 py-1 rounded-xl">
+                      {product.category}
+                    </Badge>
+                  </TableCell>
+                  <TableCell className="font-mono text-sm text-primary font-black">${(product.price || 0).toFixed(2)}</TableCell>
+                  <TableCell>
+                    <div className="flex items-center gap-4">
+                      <div className={cn("h-2 w-24 rounded-full bg-slate-100 overflow-hidden")}>
+                         <div className={cn("h-full", (product.stockQuantity || 0) < 10 ? "bg-rose-500 w-[15%]" : "bg-emerald-500 w-[85%]")} />
                       </div>
-                    </TableCell>
-                  </TableRow>
-                ))
-              ) : (
-                <TableRow>
-                  <TableCell colSpan={5} className="text-center py-40 text-slate-400">
-                    <Boxes className="h-20 w-20 mx-auto mb-6 opacity-5 animate-pulse" />
-                    <p className="font-black uppercase tracking-[0.3em] text-xs italic">Awaiting data cluster provision...</p>
+                      <span className={cn("text-xs font-black font-mono", (product.stockQuantity || 0) < 10 ? "text-rose-500" : "text-emerald-500")}>
+                        {product.stockQuantity || 0}
+                      </span>
+                    </div>
+                  </TableCell>
+                  <TableCell className="text-right pr-10">
+                    <div className="flex justify-end gap-3 opacity-0 group-hover:opacity-100 transition-all">
+                      <Button size="icon" variant="ghost" className="h-11 w-11 rounded-2xl" onClick={() => handleOpenDialog(product)}>
+                        <Edit2 className="h-5 w-5 text-slate-400 hover:text-primary" />
+                      </Button>
+                      <Button size="icon" variant="ghost" className="h-11 w-11 rounded-2xl" onClick={() => {
+                        const docRef = doc(db!, "products", product.id);
+                        deleteDocumentNonBlocking(docRef);
+                        toast({ title: "Node Purged", variant: "destructive" });
+                      }}>
+                        <Trash2 className="h-5 w-5 text-rose-500" />
+                      </Button>
+                    </div>
                   </TableCell>
                 </TableRow>
-              )}
+              ))}
             </TableBody>
           </Table>
         </CardContent>
       </Card>
 
-      <div className="md:hidden space-y-4">
-        {filteredProducts.length ? (
-          filteredProducts.map((product) => (
-            <Card key={product.id} className="border-none bg-white rounded-3xl shadow-sm overflow-hidden group">
-              <div className="relative h-48 w-full">
-                <Image 
-                  src={product.imageUrl || `https://picsum.photos/seed/${product.sku}/600/400`}
-                  alt={product.name}
-                  fill
-                  className="object-cover"
-                  data-ai-hint="retail product"
-                />
-                <div className="absolute top-4 left-4">
-                  <Badge className="bg-white/90 backdrop-blur-md text-primary border-none text-[9px] font-black uppercase tracking-widest px-3 py-1 rounded-xl">
-                    {product.category}
-                  </Badge>
-                </div>
-              </div>
-              <CardContent className="p-6 space-y-6">
-                <div className="flex justify-between items-start">
-                  <div className="space-y-1">
-                    <h3 className="font-black text-slate-900 text-base uppercase italic tracking-tight leading-none">{product.name}</h3>
-                    <p className="text-[10px] font-mono text-slate-400 uppercase tracking-widest">{product.sku}</p>
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-2 gap-4 bg-slate-50 rounded-2xl p-4">
-                  <div className="space-y-0.5">
-                    <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Density</p>
-                    <div className="flex items-center gap-2">
-                      <div className={cn("h-1.5 w-1.5 rounded-full", (product.stockQuantity || 0) < 10 ? "bg-rose-500 animate-pulse" : "bg-emerald-500")} />
-                      <span className={cn("text-sm font-black font-mono", (product.stockQuantity || 0) < 10 ? "text-rose-500" : "text-emerald-500")}>
-                        {product.stockQuantity || 0}
-                      </span>
-                    </div>
-                  </div>
-                  <div className="space-y-0.5 text-right">
-                    <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Valuation</p>
-                    <p className="text-sm font-black text-primary font-mono">${(product.price || 0).toFixed(2)}</p>
-                  </div>
-                </div>
-
-                <div className="flex gap-3">
-                  <Button className="flex-1 h-12 rounded-2xl bg-slate-50 text-slate-600 font-bold uppercase tracking-widest text-[10px] hover:bg-slate-100" onClick={() => handleOpenDialog(product)}>
-                     <Edit2 className="h-4 w-4 mr-2" /> Protocol
-                  </Button>
-                  <Button className="h-12 w-12 rounded-2xl bg-rose-50 text-rose-500 hover:bg-rose-100" onClick={() => {
-                    const docRef = doc(db!, "products", product.id);
-                    deleteDocumentNonBlocking(docRef);
-                    toast({ title: "Node Deprovisioned", variant: "destructive" });
-                  }}>
-                     <Trash2 className="h-4 w-4" />
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
-          ))
-        ) : (
-          <div className="text-center py-20 bg-white rounded-3xl text-slate-400 italic font-black uppercase text-[10px] tracking-widest">
-            Cluster empty...
-          </div>
-        )}
-      </div>
-
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-        <DialogContent className="sm:max-w-[750px] w-[95vw] bg-white border-none text-slate-900 rounded-[2.5rem] p-6 md:p-10 shadow-2xl overflow-y-auto max-h-[90vh]">
+        <DialogContent className="sm:max-w-[700px] rounded-[2.5rem] p-10 bg-white border-none shadow-2xl overflow-y-auto max-h-[90vh]">
           <DialogHeader>
-            <DialogTitle className="text-2xl md:text-3xl font-black tracking-tighter uppercase italic text-primary">
+            <DialogTitle className="text-3xl font-black uppercase italic text-primary">
               {editingProduct ? "Modify SKU Node" : "Provision Cluster"}
             </DialogTitle>
           </DialogHeader>
-          <div className="grid gap-6 md:gap-8 py-6 md:py-10">
+          <div className="grid gap-8 py-10">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-8 items-start">
                <div className="space-y-6">
                 <div className="space-y-3">
-                  <Label className="text-[10px] font-black uppercase tracking-[0.3em] text-slate-400 pl-1">Identity Tag</Label>
-                  <Input 
-                    value={formData.name}
-                    onChange={(e) => setFormData({...formData, name: e.target.value})}
-                    className="bg-slate-50 border-none h-14 rounded-2xl focus:ring-primary text-base font-medium"
-                    placeholder="Item designation..."
-                  />
+                  <Label className="text-[10px] font-black uppercase tracking-widest text-slate-400">Identity Tag</Label>
+                  <Input value={formData.name} onChange={(e) => setFormData({...formData, name: e.target.value})} className="h-14 rounded-2xl bg-slate-50 border-none" />
                 </div>
                 <div className="space-y-3">
-                  <Label className="text-[10px] font-black uppercase tracking-[0.3em] text-slate-400 pl-1">Registry SKU</Label>
-                  <Input 
-                    value={formData.sku}
-                    onChange={(e) => setFormData({...formData, sku: e.target.value})}
-                    className="bg-slate-50 border-none h-14 rounded-2xl font-mono uppercase text-primary font-bold"
-                    placeholder="SKU-XXXX-YY"
-                  />
+                  <Label className="text-[10px] font-black uppercase tracking-widest text-slate-400">Registry SKU</Label>
+                  <Input value={formData.sku} onChange={(e) => setFormData({...formData, sku: e.target.value})} className="h-14 rounded-2xl font-mono uppercase font-bold bg-slate-50 border-none" />
                 </div>
                </div>
                <div className="space-y-3">
-                 <Label className="text-[10px] font-black uppercase tracking-[0.3em] text-slate-400 pl-1 text-center block">Visual ID Capture</Label>
-                 <div className="aspect-video relative rounded-[1.5rem] bg-slate-900 border-2 border-primary/20 overflow-hidden flex items-center justify-center group">
+                 <Label className="text-[10px] font-black uppercase tracking-widest text-slate-400 text-center block">Visual ID Capture</Label>
+                 <div className="aspect-video relative rounded-[1.5rem] bg-slate-900 overflow-hidden flex items-center justify-center group">
                    {isCameraActive ? (
                      <video ref={videoRef} className="w-full h-full object-cover" autoPlay muted playsInline />
                    ) : formData.imageUrl ? (
                      <Image src={formData.imageUrl} alt="Preview" fill className="object-cover" />
                    ) : (
-                     <div className="flex flex-col items-center gap-2 opacity-20 text-white">
-                       <ImageIcon className="h-10 w-10" />
-                       <span className="text-[9px] font-black uppercase tracking-widest">No Payload</span>
-                     </div>
+                     <ImageIcon className="h-10 w-10 text-white/20" />
                    )}
-                   
                    <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-4">
                      {!isCameraActive ? (
-                       <Button size="sm" className="bg-primary text-white font-black rounded-xl" onClick={startCamera}>
+                       <Button size="sm" className="bg-primary rounded-xl" onClick={startCamera}>
                          <Camera className="h-4 w-4 mr-2" /> Start Lens
                        </Button>
                      ) : (
                        <>
-                        <Button size="sm" className="bg-emerald-500 text-white font-black rounded-xl" onClick={capturePhoto}>
+                        <Button size="sm" className="bg-emerald-500 rounded-xl" onClick={capturePhoto}>
                           <Sparkles className="h-4 w-4 mr-2" /> Capture
                         </Button>
-                        <Button size="sm" variant="destructive" className="font-black rounded-xl" onClick={stopCamera}>
+                        <Button size="sm" variant="destructive" className="rounded-xl" onClick={stopCamera}>
                           <CameraOff className="h-4 w-4 mr-2" /> Abort
                         </Button>
                        </>
                      )}
                    </div>
                  </div>
-                 
                  {hasCameraPermission === false && (
                     <Alert variant="destructive" className="mt-4 rounded-2xl">
-                        <AlertTitle className="text-xs font-black uppercase">Camera Access Required</AlertTitle>
-                        <AlertDescription className="text-[10px]">
-                          Enable browser permissions to use live ID capture.
-                        </AlertDescription>
+                        <AlertTitle className="text-xs font-black uppercase">Camera Required</AlertTitle>
+                        <AlertDescription className="text-[10px]">Enable browser permissions for live capture.</AlertDescription>
                     </Alert>
                  )}
-
-                 <div className="mt-4 space-y-2">
-                    <Label className="text-[9px] font-black uppercase text-slate-400 pl-1">Payload Address</Label>
-                    <Input 
-                        value={formData.imageUrl}
-                        onChange={(e) => setFormData({...formData, imageUrl: e.target.value})}
-                        className="bg-slate-50 border-none h-10 rounded-xl text-[10px] font-mono"
-                        placeholder="Public Image URL or Captured Data..."
-                    />
-                 </div>
                </div>
             </div>
-
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
               <div className="space-y-3">
-                <Label className="text-[10px] font-black uppercase tracking-[0.3em] text-slate-400 pl-1">Node Sector</Label>
+                <Label className="text-[10px] font-black uppercase tracking-widest text-slate-400">Sector</Label>
                 <Select value={formData.category} onValueChange={(val) => setFormData({...formData, category: val})}>
-                  <SelectTrigger className="bg-slate-50 border-none h-14 rounded-2xl px-5">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent className="bg-white border-slate-100 text-slate-900 rounded-2xl">
-                    {CATEGORIES.map((cat) => (
-                      <SelectItem key={cat} value={cat} className="font-bold uppercase tracking-widest text-[10px]">{cat}</SelectItem>
-                    ))}
-                  </SelectContent>
+                  <SelectTrigger className="h-14 rounded-2xl bg-slate-50 border-none"><SelectValue /></SelectTrigger>
+                  <SelectContent>{CATEGORIES.map(c => <SelectItem key={c} value={c}>{c}</SelectItem>)}</SelectContent>
                 </Select>
               </div>
               <div className="space-y-3">
-                <Label className="text-[10px] font-black uppercase tracking-[0.3em] text-slate-400 pl-1">Unit Val ($)</Label>
-                <Input 
-                  type="number" 
-                  value={formData.price}
-                  onChange={(e) => setFormData({...formData, price: e.target.value})}
-                  className="bg-slate-50 border-none h-14 rounded-2xl font-mono text-emerald-600 font-bold"
-                />
+                <Label className="text-[10px] font-black uppercase tracking-widest text-slate-400">Unit Val ($)</Label>
+                <Input type="number" value={formData.price} onChange={(e) => setFormData({...formData, price: e.target.value})} className="h-14 rounded-2xl bg-slate-50 border-none font-mono" />
               </div>
               <div className="space-y-3">
-                <Label className="text-[10px] font-black uppercase tracking-[0.3em] text-slate-400 pl-1">Density</Label>
-                <Input 
-                  type="number" 
-                  value={formData.stockQuantity}
-                  onChange={(e) => setFormData({...formData, stockQuantity: e.target.value})}
-                  className="bg-slate-50 border-none h-14 rounded-2xl font-mono text-blue-600 font-bold"
-                />
+                <Label className="text-[10px] font-black uppercase tracking-widest text-slate-400">Density</Label>
+                <Input type="number" value={formData.stockQuantity} onChange={(e) => setFormData({...formData, stockQuantity: e.target.value})} className="h-14 rounded-2xl bg-slate-50 border-none font-mono" />
               </div>
             </div>
           </div>
-          <DialogFooter className="flex-col md:flex-row gap-4">
-            <Button variant="ghost" onClick={() => setIsDialogOpen(false)} className="w-full md:w-auto h-14 px-8 rounded-2xl text-slate-400 hover:text-slate-900 hover:bg-slate-50 font-bold uppercase tracking-widest">Abort</Button>
-            <Button onClick={handleSave} className="w-full md:w-auto bg-primary h-14 px-10 rounded-2xl text-white font-black shadow-lg uppercase tracking-widest hover:scale-105 transition-all">
-              <CheckCircle2 className="mr-3 h-6 w-6" />
-              {editingProduct ? "Apply Protocol" : "Initialize Node"}
+          <DialogFooter className="gap-4">
+            <Button variant="ghost" onClick={() => setIsDialogOpen(false)} className="h-14 px-8 rounded-2xl uppercase tracking-widest font-bold">Abort</Button>
+            <Button onClick={handleSave} className="bg-primary h-14 px-10 rounded-2xl text-white font-black uppercase tracking-widest">
+              <CheckCircle2 className="mr-3 h-6 w-6" /> Commit SKU
             </Button>
           </DialogFooter>
         </DialogContent>

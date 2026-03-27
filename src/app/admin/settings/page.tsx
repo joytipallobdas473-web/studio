@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState } from "react";
@@ -50,7 +51,6 @@ export default function AdminSettings() {
         description: "Admin passkey has been successfully rotated.",
       });
     } catch (err: any) {
-      console.error(err);
       if (err.code === "auth/requires-recent-login") {
         setError("Security Timeout: Please logout and sign back in to authorize passkey rotation.");
       } else {
@@ -58,7 +58,6 @@ export default function AdminSettings() {
       }
       toast({
         title: "Update Failed",
-        description: "Credentials rotation aborted.",
         variant: "destructive",
       });
     } finally {
