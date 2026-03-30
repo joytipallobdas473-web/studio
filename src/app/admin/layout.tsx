@@ -12,6 +12,8 @@ import { Separator } from "@/components/ui/separator";
 import { signOut } from "firebase/auth";
 import { toast } from "@/hooks/use-toast";
 
+const MASTER_ADMIN_UID = "j96izCkggNcL002AHiJjzGb18Bf2";
+
 function AdminSidebar() {
   const pathname = usePathname();
 
@@ -88,7 +90,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     if (!isUserLoading && !user && pathname !== "/admin/login") {
       router.push("/admin/login");
     } else if (!isUserLoading && user && pathname !== "/admin/login") {
-      const isAdmin = user.email?.toLowerCase().includes("admin") || user.uid === "j96izCkggNcL002AHiJjzGb18Bf2";
+      const isAdmin = user.email?.toLowerCase().includes("admin") || user.uid === MASTER_ADMIN_UID;
       if (!isAdmin) {
         router.push("/");
         toast({ title: "Restricted Node", description: "Admin identity required.", variant: "destructive" });
@@ -109,7 +111,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   }
 
   // Master Admin UID check
-  const isAdmin = user?.email?.toLowerCase().includes("admin") || user?.uid === "j96izCkggNcL002AHiJjzGb18Bf2";
+  const isAdmin = user?.email?.toLowerCase().includes("admin") || user?.uid === MASTER_ADMIN_UID;
   if (!user || !isAdmin) {
     return null;
   }

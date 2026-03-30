@@ -13,6 +13,8 @@ import { signInWithEmailAndPassword } from "firebase/auth";
 import { toast } from "@/hooks/use-toast";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 
+const MASTER_ADMIN_UID = "j96izCkggNcL002AHiJjzGb18Bf2";
+
 export default function AdminLoginPage() {
   const router = useRouter();
   const auth = useAuth();
@@ -24,7 +26,7 @@ export default function AdminLoginPage() {
 
   useEffect(() => {
     if (!isUserLoading && user) {
-      const isAdmin = user.email?.toLowerCase().includes("admin") || user.uid === "j96izCkggNcL002AHiJjzGb18Bf2";
+      const isAdmin = user.email?.toLowerCase().includes("admin") || user.uid === MASTER_ADMIN_UID;
       if (isAdmin) {
         router.push("/admin");
       }
@@ -37,9 +39,6 @@ export default function AdminLoginPage() {
     if (!auth) return;
     
     const lowerEmail = email.toLowerCase().trim();
-    
-    // We remove the strict client-side email string check to allow the Master Admin UID to sign in
-    // The redirect logic in useEffect and security rules will handle verification.
     
     setIsLoading(true);
     try {

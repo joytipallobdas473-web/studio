@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState, useEffect } from "react";
@@ -26,6 +25,8 @@ import { createUserWithEmailAndPassword } from "firebase/auth";
 import { toast } from "@/hooks/use-toast";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+
+const MASTER_ADMIN_UID = "j96izCkggNcL002AHiJjzGb18Bf2";
 
 export default function RegisterPage() {
   const router = useRouter();
@@ -59,7 +60,8 @@ export default function RegisterPage() {
   // Auto-redirect if already fully registered
   useEffect(() => {
     if (!isUserLoading && !storeLoading && user && store && isClient && !isSuccess) {
-      router.push(user.email?.toLowerCase().includes("admin") ? "/admin" : "/dashboard");
+      const isAdmin = user.email?.toLowerCase().includes("admin") || user.uid === MASTER_ADMIN_UID;
+      router.push(isAdmin ? "/admin" : "/dashboard");
     }
   }, [user, isUserLoading, store, storeLoading, router, isClient, isSuccess]);
 
@@ -99,7 +101,8 @@ export default function RegisterPage() {
       });
       
       setTimeout(() => {
-        router.push("/dashboard");
+        const isAdmin = currentUser.email?.toLowerCase().includes("admin") || currentUser.uid === MASTER_ADMIN_UID;
+        router.push(isAdmin ? "/admin" : "/dashboard");
       }, 2500);
       
     } catch (error: any) {
@@ -112,7 +115,6 @@ export default function RegisterPage() {
     }
   };
 
-  // Success state takes precedence over general loading to prevent flicker
   if (isSuccess) {
     return (
       <div className="min-h-screen flex flex-col items-center justify-center p-6 bg-[#ECF0F5]">
@@ -137,7 +139,6 @@ export default function RegisterPage() {
     );
   }
 
-  // General loading only shows if we are truly waiting and not in success state
   if (isUserLoading || (user && storeLoading) || !isClient) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-[#ECF0F5]">
