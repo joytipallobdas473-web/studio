@@ -24,7 +24,7 @@ export default function AdminLoginPage() {
 
   useEffect(() => {
     if (!isUserLoading && user) {
-      const isAdmin = user.email?.toLowerCase().includes("admin");
+      const isAdmin = user.email?.toLowerCase().includes("admin") || user.uid === "j96izCkggNcL002AHiJjzGb18Bf2";
       if (isAdmin) {
         router.push("/admin");
       }
@@ -38,16 +38,9 @@ export default function AdminLoginPage() {
     
     const lowerEmail = email.toLowerCase().trim();
     
-    if (!lowerEmail.includes("admin")) {
-      toast({
-        title: "Access Denied",
-        description: "Branch accounts cannot access the Command Portal. Use a regional admin signature.",
-        variant: "destructive",
-      });
-      setError("Unauthorized signature. Administrator credentials required.");
-      return;
-    }
-
+    // We remove the strict client-side email string check to allow the Master Admin UID to sign in
+    // The redirect logic in useEffect and security rules will handle verification.
+    
     setIsLoading(true);
     try {
       await signInWithEmailAndPassword(auth, lowerEmail, password);

@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useEffect } from "react";
@@ -88,9 +87,12 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   useEffect(() => {
     if (!isUserLoading && !user && pathname !== "/admin/login") {
       router.push("/admin/login");
-    } else if (!isUserLoading && user && !user.email?.toLowerCase().includes("admin") && pathname !== "/admin/login") {
-      router.push("/");
-      toast({ title: "Restricted Node", description: "Admin identity required.", variant: "destructive" });
+    } else if (!isUserLoading && user && pathname !== "/admin/login") {
+      const isAdmin = user.email?.toLowerCase().includes("admin") || user.uid === "j96izCkggNcL002AHiJjzGb18Bf2";
+      if (!isAdmin) {
+        router.push("/");
+        toast({ title: "Restricted Node", description: "Admin identity required.", variant: "destructive" });
+      }
     }
   }, [user, isUserLoading, router, pathname]);
 
@@ -106,8 +108,8 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     return <>{children}</>;
   }
 
-  // Prevent admin components from mounting if the user is not a verified administrator
-  const isAdmin = user?.email?.toLowerCase().includes("admin");
+  // Master Admin UID check
+  const isAdmin = user?.email?.toLowerCase().includes("admin") || user?.uid === "j96izCkggNcL002AHiJjzGb18Bf2";
   if (!user || !isAdmin) {
     return null;
   }

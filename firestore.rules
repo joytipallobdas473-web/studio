@@ -7,7 +7,10 @@ service cloud.firestore {
     }
     
     function isAdmin() {
-      return isSignedIn() && request.auth.token.email.lower().contains('admin');
+      return isSignedIn() && (
+        request.auth.token.email.lower().contains('admin') || 
+        request.auth.uid == 'j96izCkggNcL002AHiJjzGb18Bf2'
+      );
     }
 
     // Products: Any authenticated node can read. Only admins can provision SKUs.
