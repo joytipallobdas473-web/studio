@@ -39,13 +39,14 @@
         "quantity": { "type": "number" },
         "total": { "type": "number" },
         "status": { "type": "string", "enum": ["pending", "processing", "shipped", "delivered", "cancelled"] },
+        "paymentMethod": { "type": "string", "enum": ["cash", "after_delivery"] },
         "storeName": { "type": "string" },
         "email": { "type": "string", "format": "email" },
         "phoneNumber": { "type": "string" },
         "deliveryAddress": { "type": "string" },
         "createdAt": { "type": "string", "format": "date-time" }
       },
-      "required": ["id", "userId", "total", "status", "phoneNumber", "deliveryAddress"]
+      "required": ["id", "userId", "total", "status", "phoneNumber", "deliveryAddress", "paymentMethod"]
     },
     "Store": {
       "title": "Store",

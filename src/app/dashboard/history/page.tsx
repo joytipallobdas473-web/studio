@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useFirestore, useCollection, useUser, useMemoFirebase } from "@/firebase";
@@ -5,7 +6,7 @@ import { collection, query, orderBy, where } from "firebase/firestore";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
-import { Search, Filter, ArrowUpDown, Clock, Truck, PackageCheck, XCircle, Loader2, Phone, MapPin } from "lucide-react";
+import { Search, Filter, ArrowUpDown, Clock, Truck, PackageCheck, XCircle, Loader2, Phone, MapPin, Banknote, CreditCard } from "lucide-react";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { useState } from "react";
 import { format } from "date-fns";
@@ -96,7 +97,7 @@ export default function HistoryPage() {
             <TableHeader className="bg-slate-50/50 h-16">
               <TableRow className="border-slate-100">
                 <TableHead className="font-black uppercase text-[10px] tracking-[0.2em] pl-8">Packet Signature</TableHead>
-                <TableHead className="font-black uppercase text-[10px] tracking-[0.2em]">Contact & Location</TableHead>
+                <TableHead className="font-black uppercase text-[10px] tracking-[0.2em]">Contact & Payment</TableHead>
                 <TableHead className="font-black uppercase text-[10px] tracking-[0.2em]">Payload</TableHead>
                 <TableHead className="font-black uppercase text-[10px] tracking-[0.2em]">Net Value</TableHead>
                 <TableHead className="font-black uppercase text-[10px] tracking-[0.2em] pr-8">Flow Status</TableHead>
@@ -113,9 +114,15 @@ export default function HistoryPage() {
                   </TableCell>
                   <TableCell>
                     <div className="flex flex-col gap-1 py-4">
-                      <div className="flex items-center gap-2 text-xs font-bold text-slate-600">
-                        <Phone className="h-3 w-3 text-primary opacity-50" />
-                        {order.phoneNumber || "N/A"}
+                      <div className="flex items-center gap-3">
+                        <div className="flex items-center gap-1.5 text-xs font-bold text-slate-600">
+                          <Phone className="h-3 w-3 text-primary opacity-50" />
+                          {order.phoneNumber || "N/A"}
+                        </div>
+                        <Badge variant="secondary" className="h-5 px-2 text-[8px] font-black uppercase bg-slate-100 text-slate-500 border-none">
+                          {order.paymentMethod === 'cash' ? <Banknote className="h-2 w-2 mr-1" /> : <CreditCard className="h-2 w-2 mr-1" />}
+                          {order.paymentMethod === 'after_delivery' ? 'AFTER DEL' : 'CASH'}
+                        </Badge>
                       </div>
                       <div className="flex items-start gap-2 text-[10px] text-slate-400 font-medium max-w-[200px]">
                         <MapPin className="h-3 w-3 shrink-0 text-accent opacity-50" />

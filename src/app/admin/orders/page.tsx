@@ -9,7 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Download, Search, FileText, Filter, Loader2, Phone, MapPin, Mail, Globe, CheckCircle2 } from "lucide-react";
+import { Download, Search, FileText, Filter, Loader2, Phone, MapPin, Mail, Globe, CheckCircle2, Banknote, CreditCard } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
 import { format } from "date-fns";
 import { errorEmitter } from "@/firebase/error-emitter";
@@ -86,7 +86,7 @@ export default function AdminOrdersPage() {
     const ordersToExport = orderId ? orders.filter(o => o.id === orderId) : filteredOrders;
     if (!ordersToExport || ordersToExport.length === 0) return;
 
-    const headers = ["Packet ID", "Node", "Gmail", "Phone", "Delivery Address", "Timestamp", "Items", "Quantity", "Total ($)", "Status"];
+    const headers = ["Packet ID", "Node", "Gmail", "Phone", "Delivery Address", "Payment", "Timestamp", "Items", "Quantity", "Total ($)", "Status"];
     const csvContent = [
       headers,
       ...ordersToExport.map(o => [
@@ -95,6 +95,7 @@ export default function AdminOrdersPage() {
         o.email || 'N/A',
         o.phoneNumber || 'N/A',
         `"${o.deliveryAddress?.replace(/,/g, ' ') || 'N/A'}"`,
+        o.paymentMethod === 'cash' ? 'Cash' : 'After Delivery',
         o.createdAt?.seconds ? format(o.createdAt.seconds * 1000, 'yyyy-MM-dd HH:mm') : 'PENDING',
         `"${o.items || 'Restock'}"`,
         o.quantity || 1,
@@ -221,7 +222,13 @@ export default function AdminOrdersPage() {
                     </TableCell>
                     <TableCell>
                       <div className="flex flex-col gap-1">
-                        <span className="text-xs font-bold text-slate-700 truncate max-w-[180px] uppercase tracking-tight">{order.items || 'Logistics Cluster'}</span>
+                        <div className="flex items-center gap-2">
+                          <span className="text-xs font-bold text-slate-700 truncate max-w-[140px] uppercase tracking-tight">{order.items || 'Logistics Cluster'}</span>
+                          <Badge variant="outline" className="text-[8px] font-black uppercase tracking-tighter px-2 py-0 h-4 rounded-lg bg-slate-50 text-slate-400 border-none shrink-0">
+                            {order.paymentMethod === 'cash' ? <Banknote className="h-2 w-2 mr-1" /> : <CreditCard className="h-2 w-2 mr-1" />}
+                            {order.paymentMethod === 'after_delivery' ? 'AFTER DEL' : 'CASH'}
+                          </Badge>
+                        </div>
                         <div className="flex items-center gap-2">
                            <span className="text-[10px] font-black text-primary tracking-widest">${(order.total || 0).toFixed(2)}</span>
                            <span className="text-[9px] text-slate-400 font-mono">Qty: {order.quantity || 1}</span>
@@ -288,7 +295,12 @@ export default function AdminOrdersPage() {
             <div className="flex justify-between items-start">
                <div className="min-w-0 flex-1 pr-2">
                  <p className="text-[10px] font-black text-primary uppercase italic tracking-tighter mb-1">{order.id.substring(0, 8)}</p>
-                 <h3 className="font-black text-slate-900 text-sm uppercase italic truncate">{order.storeName || 'Branch Node'}</h3>
+                 <div className="flex items-center gap-2">
+                    <h3 className="font-black text-slate-900 text-sm uppercase italic truncate">{order.storeName || 'Branch Node'}</h3>
+                    <Badge variant="outline" className="text-[7px] font-black uppercase tracking-tighter px-1.5 py-0 h-3.5 rounded bg-slate-50 text-slate-400 border-none shrink-0">
+                      {order.paymentMethod === 'after_delivery' ? 'POST-PAY' : 'CASH'}
+                    </Badge>
+                 </div>
                </div>
                <Select 
                   defaultValue={order.status} 
@@ -315,9 +327,14 @@ export default function AdminOrdersPage() {
             </div>
             
             <div className="space-y-3 bg-slate-50 p-4 rounded-2xl">
-               <div className="flex items-center gap-3 text-xs font-bold text-slate-600">
-                  <Phone className="h-3 w-3 text-primary opacity-50" />
-                  {order.phoneNumber || 'N/A'}
+               <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-3 text-xs font-bold text-slate-600">
+                    <Phone className="h-3 w-3 text-primary opacity-50" />
+                    {order.phoneNumber || 'N/A'}
+                  </div>
+                  <Badge className="bg-white text-slate-400 border-slate-100 text-[8px] font-black px-2 py-0.5">
+                    {order.paymentMethod === 'cash' ? 'CASH' : 'AFTER DELIVERY'}
+                  </Badge>
                </div>
                <div className="flex items-start gap-3 text-[10px] text-slate-500 font-medium">
                   <MapPin className="h-3 w-3 text-accent shrink-0 mt-0.5" />

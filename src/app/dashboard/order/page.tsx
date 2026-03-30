@@ -11,6 +11,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { 
   Package, 
   ShoppingBag, 
@@ -20,7 +21,9 @@ import {
   Filter, 
   Phone,
   MapPin,
-  PhoneCall
+  PhoneCall,
+  CreditCard,
+  Banknote
 } from "lucide-react";
 import { useFirestore, useCollection, useUser, useMemoFirebase, useDoc } from "@/firebase";
 import { collection, serverTimestamp, query, doc } from "firebase/firestore";
@@ -53,6 +56,7 @@ export default function NewOrderPage() {
   const [orderQuantity, setOrderQuantity] = useState("1");
   const [phoneNumber, setPhoneNumber] = useState("");
   const [deliveryAddress, setDeliveryAddress] = useState("");
+  const [paymentMethod, setPaymentMethod] = useState("cash");
 
   useEffect(() => {
     setIsClient(true);
@@ -98,6 +102,7 @@ export default function NewOrderPage() {
   const handleOpenOrderDialog = (product: any) => {
     setSelectedProduct(product);
     setOrderQuantity("1");
+    setPaymentMethod("cash");
     setOrderDialogOpen(true);
   };
 
@@ -127,6 +132,7 @@ export default function NewOrderPage() {
       total: (selectedProduct.price || 0) * qty,
       phoneNumber: phoneNumber.trim(),
       deliveryAddress: deliveryAddress.trim(),
+      paymentMethod: paymentMethod,
       email: store?.email || user.email || "N/A",
       status: "pending",
       storeName: store?.name || "Retailer Node", 
@@ -294,6 +300,27 @@ export default function NewOrderPage() {
               </div>
               
               <div className="space-y-6">
+                <div className="space-y-3">
+                  <Label className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 ml-1">Payment Protocol</Label>
+                  <Select value={paymentMethod} onValueChange={setPaymentMethod}>
+                    <SelectTrigger className="h-14 rounded-2xl bg-slate-50 border-none font-bold text-slate-900">
+                      <SelectValue placeholder="Select Payment Method" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="cash" className="font-black uppercase text-[10px]">
+                        <div className="flex items-center gap-2">
+                          <Banknote className="h-4 w-4" /> Cash
+                        </div>
+                      </SelectItem>
+                      <SelectItem value="after_delivery" className="font-black uppercase text-[10px]">
+                        <div className="flex items-center gap-2">
+                          <CreditCard className="h-4 w-4" /> After Delivery
+                        </div>
+                      </SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+
                 <div className="space-y-3">
                   <Label className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 ml-1">Contact Phone Node</Label>
                   <div className="relative">
