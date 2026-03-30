@@ -70,6 +70,23 @@ export default function AdminOrdersPage() {
       });
   };
 
+  const handlePaymentUpdate = (orderId: string, newPaymentMethod: string) => {
+    if (!db) return;
+    const orderRef = doc(db, "orders", orderId);
+    
+    updateDoc(orderRef, { paymentMethod: newPaymentMethod })
+      .then(() => {
+        toast({ title: "Payment Protocol Synchronized", description: `Packet ${orderId.substring(0, 6)} updated.` });
+      })
+      .catch(async (err) => {
+        errorEmitter.emit('permission-error', new FirestorePermissionError({
+          path: orderRef.path,
+          operation: 'update',
+          requestResourceData: { paymentMethod: newPaymentMethod }
+        }));
+      });
+  };
+
   const filteredOrders = orders.filter(order => {
     const matchesStore = storeFilter === "all" || order.storeName === storeFilter;
     const matchesStatus = statusFilter === "all" || order.status === statusFilter;
@@ -95,7 +112,7 @@ export default function AdminOrdersPage() {
         o.email || 'N/A',
         o.phoneNumber || 'N/A',
         `"${o.deliveryAddress?.replace(/,/g, ' ') || 'N/A'}"`,
-        o.paymentMethod === 'cash' ? 'Cash' : 'After Delivery',
+        o.paymentMethod === 'cash' ? 'Cash' : 'Credit',
         o.createdAt?.seconds ? format(o.createdAt.seconds * 1000, 'yyyy-MM-dd HH:mm') : 'PENDING',
         `"${o.items || 'Restock'}"`,
         o.quantity || 1,
@@ -224,10 +241,18 @@ export default function AdminOrdersPage() {
                       <div className="flex flex-col gap-1">
                         <div className="flex items-center gap-2">
                           <span className="text-xs font-bold text-slate-700 truncate max-w-[140px] uppercase tracking-tight">{order.items || 'Logistics Cluster'}</span>
-                          <Badge variant="outline" className="text-[8px] font-black uppercase tracking-tighter px-2 py-0 h-4 rounded-lg bg-slate-50 text-slate-400 border-none shrink-0">
-                            {order.paymentMethod === 'cash' ? <Banknote className="h-2 w-2 mr-1" /> : <CreditCard className="h-2 w-2 mr-1" />}
-                            {order.paymentMethod === 'after_delivery' ? 'AFTER DEL' : 'CASH'}
-                          </Badge>
+                          <Select 
+                            defaultValue={order.paymentMethod || 'cash'} 
+                            onValueChange={(val) => handlePaymentUpdate(order.id, val)}
+                          >
+                            <SelectTrigger className="h-7 w-[90px] text-[7px] font-black uppercase tracking-widest rounded-lg border-none bg-slate-100 shrink-0">
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent className="bg-white border-slate-200 text-slate-900 rounded-xl">
+                              <SelectItem value="cash" className="text-[10px] font-black tracking-widest uppercase">CASH</SelectItem>
+                              <SelectItem value="after_delivery" className="text-[10px] font-black tracking-widest uppercase">CREDIT</SelectItem>
+                            </SelectContent>
+                          </Select>
                         </div>
                         <div className="flex items-center gap-2">
                            <span className="text-[10px] font-black text-primary tracking-widest">${(order.total || 0).toFixed(2)}</span>
@@ -297,9 +322,18 @@ export default function AdminOrdersPage() {
                  <p className="text-[10px] font-black text-primary uppercase italic tracking-tighter mb-1">{order.id.substring(0, 8)}</p>
                  <div className="flex items-center gap-2">
                     <h3 className="font-black text-slate-900 text-sm uppercase italic truncate">{order.storeName || 'Branch Node'}</h3>
-                    <Badge variant="outline" className="text-[7px] font-black uppercase tracking-tighter px-1.5 py-0 h-3.5 rounded bg-slate-50 text-slate-400 border-none shrink-0">
-                      {order.paymentMethod === 'after_delivery' ? 'POST-PAY' : 'CASH'}
-                    </Badge>
+                    <Select 
+                      defaultValue={order.paymentMethod || 'cash'} 
+                      onValueChange={(val) => handlePaymentUpdate(order.id, val)}
+                    >
+                      <SelectTrigger className="h-7 w-[70px] text-[7px] font-black uppercase tracking-widest rounded-lg border-none bg-slate-50 shrink-0">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent className="bg-white border-slate-200 text-slate-900 rounded-xl">
+                        <SelectItem value="cash" className="text-[9px] font-black tracking-widest uppercase">CASH</SelectItem>
+                        <SelectItem value="after_delivery" className="text-[9px] font-black tracking-widest uppercase">CREDIT</SelectItem>
+                      </SelectContent>
+                    </Select>
                  </div>
                </div>
                <Select 
@@ -332,9 +366,10 @@ export default function AdminOrdersPage() {
                     <Phone className="h-3 w-3 text-primary opacity-50" />
                     {order.phoneNumber || 'N/A'}
                   </div>
-                  <Badge className="bg-white text-slate-400 border-slate-100 text-[8px] font-black px-2 py-0.5">
-                    {order.paymentMethod === 'cash' ? 'CASH' : 'AFTER DELIVERY'}
-                  </Badge>
+                  <div className="flex items-center gap-1.5 text-[8px] font-black text-slate-400 uppercase">
+                    {order.paymentMethod === 'cash' ? <Banknote className="h-3 w-3" /> : <CreditCard className="h-3 w-3" />}
+                    {order.paymentMethod === 'after_delivery' ? 'CREDIT' : 'CASH'}
+                  </div>
                </div>
                <div className="flex items-start gap-3 text-[10px] text-slate-500 font-medium">
                   <MapPin className="h-3 w-3 text-accent shrink-0 mt-0.5" />
