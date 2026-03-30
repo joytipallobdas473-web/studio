@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState, useEffect } from "react";
@@ -8,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { Mail, Lock, Loader2, ArrowLeft, ShieldAlert, Zap, Globe, AlertTriangle, Fingerprint } from "lucide-react";
+import { Mail, Lock, Loader2, ArrowLeft, ShieldAlert, Zap, Globe, AlertTriangle, Fingerprint, ShieldCheck } from "lucide-react";
 import { useAuth, useUser } from "@/firebase";
 import { signInWithEmailAndPassword, signOut } from "firebase/auth";
 import { toast } from "@/hooks/use-toast";
@@ -67,52 +66,57 @@ export default function AdminLoginPage() {
   if (isUserLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
-        <Loader2 className="h-10 w-10 animate-spin text-accent" />
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
       </div>
     );
   }
 
   return (
     <div className="min-h-screen flex flex-col items-center justify-center p-6 bg-background relative overflow-hidden">
-      {/* Background Decorative Elements */}
-      <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-primary/20 blur-[150px] rounded-full" />
-      <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-accent/10 blur-[150px] rounded-full" />
+      {/* Structural Decorative Elements */}
+      <div className="absolute inset-0 bg-[radial-gradient(#e5e7eb_1px,transparent_1px)] [background-size:20px_20px] opacity-30" />
+      <div className="absolute top-0 right-0 w-1/3 h-1/3 bg-primary/5 blur-[120px] rounded-full" />
       
-      <div className="w-full max-w-lg space-y-12 relative z-10 animate-in fade-in zoom-in duration-1000">
-        <div className="text-center space-y-6">
-          <div className="command-gradient p-6 rounded-[2.5rem] shadow-[0_0_50px_rgba(38,205,242,0.4)] inline-block mb-4">
-            <ShieldAlert className="h-10 w-10 text-white" />
+      <div className="w-full max-w-lg space-y-10 relative z-10 animate-in fade-in duration-700">
+        <div className="text-center space-y-4">
+          <div className="inline-flex items-center gap-3 px-4 py-2 bg-white rounded-2xl border border-slate-200 shadow-sm mb-6">
+            <ShieldCheck className="h-4 w-4 text-primary" />
+            <span className="text-[10px] font-black uppercase tracking-[0.3em] text-slate-500">Secure Node Protocol</span>
           </div>
-          <h1 className="text-5xl font-black text-white tracking-tighter uppercase italic leading-none">Command Terminal</h1>
-          <div className="text-accent font-black flex items-center justify-center gap-4 text-[11px] uppercase tracking-[0.6em]">
-             <div className="h-1.5 w-1.5 rounded-full bg-accent animate-ping" />
-             Restricted Regional Access
+          <h1 className="text-4xl font-black text-slate-900 tracking-tighter uppercase italic leading-none">Command Terminal</h1>
+          <div className="flex items-center justify-center gap-4">
+             <div className="h-px w-8 bg-slate-200" />
+             <div className="text-primary font-black text-[10px] uppercase tracking-[0.5em] flex items-center gap-2">
+                <div className="h-1.5 w-1.5 rounded-full bg-primary animate-pulse" />
+                Regional Access
+             </div>
+             <div className="h-px w-8 bg-slate-200" />
           </div>
         </div>
 
         {error && (
-          <Alert variant="destructive" className="bg-rose-500/10 border-rose-500/30 text-rose-400 rounded-3xl p-8 shadow-2xl animate-in shake duration-500">
-            <AlertTriangle className="h-5 w-5" />
-            <AlertTitle className="font-black uppercase text-xs tracking-widest mb-2">Authorization Error</AlertTitle>
-            <AlertDescription className="text-sm font-medium opacity-90">{error}</AlertDescription>
+          <Alert variant="destructive" className="bg-rose-50 border-rose-100 text-rose-600 rounded-2xl p-6 shadow-sm animate-in shake duration-500">
+            <AlertTriangle className="h-4 w-4" />
+            <AlertTitle className="font-black uppercase text-[10px] tracking-widest mb-1">Authorization Error</AlertTitle>
+            <AlertDescription className="text-xs font-medium">{error}</AlertDescription>
           </Alert>
         )}
 
-        <Card className="glass-panel rounded-[3.5rem] p-4 overflow-hidden shadow-2xl">
-          <CardHeader className="p-12 pb-0">
-            <CardTitle className="text-2xl font-black text-white uppercase italic tracking-tighter">Identity Sync</CardTitle>
-            <CardDescription className="text-muted-foreground/60 font-bold text-sm mt-2 uppercase tracking-wide">Enter Encrypted Controller Passkey</CardDescription>
+        <Card className="border-none shadow-[0_20px_50px_rgba(0,0,0,0.1)] rounded-[2.5rem] bg-white overflow-hidden">
+          <CardHeader className="p-10 pb-0">
+            <CardTitle className="text-xl font-black text-slate-900 uppercase italic tracking-tighter">Identity Sync</CardTitle>
+            <CardDescription className="text-slate-400 font-bold text-xs mt-1 uppercase tracking-wide">Enter Encrypted Controller Passkey</CardDescription>
           </CardHeader>
-          <CardContent className="p-12">
-            <form onSubmit={handleAdminSignIn} className="space-y-10">
-              <div className="space-y-4">
-                <Label className="text-[11px] font-black uppercase tracking-[0.4em] text-muted-foreground/50 ml-1">Admin Signature</Label>
-                <div className="relative group">
-                  <Mail className="absolute left-6 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground/40 group-focus-within:text-accent transition-colors" />
+          <CardContent className="p-10">
+            <form onSubmit={handleAdminSignIn} className="space-y-8">
+              <div className="space-y-3">
+                <Label className="text-[9px] font-black uppercase tracking-widest text-slate-400 ml-1">Admin Signature</Label>
+                <div className="relative">
+                  <Mail className="absolute left-5 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-300" />
                   <Input 
                     type="email" 
-                    placeholder="admin@hub.protocol" 
-                    className="pl-16 h-20 bg-white/5 border-white/5 rounded-3xl focus:ring-accent font-black text-white placeholder:text-white/10 uppercase tracking-widest text-xs" 
+                    placeholder="admin@protocol.io" 
+                    className="pl-14 h-14 bg-slate-50 border-none rounded-2xl focus:ring-primary font-bold text-slate-900 placeholder:text-slate-300 text-sm" 
                     required 
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
@@ -120,14 +124,14 @@ export default function AdminLoginPage() {
                 </div>
               </div>
               
-              <div className="space-y-4">
-                <Label className="text-[11px] font-black uppercase tracking-[0.4em] text-muted-foreground/50 ml-1">Secure Passkey</Label>
-                <div className="relative group">
-                  <Lock className="absolute left-6 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground/40 group-focus-within:text-accent transition-colors" />
+              <div className="space-y-3">
+                <Label className="text-[9px] font-black uppercase tracking-widest text-slate-400 ml-1">Secure Passkey</Label>
+                <div className="relative">
+                  <Lock className="absolute left-5 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-300" />
                   <Input 
                     type="password" 
                     placeholder="••••••••" 
-                    className="pl-16 h-20 bg-white/5 border-white/5 rounded-3xl focus:ring-accent font-black text-white placeholder:text-white/10" 
+                    className="pl-14 h-14 bg-slate-50 border-none rounded-2xl focus:ring-primary font-bold text-slate-900 placeholder:text-slate-300" 
                     required 
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
@@ -135,20 +139,20 @@ export default function AdminLoginPage() {
                 </div>
               </div>
 
-              <Button type="submit" className="w-full h-20 command-gradient text-white hover:scale-105 transition-all duration-500 font-black rounded-3xl shadow-[0_0_40px_rgba(38,205,242,0.3)] uppercase tracking-[0.3em] text-[11px]" disabled={isLoading}>
+              <Button type="submit" className="w-full h-16 bg-primary text-white hover:bg-primary/90 hover:scale-[1.02] transition-all duration-300 font-black rounded-2xl shadow-lg shadow-primary/20 uppercase tracking-[0.2em] text-[10px]" disabled={isLoading}>
                 {isLoading ? (
-                  <Loader2 className="h-8 w-8 animate-spin" />
+                  <Loader2 className="h-6 w-6 animate-spin" />
                 ) : (
-                  <div className="flex items-center gap-4">
-                    <Fingerprint className="h-6 w-6" /> Authorize Session
+                  <div className="flex items-center gap-3">
+                    <Fingerprint className="h-5 w-5" /> Authorize Node
                   </div>
                 )}
               </Button>
             </form>
           </CardContent>
-          <div className="px-12 pb-12 text-center border-t border-white/5 pt-8 bg-black/40">
-             <Link href="/login" className="text-[11px] text-muted-foreground hover:text-accent transition-colors font-black uppercase tracking-widest flex items-center justify-center gap-3 group">
-               <ArrowLeft className="h-4 w-4 group-hover:-translate-x-2 transition-transform" /> Switch to Branch Portal
+          <div className="px-10 pb-10 text-center pt-8 bg-slate-50/50">
+             <Link href="/login" className="text-[9px] text-slate-400 hover:text-primary transition-colors font-black uppercase tracking-[0.2em] flex items-center justify-center gap-3 group">
+               <ArrowLeft className="h-3 w-3 group-hover:-translate-x-1 transition-transform" /> Switch to Branch Portal
              </Link>
           </div>
         </Card>

@@ -1,11 +1,10 @@
-
 "use client";
 
 import { useState, useMemo, useEffect } from "react";
 import { useFirestore, useCollection, useMemoFirebase, useUser } from "@/firebase";
 import { collection, query, limit } from "firebase/firestore";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Store, Package, ShoppingCart, AlertCircle, Loader2, BrainCircuit, Activity, Zap, Share2, Globe, ArrowUpRight } from "lucide-react";
+import { Store, Package, ShoppingCart, AlertCircle, Loader2, BrainCircuit, Activity, Zap, Share2, Globe, ArrowUpRight, TrendingUp } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { analyzeInventory, type InventoryAnalysisOutput } from "@/ai/flows/inventory-analyst";
@@ -55,10 +54,10 @@ export default function AdminOverview() {
     const lowStockCount = products?.filter(p => (p.stockQuantity || 0) < 10)?.length || 0;
 
     return [
-      { label: "New Requests", value: pendingStoresCount.toString(), icon: Store, color: "text-blue-400", bg: "bg-blue-400/10" },
-      { label: "Active SKUs", value: (products?.length || 0).toString(), icon: Package, color: "text-emerald-400", bg: "bg-emerald-400/10" },
-      { label: "Live Traffic", value: activeOrdersCount.toString(), icon: ShoppingCart, color: "text-accent", bg: "bg-accent/10" },
-      { label: "Risk Nodes", value: lowStockCount.toString(), icon: AlertCircle, color: "text-rose-400", bg: "bg-rose-400/10" },
+      { label: "Pending Nodes", value: pendingStoresCount.toString(), icon: Store, color: "text-blue-500", bg: "bg-blue-50" },
+      { label: "Catalog SKUs", value: (products?.length || 0).toString(), icon: Package, color: "text-indigo-500", bg: "bg-indigo-50" },
+      { label: "Active Traffic", value: activeOrdersCount.toString(), icon: ShoppingCart, color: "text-amber-500", bg: "bg-amber-50" },
+      { label: "Critical Risk", value: lowStockCount.toString(), icon: AlertCircle, color: "text-rose-500", bg: "bg-rose-50" },
     ];
   }, [stores, orders, products]);
 
@@ -93,7 +92,7 @@ export default function AdminOverview() {
   if (storesLoading || ordersLoading || productsLoading) {
     return (
       <div className="flex h-[60vh] items-center justify-center">
-        <Loader2 className="h-12 w-12 animate-spin text-accent opacity-50" />
+        <Loader2 className="h-10 w-10 animate-spin text-primary opacity-30" />
       </div>
     );
   }
@@ -105,141 +104,143 @@ export default function AdminOverview() {
   }).slice(0, 10) : [];
 
   return (
-    <div className="space-y-12 animate-in fade-in duration-1000">
-      <div className="flex flex-col xl:flex-row justify-between items-start xl:items-end gap-8">
-        <div className="space-y-4">
-          <div className="flex items-center gap-4">
-             <div className="h-2 w-2 rounded-full bg-accent neon-glow" />
-             <span className="text-[11px] font-black tracking-[0.5em] text-accent uppercase">Global Protocol v2.8</span>
+    <div className="space-y-10 animate-in fade-in duration-700">
+      <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-6">
+        <div className="space-y-1">
+          <div className="flex items-center gap-3">
+             <div className="h-1.5 w-1.5 rounded-full bg-primary" />
+             <span className="text-[10px] font-black tracking-[0.4em] text-primary uppercase">Regional Command v2.9</span>
           </div>
-          <h1 className="text-6xl font-black text-white tracking-tighter uppercase italic leading-none">Grid Overview</h1>
-          <p className="text-muted-foreground text-lg font-medium tracking-tight">Orchestrating {stores?.length || 0} regional nodes across the North East.</p>
+          <h1 className="text-4xl font-black text-slate-900 tracking-tighter uppercase italic leading-none">Grid Overview</h1>
+          <p className="text-slate-500 text-sm font-medium">Orchestrating {stores?.length || 0} branch nodes across the regional logistics grid.</p>
         </div>
-        <div className="flex gap-4 w-full xl:w-auto">
-          <Button variant="outline" className="flex-1 xl:flex-none h-16 px-10 rounded-2xl font-black border-border/50 bg-white/5 hover:bg-white/10 uppercase tracking-widest text-[10px]" onClick={() => toast({ title: "Grid Synchronized" })}>
-            <Zap className="mr-3 h-5 w-5 text-accent" /> System Sync
+        <div className="flex gap-4 w-full lg:w-auto">
+          <Button variant="outline" className="flex-1 lg:flex-none h-14 px-8 rounded-xl font-black border-slate-200 bg-white hover:bg-slate-50 text-[10px] uppercase tracking-widest shadow-sm" onClick={() => toast({ title: "Grid Synchronized" })}>
+            <Zap className="mr-2 h-4 w-4 text-amber-500" /> Grid Sync
           </Button>
-          <Button className="flex-1 xl:flex-none h-16 px-12 rounded-2xl font-black command-gradient text-white uppercase tracking-[0.2em] text-[10px] shadow-[0_0_30px_rgba(38,205,242,0.3)]">
-            <Globe className="mr-3 h-5 w-5" /> Live Map
+          <Button className="flex-1 lg:flex-none h-14 px-8 rounded-xl font-black bg-primary text-white text-[10px] uppercase tracking-widest shadow-lg shadow-primary/20">
+            <Globe className="mr-2 h-4 w-4" /> Global Map
           </Button>
         </div>
       </div>
       
       <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
         {stats.map((stat, i) => (
-          <Card key={i} className="glass-panel rounded-[2rem] overflow-hidden group hover:scale-[1.02] transition-all duration-500">
-            <CardHeader className="flex flex-row items-center justify-between pb-4">
-              <CardTitle className="text-[10px] font-black uppercase tracking-[0.3em] text-muted-foreground/60">{stat.label}</CardTitle>
-              <div className={cn(stat.bg, stat.color, "p-3 rounded-2xl border border-white/5")}>
-                <stat.icon className="h-5 w-5" />
+          <Card key={i} className="border-none shadow-sm rounded-2xl bg-white overflow-hidden group hover:translate-y-[-4px] transition-all duration-300">
+            <CardContent className="p-8">
+              <div className="flex items-center justify-between mb-4">
+                <span className="text-[9px] font-black uppercase tracking-widest text-slate-400">{stat.label}</span>
+                <div className={cn(stat.bg, stat.color, "p-2.5 rounded-xl border border-white")}>
+                  <stat.icon className="h-4 w-4" />
+                </div>
               </div>
-            </CardHeader>
-            <CardContent>
-              <div className="text-4xl font-black text-white tracking-tighter italic">{stat.value}</div>
-              <div className="flex items-center gap-2 mt-4 text-[10px] font-black text-accent/60 uppercase tracking-widest">
-                <ArrowUpRight className="h-3 w-3" /> Node Pulse Optimal
+              <div className="text-3xl font-black text-slate-900 tracking-tighter italic">{stat.value}</div>
+              <div className="flex items-center gap-1.5 mt-4 text-[9px] font-black text-slate-400 uppercase tracking-widest">
+                <TrendingUp className="h-3 w-3 text-emerald-500" /> Optimal Flow
               </div>
             </CardContent>
           </Card>
         ))}
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        <Card className="lg:col-span-2 glass-panel rounded-[3rem] overflow-hidden">
-          <CardHeader className="border-b border-white/5 py-10 px-12 bg-white/5">
+      <div className="grid grid-cols-1 xl:grid-cols-3 gap-8">
+        <Card className="xl:col-span-2 border-none shadow-sm rounded-[2rem] bg-white overflow-hidden">
+          <CardHeader className="border-b border-slate-100 py-8 px-10">
             <div className="flex items-center justify-between">
-              <div className="flex items-center gap-4">
-                <Activity className="h-6 w-6 text-accent" />
-                <CardTitle className="text-2xl font-black uppercase italic tracking-tighter text-white">Grid Traffic Logs</CardTitle>
+              <div className="flex items-center gap-3">
+                <Activity className="h-5 w-5 text-primary" />
+                <CardTitle className="text-xl font-black uppercase italic tracking-tighter text-slate-900">Traffic Telemetry</CardTitle>
               </div>
-              <Badge className="text-[10px] font-black uppercase tracking-widest bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 px-6 py-2 rounded-full">Telemetry Online</Badge>
+              <Badge className="text-[9px] font-black uppercase tracking-widest bg-emerald-50 text-emerald-600 border-none px-4 py-1.5 rounded-lg">LIVE GRID</Badge>
             </div>
           </CardHeader>
           <CardContent className="p-0">
-            <div className="divide-y divide-white/5">
+            <div className="divide-y divide-slate-50">
               {sortedOrders.length > 0 ? sortedOrders.map((order, i) => (
-                <div key={i} className="flex items-center justify-between px-12 py-8 hover:bg-white/5 transition-all group">
-                  <div className="flex items-center gap-8">
+                <div key={i} className="flex items-center justify-between px-10 py-6 hover:bg-slate-50 transition-all group">
+                  <div className="flex items-center gap-6">
                     <div className={cn(
-                      "h-3 w-3 rounded-full transition-all group-hover:scale-150 group-hover:neon-glow",
+                      "h-2 w-2 rounded-full transition-all group-hover:scale-150",
                       order.status === 'delivered' ? 'bg-emerald-500' : 
-                      order.status === 'cancelled' ? 'bg-rose-500' : 'bg-accent'
+                      order.status === 'cancelled' ? 'bg-rose-500' : 'bg-primary'
                     )} />
                     <div>
-                      <p className="text-lg font-black text-white uppercase italic tracking-tight leading-none">{order.storeName || 'Branch Node'}</p>
-                      <p className="text-[11px] text-muted-foreground font-bold uppercase tracking-widest mt-3 flex items-center gap-2">
-                        <Package className="h-3 w-3 opacity-30" /> {order.items || 'Restock Payload'}
+                      <p className="text-sm font-black text-slate-900 uppercase italic tracking-tight">{order.storeName || 'Branch Node'}</p>
+                      <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest mt-1 flex items-center gap-2">
+                        <Package className="h-3 w-3 opacity-30" /> {order.items || 'Payload Cluster'}
                       </p>
                     </div>
                   </div>
                   <div className="text-right">
-                    <p className="text-lg font-black text-accent font-mono tracking-tighter">${(order.total || 0).toFixed(2)}</p>
+                    <p className="text-sm font-black text-primary font-mono">${(order.total || 0).toFixed(2)}</p>
                     <span className={cn(
-                      "text-[10px] font-black uppercase tracking-[0.2em] mt-2 block",
-                      order.status === 'delivered' ? 'text-emerald-400' : 
-                      order.status === 'cancelled' ? 'text-rose-400' : 'text-muted-foreground/60'
+                      "text-[9px] font-black uppercase tracking-widest mt-1 block",
+                      order.status === 'delivered' ? 'text-emerald-500' : 
+                      order.status === 'cancelled' ? 'text-rose-500' : 'text-slate-400'
                     )}>{order.status}</span>
                   </div>
                 </div>
               )) : (
-                <div className="py-32 text-center text-muted-foreground/30 font-black uppercase text-xs tracking-[0.5em] italic">Awaiting grid telemetry...</div>
+                <div className="py-24 text-center text-slate-300 font-black uppercase text-[10px] tracking-[0.4em] italic">Awaiting grid telemetry...</div>
               )}
             </div>
           </CardContent>
         </Card>
 
         <div className="space-y-8">
-          <Card className="command-gradient text-white shadow-2xl rounded-[3rem] overflow-hidden p-10 relative group">
-            <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity duration-700" />
+          <Card className="command-gradient text-white border-none shadow-xl rounded-[2.5rem] p-10 relative overflow-hidden group">
+            <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -translate-y-1/2 translate-x-1/2 blur-2xl" />
             <div className="relative z-10 space-y-8">
               <div className="flex items-center gap-4">
-                <BrainCircuit className="h-8 w-8 text-white" />
-                <CardTitle className="text-3xl font-black uppercase italic tracking-tighter">AI Synthesis</CardTitle>
+                <BrainCircuit className="h-7 w-7 text-white" />
+                <CardTitle className="text-2xl font-black uppercase italic tracking-tighter">AI synthesis</CardTitle>
               </div>
               {aiAnalysis ? (
-                <div className="space-y-8 animate-in slide-in-from-bottom-4 duration-700">
-                  <p className="text-sm leading-relaxed font-bold italic opacity-90 border-l-2 border-white/30 pl-6">"{aiAnalysis.summary}"</p>
-                  <div className="space-y-4">
+                <div className="space-y-6 animate-in slide-in-from-bottom-2 duration-500">
+                  <div className="p-5 bg-white/10 rounded-2xl border border-white/10">
+                    <p className="text-xs leading-relaxed font-bold italic opacity-90">"{aiAnalysis.summary}"</p>
+                  </div>
+                  <div className="space-y-3">
                      {aiAnalysis.recommendations.map((rec, idx) => (
-                       <div key={idx} className="flex gap-4 items-start text-[11px] font-black uppercase tracking-wide leading-snug opacity-80">
-                          <Zap className="h-4 w-4 text-white shrink-0 mt-0.5" />
+                       <div key={idx} className="flex gap-3 items-start text-[10px] font-black uppercase tracking-wide leading-snug opacity-80">
+                          <Zap className="h-3 w-3 text-accent shrink-0 mt-0.5" />
                           <span>{rec}</span>
                        </div>
                      ))}
                   </div>
-                  <Button variant="secondary" className="w-full h-16 rounded-2xl font-black text-[10px] uppercase tracking-[0.3em] bg-white text-primary hover:bg-black hover:text-white transition-all shadow-xl" onClick={handleRunAIAnalysis} disabled={isAnalyzing}>
-                    {isAnalyzing ? <Loader2 className="h-5 w-5 animate-spin" /> : "Refresh Intelligence"}
+                  <Button variant="secondary" className="w-full h-14 rounded-xl font-black text-[9px] uppercase tracking-widest bg-white text-primary hover:bg-slate-100 transition-all shadow-lg" onClick={handleRunAIAnalysis} disabled={isAnalyzing}>
+                    {isAnalyzing ? <Loader2 className="h-4 w-4 animate-spin" /> : "Refresh analysis"}
                   </Button>
                 </div>
               ) : (
-                <div className="space-y-8">
-                  <p className="text-sm font-bold opacity-80 leading-relaxed">Synthesize regional stock health and branch reordering patterns for actionable grid intelligence.</p>
+                <div className="space-y-6">
+                  <p className="text-xs font-bold opacity-80 leading-relaxed">Synthesize regional stock patterns and branch reordering for grid intelligence.</p>
                   <Button 
-                    className="w-full h-16 bg-white/10 backdrop-blur-md text-white hover:bg-white hover:text-primary font-black rounded-2xl shadow-xl transition-all uppercase tracking-[0.3em] text-[10px] border border-white/20"
+                    className="w-full h-14 bg-white/15 backdrop-blur-sm text-white hover:bg-white hover:text-primary font-black rounded-xl shadow-lg transition-all uppercase tracking-widest text-[9px] border border-white/20"
                     onClick={handleRunAIAnalysis}
                     disabled={isAnalyzing}
                   >
-                    {isAnalyzing ? <Loader2 className="h-6 w-6 animate-spin" /> : "Begin Synthesis"}
+                    {isAnalyzing ? <Loader2 className="h-4 w-4 animate-spin" /> : "Begin synthesis"}
                   </Button>
                 </div>
               )}
             </div>
           </Card>
 
-          <Card className="glass-panel rounded-[2.5rem] p-10 space-y-6">
-            <h3 className="text-[11px] font-black text-muted-foreground uppercase tracking-[0.5em]">Network Telemetry</h3>
-            <div className="space-y-6">
-              <div className="flex justify-between items-center pb-4 border-b border-white/5">
-                <span className="text-muted-foreground/60 font-black uppercase text-[10px] tracking-widest">Node Status</span>
-                <Badge className="bg-emerald-500/10 text-emerald-400 border-none font-black text-[10px] px-4 py-1">ENCRYPTED</Badge>
+          <Card className="border-none shadow-sm rounded-2xl bg-white p-8 space-y-6">
+            <h3 className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Network Telemetry</h3>
+            <div className="space-y-5">
+              <div className="flex justify-between items-center pb-3 border-b border-slate-50">
+                <span className="text-slate-400 font-bold uppercase text-[9px]">Uptime</span>
+                <span className="font-black text-slate-900 font-mono text-xs">99.9%</span>
               </div>
-              <div className="flex justify-between items-center pb-4 border-b border-white/5">
-                <span className="text-muted-foreground/60 font-black uppercase text-[10px] tracking-widest">Uptime</span>
-                <span className="font-black text-white font-mono text-sm uppercase">99.98%</span>
+              <div className="flex justify-between items-center pb-3 border-b border-slate-50">
+                <span className="text-slate-400 font-bold uppercase text-[9px]">Encryption</span>
+                <Badge className="bg-primary/10 text-primary border-none font-black text-[8px] px-3 py-0.5">AES-256</Badge>
               </div>
               <div className="flex justify-between items-center">
-                <span className="text-muted-foreground/60 font-black uppercase text-[10px] tracking-widest">Active Nodes</span>
-                <span className="font-black text-accent font-mono text-xl tracking-tighter">{stores?.length || 0}</span>
+                <span className="text-slate-400 font-bold uppercase text-[9px]">Nodes</span>
+                <span className="font-black text-primary font-mono text-lg">{stores?.length || 0}</span>
               </div>
             </div>
           </Card>

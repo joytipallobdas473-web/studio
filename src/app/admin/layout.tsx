@@ -1,9 +1,8 @@
-
 "use client";
 
 import { useEffect } from "react";
 import { SidebarProvider, Sidebar, SidebarContent, SidebarHeader, SidebarMenu, SidebarMenuItem, SidebarMenuButton, SidebarGroup, SidebarGroupLabel, SidebarGroupContent, SidebarInset, SidebarTrigger, SidebarFooter } from "@/components/ui/sidebar";
-import { LayoutDashboard, Store, Package, ShoppingCart, LogOut, MapPin, Boxes, UserCircle, Loader2, Settings, ShieldCheck } from "lucide-react";
+import { LayoutDashboard, Store, Package, ShoppingCart, LogOut, MapPin, Boxes, UserCircle, Loader2, Settings, ShieldCheck, Cpu } from "lucide-react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { cn } from "@/lib/utils";
@@ -19,47 +18,47 @@ function AdminSidebar() {
   const pathname = usePathname();
 
   const menuItems = [
-    { title: "Dashboard", icon: LayoutDashboard, href: "/admin" },
-    { title: "Retailers", icon: Store, href: "/admin/stores" },
+    { title: "Grid Stats", icon: LayoutDashboard, href: "/admin" },
+    { title: "Retail Nodes", icon: Store, href: "/admin/stores" },
     { title: "Inventory", icon: Package, href: "/admin/inventory" },
-    { title: "Orders", icon: ShoppingCart, href: "/admin/orders" },
-    { title: "Settings", icon: Settings, href: "/admin/settings" },
+    { title: "Traffic Logs", icon: ShoppingCart, href: "/admin/orders" },
+    { title: "Core Protocols", icon: Settings, href: "/admin/settings" },
   ];
 
   return (
-    <Sidebar className="bg-background border-r border-border/50">
-      <SidebarHeader className="h-28 flex items-center px-8 border-b border-border/30">
-        <Link href="/admin" className="flex items-center gap-4 group">
-          <div className="command-gradient p-3 rounded-2xl shadow-[0_0_30px_rgba(38,205,242,0.3)] group-hover:scale-110 transition-transform duration-500">
-            <Boxes className="h-6 w-6 text-white" />
+    <Sidebar className="bg-sidebar border-r border-sidebar-border">
+      <SidebarHeader className="h-24 flex items-center px-8">
+        <Link href="/admin" className="flex items-center gap-3 group">
+          <div className="bg-primary p-2.5 rounded-xl shadow-lg group-hover:rotate-12 transition-transform duration-300">
+            <Cpu className="h-5 w-5 text-white" />
           </div>
           <div className="flex flex-col">
-            <span className="font-black text-xl leading-none uppercase italic tracking-tighter text-white">NE HUB</span>
-            <span className="text-[9px] font-black text-accent uppercase tracking-[0.3em] mt-1">Command Grid</span>
+            <span className="font-black text-lg leading-none uppercase italic tracking-tighter text-white">NE HUB</span>
+            <span className="text-[9px] font-black text-accent uppercase tracking-widest mt-1">LOGISTICS GRID</span>
           </div>
         </Link>
       </SidebarHeader>
       
-      <SidebarContent className="px-6 py-8">
+      <SidebarContent className="px-4 py-6">
         <SidebarGroup>
-          <SidebarGroupLabel className="px-4 text-[10px] uppercase font-black tracking-[0.4em] text-muted-foreground/50 mb-6">Operations Hub</SidebarGroupLabel>
+          <SidebarGroupLabel className="px-4 text-[9px] uppercase font-black tracking-[0.3em] text-white/30 mb-4">Operations Console</SidebarGroupLabel>
           <SidebarGroupContent>
-            <SidebarMenu className="gap-3">
+            <SidebarMenu className="gap-2">
               {menuItems.map((item) => (
                 <SidebarMenuItem key={item.title}>
                   <SidebarMenuButton 
                     asChild 
                     isActive={pathname === item.href}
                     className={cn(
-                      "h-14 rounded-2xl transition-all duration-500 border border-transparent",
+                      "h-12 rounded-xl transition-all duration-200",
                       pathname === item.href 
-                        ? "bg-accent/10 text-accent font-black border-accent/20 shadow-[0_0_20px_rgba(38,205,242,0.1)]" 
-                        : "text-muted-foreground hover:bg-white/5 hover:text-white"
+                        ? "bg-white/10 text-accent font-black shadow-sm" 
+                        : "text-white/60 hover:bg-white/5 hover:text-white"
                     )}
                   >
                     <Link href={item.href}>
-                      <item.icon className={cn("h-5 w-5", pathname === item.href ? "text-accent" : "text-muted-foreground/40")} />
-                      <span className="ml-4 uppercase italic tracking-tight font-bold">{item.title}</span>
+                      <item.icon className={cn("h-4 w-4", pathname === item.href ? "text-accent" : "text-white/20")} />
+                      <span className="ml-3 uppercase italic tracking-tight font-bold text-xs">{item.title}</span>
                     </Link>
                   </SidebarMenuButton>
                 </SidebarMenuItem>
@@ -69,14 +68,14 @@ function AdminSidebar() {
         </SidebarGroup>
       </SidebarContent>
 
-      <SidebarFooter className="p-8 border-t border-border/30">
-        <div className="p-6 bg-accent/5 rounded-[2rem] border border-accent/10 backdrop-blur-md group">
+      <SidebarFooter className="p-6">
+        <div className="p-4 bg-white/5 rounded-2xl border border-white/10">
           <div className="flex items-center justify-between">
-             <div className="flex flex-col gap-1">
-                <span className="text-[9px] font-black text-accent/60 uppercase tracking-widest">Master Auth</span>
-                <span className="text-[10px] font-black text-white uppercase tracking-tighter italic">Secure Node</span>
+             <div className="flex flex-col">
+                <span className="text-[8px] font-black text-white/30 uppercase tracking-widest">Protocol</span>
+                <span className="text-[10px] font-black text-white uppercase italic">Active Node</span>
              </div>
-             <ShieldCheck className="h-5 w-5 text-accent animate-pulse" />
+             <div className="h-1.5 w-1.5 rounded-full bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)]" />
           </div>
         </div>
       </SidebarFooter>
@@ -113,11 +112,9 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   if (isUserLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
-        <div className="flex flex-col items-center gap-6">
-          <div className="command-gradient p-5 rounded-3xl animate-pulse shadow-[0_0_50px_rgba(38,205,242,0.2)]">
-            <Loader2 className="h-10 w-10 animate-spin text-white" />
-          </div>
-          <span className="text-[10px] font-black text-accent uppercase tracking-[0.5em]">Identity Sync...</span>
+        <div className="flex flex-col items-center gap-4">
+          <Loader2 className="h-8 w-8 animate-spin text-primary" />
+          <span className="text-[10px] font-black text-primary uppercase tracking-widest">Syncing Identity...</span>
         </div>
       </div>
     );
@@ -137,33 +134,33 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
       <div className="flex min-h-screen w-full bg-background text-foreground">
         <AdminSidebar />
         <SidebarInset className="flex flex-col min-w-0 bg-transparent">
-          <header className="sticky top-0 z-30 flex h-28 shrink-0 items-center gap-8 border-b border-border/30 bg-background/80 backdrop-blur-2xl px-12">
-            <SidebarTrigger className="text-accent hover:bg-white/5 h-12 w-12 rounded-2xl border border-accent/20" />
-            <Separator orientation="vertical" className="h-10 bg-border/50" />
+          <header className="sticky top-0 z-30 flex h-20 shrink-0 items-center gap-6 border-b border-slate-200 bg-white/80 backdrop-blur-xl px-10">
+            <SidebarTrigger className="text-slate-400 hover:text-primary h-10 w-10 rounded-xl" />
+            <Separator orientation="vertical" className="h-8 bg-slate-200" />
             <div className="flex flex-col">
-              <span className="text-2xl font-black text-white uppercase italic tracking-tighter leading-none">Console Terminal</span>
-              <div className="flex items-center gap-3 text-[10px] text-muted-foreground font-black uppercase tracking-[0.4em] mt-2">
-                <div className="h-1.5 w-1.5 rounded-full bg-accent animate-ping" />
+              <span className="text-lg font-black text-slate-900 uppercase italic tracking-tighter leading-none">Console Terminal</span>
+              <div className="flex items-center gap-2 text-[8px] text-slate-400 font-black uppercase tracking-widest mt-1">
+                <div className="h-1 w-1 rounded-full bg-primary animate-pulse" />
                 Regional Cluster Live
               </div>
             </div>
-            <div className="ml-auto flex items-center gap-8">
+            <div className="ml-auto flex items-center gap-6">
               <div className="hidden md:flex flex-col items-end">
-                <span className="text-[10px] font-black text-accent uppercase tracking-widest">Session Active</span>
-                <span className="text-[11px] font-bold text-white/50 lowercase tracking-tight">{user.email}</span>
+                <span className="text-[9px] font-black text-primary uppercase tracking-widest">Master Auth</span>
+                <span className="text-[10px] font-bold text-slate-500 lowercase tracking-tight">{user.email}</span>
               </div>
-              <Button variant="ghost" size="icon" className="h-14 w-14 rounded-2xl text-muted-foreground hover:text-rose-500 hover:bg-rose-500/10 border border-border/50 transition-all" onClick={async () => {
+              <Button variant="ghost" size="icon" className="h-10 w-10 rounded-xl text-slate-400 hover:text-rose-500 hover:bg-rose-50 transition-colors" onClick={async () => {
                 await signOut(auth);
                 router.push("/admin/login");
                 toast({ title: "Console Terminated" });
               }}>
-                <LogOut className="h-6 w-6" />
+                <LogOut className="h-5 w-5" />
               </Button>
             </div>
           </header>
           
-          <main className="flex-1 p-12 overflow-y-auto">
-            <div className="max-w-[1400px] mx-auto space-y-12">
+          <main className="flex-1 p-10 overflow-y-auto">
+            <div className="max-w-7xl mx-auto space-y-10">
               {children}
             </div>
           </main>

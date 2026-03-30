@@ -1,40 +1,39 @@
-
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
 @layer base {
   :root {
-    /* High-Tech Slate & Neon Theme */
-    --background: 222 47% 4%;
-    --foreground: 210 40% 98%;
-    --card: 222 47% 8%;
-    --card-foreground: 210 40% 98%;
-    --popover: 222 47% 6%;
-    --popover-foreground: 210 40% 98%;
-    --primary: 217 91% 60%;
+    /* Cyber-Industrial Ivory & Obsidian Theme */
+    --background: 210 40% 98%;
+    --foreground: 222 47% 11%;
+    --card: 0 0% 100%;
+    --card-foreground: 222 47% 11%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 222 47% 11%;
+    --primary: 221 83% 53%;
     --primary-foreground: 210 40% 98%;
-    --secondary: 222 47% 12%;
-    --secondary-foreground: 210 40% 98%;
-    --muted: 222 47% 12%;
-    --muted-foreground: 215 20% 65%;
-    --accent: 188 91% 50%;
+    --secondary: 210 40% 96.1%;
+    --secondary-foreground: 222 47% 11.2%;
+    --muted: 210 40% 96.1%;
+    --muted-foreground: 215.4 16.3% 46.9%;
+    --accent: 38 92% 50%;
     --accent-foreground: 222 47% 11%;
-    --destructive: 0 84% 60%;
+    --destructive: 0 84.2% 60.2%;
     --destructive-foreground: 210 40% 98%;
-    --border: 222 47% 15%;
-    --input: 222 47% 15%;
-    --ring: 217 91% 60%;
-    --radius: 1.25rem;
+    --border: 214.3 32% 91%;
+    --input: 214.3 32% 91%;
+    --ring: 221.2 83.2% 53.3%;
+    --radius: 1rem;
 
-    --sidebar-background: 222 47% 4%;
+    --sidebar-background: 222 47% 11%;
     --sidebar-foreground: 210 40% 98%;
-    --sidebar-primary: 217 91% 60%;
-    --sidebar-primary-foreground: 210 40% 98%;
-    --sidebar-accent: 222 47% 12%;
-    --sidebar-accent-foreground: 188 91% 50%;
-    --sidebar-border: 222 47% 10%;
-    --sidebar-ring: 188 91% 50%;
+    --sidebar-primary: 221 83% 53%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 222 47% 15%;
+    --sidebar-accent-foreground: 38 92% 50%;
+    --sidebar-border: 222 47% 15%;
+    --sidebar-ring: 38 92% 50%;
   }
 }
 
@@ -43,22 +42,26 @@
     @apply border-border;
   }
   body {
-    @apply bg-background text-foreground font-body antialiased selection:bg-accent/30 selection:text-accent;
+    @apply bg-background text-foreground font-body antialiased selection:bg-primary/20 selection:text-primary;
   }
 }
 
 .glass-panel {
-  @apply bg-card/60 backdrop-blur-xl border border-white/5 shadow-2xl;
-}
-
-.neon-glow {
-  box-shadow: 0 0 20px rgba(38, 205, 242, 0.2);
-}
-
-.neon-border {
-  @apply border-accent/20 hover:border-accent/50 transition-colors;
+  @apply bg-white/80 backdrop-blur-md border border-slate-200 shadow-[0_8px_30px_rgb(0,0,0,0.04)];
 }
 
 .command-gradient {
-  background: linear-gradient(135deg, hsl(var(--primary)) 0%, hsl(var(--accent)) 100%);
+  background: linear-gradient(135deg, hsl(var(--primary)) 0%, hsl(221 83% 45%) 100%);
+}
+
+.neon-glow {
+  box-shadow: 0 0 15px rgba(245, 158, 11, 0.2);
+}
+
+.industrial-shadow {
+  shadow: 0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1);
+}
+
+.text-sharp {
+  @apply tracking-tighter uppercase font-black italic;
 }
