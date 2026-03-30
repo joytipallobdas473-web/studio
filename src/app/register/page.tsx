@@ -56,18 +56,19 @@ export default function RegisterPage() {
 
   const { data: store, isLoading: storeLoading } = useDoc(storeRef);
 
+  // Auto-redirect if already fully registered
   useEffect(() => {
-    if (!isUserLoading && !storeLoading && user && store && isClient) {
+    if (!isUserLoading && !storeLoading && user && store && isClient && !isSuccess) {
       router.push(user.email?.toLowerCase().includes("admin") ? "/admin" : "/dashboard");
     }
-  }, [user, isUserLoading, store, storeLoading, router, isClient]);
+  }, [user, isUserLoading, store, storeLoading, router, isClient, isSuccess]);
 
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!db || !auth) return;
     
     if (formData.password.length < 6) {
-      toast({ title: "Validation Error", description: "Password must be at least 6 characters.", variant: "destructive" });
+      toast({ title: "Security Alert", description: "Passkey must be at least 6 characters.", variant: "destructive" });
       return;
     }
 
@@ -88,37 +89,30 @@ export default function RegisterPage() {
         createdAt: serverTimestamp()
       };
 
-      const storeRef = doc(db, "stores", currentUser.uid);
-      setDocumentNonBlocking(storeRef, storeData, { merge: true });
+      const storeDocRef = doc(db, "stores", currentUser.uid);
+      setDocumentNonBlocking(storeDocRef, storeData, { merge: true });
       
       setIsSuccess(true);
       toast({
-        title: "Registration Logged",
-        description: "Your branch application is pending regional verification.",
+        title: "Protocol Initialized",
+        description: "Branch registry pending regional verification.",
       });
       
       setTimeout(() => {
         router.push("/dashboard");
-      }, 2000);
+      }, 2500);
       
     } catch (error: any) {
       setIsLoading(false);
       toast({ 
-        title: "Registration Error", 
-        description: error.message || "Protocol rejected. Identity may already exist.", 
+        title: "Onboarding Error", 
+        description: error.message || "Identity sync failed. Protocol rejected.", 
         variant: "destructive" 
       });
     }
   };
 
-  if (isUserLoading || (user && storeLoading) || !isClient) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-[#ECF0F5]">
-        <Loader2 className="h-10 w-10 animate-spin text-primary opacity-50" />
-      </div>
-    );
-  }
-
+  // Success state takes precedence over general loading to prevent flicker
   if (isSuccess) {
     return (
       <div className="min-h-screen flex flex-col items-center justify-center p-6 bg-[#ECF0F5]">
@@ -143,12 +137,24 @@ export default function RegisterPage() {
     );
   }
 
+  // General loading only shows if we are truly waiting and not in success state
+  if (isUserLoading || (user && storeLoading) || !isClient) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-[#ECF0F5]">
+        <div className="flex flex-col items-center gap-4">
+          <Loader2 className="h-10 w-10 animate-spin text-primary" />
+          <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">Loading Network Interface...</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen flex flex-col items-center justify-center p-6 bg-[#ECF0F5]">
       <div className="w-full max-w-2xl space-y-8 pb-12 animate-in fade-in duration-700">
         <Link href="/" className="flex items-center gap-2 text-slate-400 hover:text-primary transition-colors font-black text-[10px] uppercase tracking-widest group">
           <ArrowLeft className="h-3 w-3 group-hover:-translate-x-1 transition-transform" />
-          Back to Selection
+          Hub Selection
         </Link>
 
         <div className="text-center space-y-3">
@@ -161,12 +167,18 @@ export default function RegisterPage() {
           </p>
         </div>
 
-        <Alert className="bg-white border-primary/20 rounded-[2rem] shadow-sm p-6">
-          <PhoneCall className="h-6 w-6 text-primary" />
-          <AlertTitle className="text-xs font-black uppercase tracking-widest text-primary mb-1">Support Protocol Active</AlertTitle>
-          <AlertDescription className="text-sm font-medium text-slate-600">
-            For registration assistance or manager inquiries, contact our regional support node at <span className="font-black text-primary text-lg ml-2">9085067897</span>.
-          </AlertDescription>
+        <Alert className="bg-white border-primary/20 rounded-[2.5rem] shadow-sm p-8">
+          <div className="flex items-center gap-4">
+            <div className="bg-primary/5 p-4 rounded-2xl">
+              <PhoneCall className="h-6 w-6 text-primary" />
+            </div>
+            <div>
+              <AlertTitle className="text-xs font-black uppercase tracking-widest text-primary mb-1">Support Protocol Active</AlertTitle>
+              <AlertDescription className="text-sm font-medium text-slate-600">
+                Contact regional support for onboarding at <span className="font-black text-primary text-lg ml-2">9085067897</span>.
+              </AlertDescription>
+            </div>
+          </div>
         </Alert>
 
         <Card className="border-none shadow-sm rounded-[2.5rem] bg-white overflow-hidden">
@@ -174,7 +186,7 @@ export default function RegisterPage() {
             <CardTitle className="text-2xl font-black text-primary uppercase italic tracking-tighter">
               New Branch Registry
             </CardTitle>
-            <CardDescription className="font-medium">Please provide your official regional retail credentials.</CardDescription>
+            <CardDescription className="font-medium">Provide official regional retail credentials for node authorization.</CardDescription>
           </CardHeader>
           <CardContent className="p-10">
             <form onSubmit={handleRegister} className="space-y-8">
@@ -184,7 +196,7 @@ export default function RegisterPage() {
                   <div className="relative">
                     <UserIcon className="absolute left-5 top-1/2 -translate-y-1/2 h-5 w-5 text-primary opacity-30" />
                     <Input 
-                      placeholder="Full Name" 
+                      placeholder="Official Name" 
                       className="pl-14 h-14 bg-slate-50 border-none rounded-2xl focus:ring-primary font-bold text-slate-900" 
                       required 
                       value={formData.managerName}
@@ -242,7 +254,7 @@ export default function RegisterPage() {
                   <div className="relative">
                     <Building className="absolute left-5 top-1/2 -translate-y-1/2 h-5 w-5 text-primary opacity-30" />
                     <Input 
-                      placeholder="e.g., Guwahati Station" 
+                      placeholder="e.g., Guwahati Hub" 
                       className="pl-14 h-14 bg-slate-50 border-none rounded-2xl focus:ring-primary font-bold text-slate-900" 
                       required 
                       value={formData.storeName}
@@ -278,7 +290,7 @@ export default function RegisterPage() {
           </CardContent>
           <div className="p-10 pt-0 border-t border-slate-50 bg-slate-50/30 text-center space-y-4">
             <p className="text-xs text-slate-500 font-medium">
-              Already have a registered node? <Link href="/login" className="text-primary font-black hover:underline uppercase tracking-widest text-[10px] ml-2">Identity Login</Link>
+              Existing branch partner? <Link href="/login" className="text-primary font-black hover:underline uppercase tracking-widest text-[10px] ml-2">Identity Sync</Link>
             </p>
           </div>
         </Card>
