@@ -9,7 +9,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Plus, Search, Edit2, Trash2, Loader2, Filter, Boxes, CheckCircle2, ImageIcon, Camera, CameraOff, Sparkles } from "lucide-react";
+import { Plus, Search, Edit2, Trash2, Loader2, Filter, Boxes, CheckCircle2, ImageIcon, Camera, CameraOff, Sparkles, AlertTriangle, Globe } from "lucide-react";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -153,6 +153,13 @@ export default function InventoryControl() {
     setIsDialogOpen(false);
   };
 
+  const handleDelete = (product: any) => {
+    if (!db) return;
+    const docRef = doc(db, "products", product.id);
+    deleteDocumentNonBlocking(docRef);
+    toast({ title: "Node Purged", variant: "destructive" });
+  };
+
   const filteredProducts = useMemo(() => {
     if (!products) return [];
     let list = [...products].sort((a, b) => (a.name || "").localeCompare(b.name || ""));
@@ -187,7 +194,7 @@ export default function InventoryControl() {
           <h1 className="text-4xl font-black tracking-tighter text-slate-900 uppercase italic leading-none">Inventory Hub</h1>
           <p className="text-slate-500 font-medium text-sm tracking-wide">Central product registry and stock orchestration.</p>
         </div>
-        <Button onClick={() => handleOpenDialog()} className="h-14 px-10 rounded-2xl bg-primary text-white font-black shadow-lg hover:scale-105 transition-all uppercase tracking-widest text-xs">
+        <Button onClick={() => handleOpenDialog()} className="h-14 w-full md:w-auto px-10 rounded-2xl bg-primary text-white font-black shadow-lg hover:scale-105 transition-all uppercase tracking-widest text-xs">
           <Plus className="mr-3 h-6 w-6" /> Provision SKU
         </Button>
       </div>
@@ -216,68 +223,118 @@ export default function InventoryControl() {
         </Select>
       </div>
 
-      <Card className="hidden md:block border-none bg-white rounded-[2.5rem] overflow-hidden shadow-sm">
-        <CardContent className="p-0">
-          <Table>
-            <TableHeader className="bg-slate-50/50">
-              <TableRow className="h-20 border-slate-100">
-                <TableHead className="pl-10 uppercase text-[10px] font-black tracking-widest">Identity Package</TableHead>
-                <TableHead className="uppercase text-[10px] font-black tracking-widest">Cluster</TableHead>
-                <TableHead className="uppercase text-[10px] font-black tracking-widest">Valuation</TableHead>
-                <TableHead className="uppercase text-[10px] font-black tracking-widest">Density</TableHead>
-                <TableHead className="text-right pr-10 uppercase text-[10px] font-black tracking-widest">Protocol</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {filteredProducts.map((product) => (
-                <TableRow key={product.id} className="h-24 hover:bg-slate-50 transition-all group border-slate-50">
-                  <TableCell className="pl-10">
-                    <div className="flex items-center gap-6">
-                      <div className="relative h-14 w-14 rounded-2xl overflow-hidden bg-slate-100 border border-slate-100">
+      {filteredProducts.length > 0 ? (
+        <>
+          {/* Desktop Table View */}
+          <Card className="hidden md:block border-none bg-white rounded-[2.5rem] overflow-hidden shadow-sm">
+            <CardContent className="p-0">
+              <Table>
+                <TableHeader className="bg-slate-50/50">
+                  <TableRow className="h-20 border-slate-100">
+                    <TableHead className="pl-10 uppercase text-[10px] font-black tracking-widest">Identity Package</TableHead>
+                    <TableHead className="uppercase text-[10px] font-black tracking-widest">Cluster</TableHead>
+                    <TableHead className="uppercase text-[10px] font-black tracking-widest">Valuation</TableHead>
+                    <TableHead className="uppercase text-[10px] font-black tracking-widest">Density</TableHead>
+                    <TableHead className="text-right pr-10 uppercase text-[10px] font-black tracking-widest">Protocol</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {filteredProducts.map((product) => (
+                    <TableRow key={product.id} className="h-24 hover:bg-slate-50 transition-all group border-slate-50">
+                      <TableCell className="pl-10">
+                        <div className="flex items-center gap-6">
+                          <div className="relative h-14 w-14 rounded-2xl overflow-hidden bg-slate-100 border border-slate-100">
+                            <Image src={product.imageUrl || `https://picsum.photos/seed/${product.sku}/100/100`} alt={product.name} fill className="object-cover" />
+                          </div>
+                          <div className="flex flex-col">
+                            <span className="font-black text-slate-900 text-sm uppercase italic">{product.name}</span>
+                            <span className="text-[10px] font-mono text-slate-400 uppercase">{product.sku}</span>
+                          </div>
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        <Badge variant="outline" className="text-[9px] uppercase font-black px-3 py-1 rounded-xl">
+                          {product.category}
+                        </Badge>
+                      </TableCell>
+                      <TableCell className="font-mono text-sm text-primary font-black">${(product.price || 0).toFixed(2)}</TableCell>
+                      <TableCell>
+                        <div className="flex items-center gap-4">
+                          <div className={cn("h-2 w-24 rounded-full bg-slate-100 overflow-hidden")}>
+                             <div className={cn("h-full", (product.stockQuantity || 0) < 10 ? "bg-rose-500 w-[15%]" : "bg-emerald-500 w-[85%]")} />
+                          </div>
+                          <span className={cn("text-xs font-black font-mono", (product.stockQuantity || 0) < 10 ? "text-rose-500" : "text-emerald-500")}>
+                            {product.stockQuantity || 0}
+                          </span>
+                        </div>
+                      </TableCell>
+                      <TableCell className="text-right pr-10">
+                        <div className="flex justify-end gap-3 opacity-0 group-hover:opacity-100 transition-all">
+                          <Button size="icon" variant="ghost" className="h-11 w-11 rounded-2xl" onClick={() => handleOpenDialog(product)}>
+                            <Edit2 className="h-5 w-5 text-slate-400 hover:text-primary" />
+                          </Button>
+                          <Button size="icon" variant="ghost" className="h-11 w-11 rounded-2xl" onClick={() => handleDelete(product)}>
+                            <Trash2 className="h-5 w-5 text-rose-500" />
+                          </Button>
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </CardContent>
+          </Card>
+
+          {/* Mobile Grid View */}
+          <div className="md:hidden grid grid-cols-1 gap-4">
+            {filteredProducts.map((product) => (
+              <Card key={product.id} className="border-none bg-white rounded-3xl overflow-hidden shadow-sm hover:shadow-md transition-all">
+                <CardContent className="p-0">
+                   <div className="flex p-4 gap-4">
+                      <div className="relative h-24 w-24 rounded-2xl overflow-hidden bg-slate-100 shrink-0">
                         <Image src={product.imageUrl || `https://picsum.photos/seed/${product.sku}/100/100`} alt={product.name} fill className="object-cover" />
                       </div>
-                      <div className="flex flex-col">
-                        <span className="font-black text-slate-900 text-sm uppercase italic">{product.name}</span>
-                        <span className="text-[10px] font-mono text-slate-400 uppercase">{product.sku}</span>
+                      <div className="flex flex-col justify-between flex-1 min-w-0">
+                        <div className="space-y-1">
+                           <div className="flex justify-between items-start">
+                              <span className="font-black text-slate-900 text-sm uppercase italic truncate pr-2">{product.name}</span>
+                              <Badge className="text-[8px] font-black uppercase px-2 py-0 h-4 bg-slate-50 text-slate-400 border-none shrink-0">{product.category}</Badge>
+                           </div>
+                           <p className="text-[9px] font-mono text-slate-400 uppercase font-bold">{product.sku}</p>
+                        </div>
+                        <div className="flex justify-between items-end">
+                           <div className="space-y-1">
+                              <p className="text-[9px] text-slate-400 font-black uppercase tracking-widest">Density</p>
+                              <p className={cn("text-xs font-black font-mono", (product.stockQuantity || 0) < 10 ? "text-rose-500" : "text-emerald-500")}>
+                                {product.stockQuantity || 0}
+                              </p>
+                           </div>
+                           <div className="text-right">
+                              <p className="text-xs font-black text-primary font-mono">${(product.price || 0).toFixed(2)}</p>
+                           </div>
+                        </div>
                       </div>
-                    </div>
-                  </TableCell>
-                  <TableCell>
-                    <Badge variant="outline" className="text-[9px] uppercase font-black px-3 py-1 rounded-xl">
-                      {product.category}
-                    </Badge>
-                  </TableCell>
-                  <TableCell className="font-mono text-sm text-primary font-black">${(product.price || 0).toFixed(2)}</TableCell>
-                  <TableCell>
-                    <div className="flex items-center gap-4">
-                      <div className={cn("h-2 w-24 rounded-full bg-slate-100 overflow-hidden")}>
-                         <div className={cn("h-full", (product.stockQuantity || 0) < 10 ? "bg-rose-500 w-[15%]" : "bg-emerald-500 w-[85%]")} />
-                      </div>
-                      <span className={cn("text-xs font-black font-mono", (product.stockQuantity || 0) < 10 ? "text-rose-500" : "text-emerald-500")}>
-                        {product.stockQuantity || 0}
-                      </span>
-                    </div>
-                  </TableCell>
-                  <TableCell className="text-right pr-10">
-                    <div className="flex justify-end gap-3 opacity-0 group-hover:opacity-100 transition-all">
-                      <Button size="icon" variant="ghost" className="h-11 w-11 rounded-2xl" onClick={() => handleOpenDialog(product)}>
-                        <Edit2 className="h-5 w-5 text-slate-400 hover:text-primary" />
+                   </div>
+                   <div className="flex border-t border-slate-50">
+                      <Button variant="ghost" className="flex-1 h-12 rounded-none text-slate-400 hover:text-primary font-black uppercase text-[10px] tracking-widest" onClick={() => handleOpenDialog(product)}>
+                        <Edit2 className="h-4 w-4 mr-2" /> Edit
                       </Button>
-                      <Button size="icon" variant="ghost" className="h-11 w-11 rounded-2xl" onClick={() => {
-                        const docRef = doc(db!, "products", product.id);
-                        deleteDocumentNonBlocking(docRef);
-                        toast({ title: "Node Purged", variant: "destructive" });
-                      }}>
-                        <Trash2 className="h-5 w-5 text-rose-500" />
+                      <Button variant="ghost" className="flex-1 h-12 rounded-none text-rose-400 hover:text-rose-600 font-black uppercase text-[10px] tracking-widest" onClick={() => handleDelete(product)}>
+                        <Trash2 className="h-4 w-4 mr-2" /> Purge
                       </Button>
-                    </div>
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        </CardContent>
-      </Card>
+                   </div>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        </>
+      ) : (
+        <div className="text-center py-32 bg-white rounded-[2.5rem] border border-dashed border-slate-200">
+           <Globe className="h-20 w-20 mx-auto mb-6 text-slate-100 animate-spin-slow opacity-20" />
+           <p className="text-slate-400 font-black uppercase italic tracking-tighter text-sm">No SKU Nodes Detected</p>
+           <p className="text-[10px] text-slate-300 font-bold uppercase tracking-widest mt-2">Adjust your cluster filters or query signature.</p>
+        </div>
+      )}
 
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
         <DialogContent className="sm:max-w-[700px] rounded-[2.5rem] p-10 bg-white border-none shadow-2xl overflow-y-auto max-h-[90vh]">
