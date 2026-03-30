@@ -94,12 +94,19 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
       } else if (user && pathname !== "/admin/login") {
         const isAdmin = user.email?.toLowerCase().includes("admin") || user.uid === MASTER_ADMIN_UID;
         if (!isAdmin) {
-          router.push("/");
-          toast({ title: "Restricted Node", description: "Admin identity required.", variant: "destructive" });
+          // Force logout and redirect if unauthorized identity is detected in admin layout
+          signOut(auth).then(() => {
+            router.push("/login");
+            toast({ 
+              title: "Identity Breach Alert", 
+              description: "Unauthorized node signatures are purged from command paths.", 
+              variant: "destructive" 
+            });
+          });
         }
       }
     }
-  }, [user, isUserLoading, router, pathname]);
+  }, [user, isUserLoading, router, pathname, auth]);
 
   if (isUserLoading) {
     return (
@@ -113,7 +120,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     return <>{children}</>;
   }
 
-  // Master Admin UID check
+  // Final gate check before rendering
   const isAdmin = user?.email?.toLowerCase().includes("admin") || user?.uid === MASTER_ADMIN_UID;
   if (!user || !isAdmin) {
     return null;

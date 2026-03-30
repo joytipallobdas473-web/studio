@@ -10,7 +10,7 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Mail, Lock, Loader2, ArrowLeft, ShieldAlert, Zap, Globe, AlertTriangle } from "lucide-react";
 import { useAuth, useUser } from "@/firebase";
-import { signInWithEmailAndPassword } from "firebase/auth";
+import { signInWithEmailAndPassword, signOut } from "firebase/auth";
 import { toast } from "@/hooks/use-toast";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 
@@ -30,6 +30,9 @@ export default function AdminLoginPage() {
       const isAdmin = user.email?.toLowerCase().includes("admin") || user.uid === MASTER_ADMIN_UID;
       if (isAdmin) {
         router.push("/admin");
+      } else {
+        // If a non-admin is somehow here while logged in, clear error or show restricted message
+        setError("Unauthorized Identity. This terminal is restricted to regional controllers.");
       }
     }
   }, [user, isUserLoading, router]);
@@ -43,11 +46,29 @@ export default function AdminLoginPage() {
     
     setIsLoading(true);
     try {
-      await signInWithEmailAndPassword(auth, lowerEmail, password);
+      const userCredential = await signInWithEmailAndPassword(auth, lowerEmail, password);
+      const signedInUser = userCredential.user;
+      
+      const isAdmin = signedInUser.email?.toLowerCase().includes("admin") || signedInUser.uid === MASTER_ADMIN_UID;
+      
+      if (!isAdmin) {
+        // Strictly reject and sign out non-admins
+        await signOut(auth);
+        setIsLoading(false);
+        setError("Access Denied: Unrecognized administrator signature.");
+        toast({
+          title: "Identity Protocol Failure",
+          description: "This portal is restricted to regional administrators only.",
+          variant: "destructive",
+        });
+        return;
+      }
+
       toast({
         title: "Command Access Authorized",
         description: "Synchronizing regional telemetry...",
       });
+      router.push("/admin");
     } catch (error: any) {
       setIsLoading(false);
       const isAuthError = error.code === 'auth/invalid-credential' || error.code === 'auth/user-not-found' || error.code === 'auth/invalid-email';
@@ -89,7 +110,7 @@ export default function AdminLoginPage() {
         </div>
 
         {error && (
-          <Alert variant="destructive" className="bg-rose-500/10 border-rose-500/20 text-rose-500 rounded-2xl md:rounded-3xl p-5 md:p-6">
+          <Alert variant="destructive" className="bg-rose-500/10 border-rose-500/20 text-rose-500 rounded-2xl md:rounded-3xl p-5 md:p-6 shadow-2xl">
             <AlertTriangle className="h-4 w-4" />
             <AlertTitle className="font-black uppercase text-[10px] tracking-widest mb-1">Authorization Error</AlertTitle>
             <AlertDescription className="text-xs font-medium opacity-90">
@@ -101,12 +122,12 @@ export default function AdminLoginPage() {
         <Card className="border-white/5 bg-slate-900/50 backdrop-blur-3xl rounded-3xl md:rounded-[2.5rem] overflow-hidden shadow-2xl">
           <CardHeader className="p-8 md:p-10 pb-0">
             <CardTitle className="text-xl font-black text-primary uppercase italic tracking-tighter">Controller Identity</CardTitle>
-            <CardDescription className="text-slate-500 font-medium text-xs md:text-sm">Restricted access for North East administrators.</CardDescription>
+            <CardDescription className="text-slate-500 font-medium text-xs md:text-sm">Restricted access for authorized North East controllers.</CardDescription>
           </CardHeader>
           <CardContent className="p-8 md:p-10">
             <form onSubmit={handleAdminSignIn} className="space-y-6 md:space-y-8">
               <div className="space-y-3">
-                <Label className="text-[10px] font-black uppercase tracking-[0.3em] text-slate-500 ml-1 text-primary">Admin Signature</Label>
+                <Label className="text-[10px] font-black uppercase tracking-[0.3em] text-slate-500 ml-1">Admin Signature</Label>
                 <div className="relative">
                   <Mail className="absolute left-5 top-1/2 -translate-y-1/2 h-5 w-5 text-slate-600" />
                   <Input 
@@ -142,15 +163,15 @@ export default function AdminLoginPage() {
                   <Loader2 className="h-6 w-6 animate-spin" />
                 ) : (
                   <div className="flex items-center gap-3">
-                    <Zap className="h-5 w-5" /> Initialize
+                    <Zap className="h-5 w-5" /> Initialize Console
                   </div>
                 )}
               </Button>
             </form>
           </CardContent>
-          <div className="px-8 md:px-10 pb-10 text-center">
-            <p className="text-[10px] text-slate-600 font-medium italic">
-              Unrecognized identity? Controller nodes must be pre-registered.
+          <div className="px-8 md:px-10 pb-10 text-center border-t border-white/5 pt-6 bg-black/20">
+            <p className="text-[9px] text-slate-600 font-bold uppercase tracking-widest leading-relaxed">
+              Branch Managers: Use the portal entry instead. <br /> Unauthorized access attempts are logged.
             </p>
           </div>
         </Card>
