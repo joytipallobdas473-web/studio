@@ -9,7 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Download, Search, FileText, Filter, Loader2, Phone, MapPin, Mail, Globe } from "lucide-react";
+import { Download, Search, FileText, Filter, Loader2, Phone, MapPin, Mail, Globe, CheckCircle2 } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
 import { format } from "date-fns";
 import { errorEmitter } from "@/firebase/error-emitter";
@@ -17,9 +17,19 @@ import { FirestorePermissionError } from "@/firebase/errors";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 
+const STATUS_OPTIONS = [
+  { value: "all", label: "All Statuses" },
+  { value: "pending", label: "Pending" },
+  { value: "processing", label: "Processing" },
+  { value: "shipped", label: "Shipped" },
+  { value: "delivered", label: "Delivered" },
+  { value: "cancelled", label: "Cancelled" },
+];
+
 export default function AdminOrdersPage() {
   const db = useFirestore();
   const [storeFilter, setStoreFilter] = useState("all");
+  const [statusFilter, setStatusFilter] = useState("all");
   const [searchQuery, setSearchQuery] = useState("");
   const [isClient, setIsClient] = useState(false);
 
@@ -62,13 +72,14 @@ export default function AdminOrdersPage() {
 
   const filteredOrders = orders.filter(order => {
     const matchesStore = storeFilter === "all" || order.storeName === storeFilter;
+    const matchesStatus = statusFilter === "all" || order.status === statusFilter;
     const matchesSearch = 
       order.id.toLowerCase().includes(searchQuery.toLowerCase()) || 
       (order.storeName || "").toLowerCase().includes(searchQuery.toLowerCase()) ||
       (order.phoneNumber || "").toLowerCase().includes(searchQuery.toLowerCase()) ||
       (order.email || "").toLowerCase().includes(searchQuery.toLowerCase()) ||
       (order.deliveryAddress || "").toLowerCase().includes(searchQuery.toLowerCase());
-    return matchesStore && matchesSearch;
+    return matchesStore && matchesStatus && matchesSearch;
   });
 
   const downloadPO = (orderId?: string) => {
@@ -130,7 +141,7 @@ export default function AdminOrdersPage() {
         </Button>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-4 md:gap-6">
         <div className="md:col-span-2 relative">
           <Search className="absolute left-6 top-1/2 -translate-y-1/2 h-5 w-5 text-slate-400" />
           <Input 
@@ -151,6 +162,19 @@ export default function AdminOrdersPage() {
             <SelectItem value="all" className="font-bold uppercase tracking-widest text-[10px]">All Active Nodes</SelectItem>
             {Array.from(new Set(orders.map(o => o.storeName).filter(Boolean) || [])).map(store => (
               <SelectItem key={store} value={store} className="font-bold uppercase tracking-widest text-[10px]">{store}</SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+        <Select value={statusFilter} onValueChange={setStatusFilter}>
+          <SelectTrigger className="h-14 md:h-16 bg-white border-slate-200 text-slate-900 rounded-2xl md:rounded-[1.5rem] px-6">
+            <div className="flex items-center gap-3">
+              <CheckCircle2 className="h-5 w-5 text-slate-400" />
+              <SelectValue placeholder="Status Filter" />
+            </div>
+          </SelectTrigger>
+          <SelectContent className="bg-white border-slate-200 text-slate-900 rounded-2xl">
+            {STATUS_OPTIONS.map(opt => (
+              <SelectItem key={opt.value} value={opt.value} className="font-bold uppercase tracking-widest text-[10px]">{opt.label}</SelectItem>
             ))}
           </SelectContent>
         </Select>
@@ -259,17 +283,35 @@ export default function AdminOrdersPage() {
       </Card>
 
       <div className="md:hidden space-y-4">
-        {filteredOrders.map((order) => (
+        {filteredOrders.length ? filteredOrders.map((order) => (
           <Card key={order.id} className="border-none bg-white rounded-3xl p-6 shadow-sm space-y-6">
             <div className="flex justify-between items-start">
-               <div>
+               <div className="min-w-0 flex-1 pr-2">
                  <p className="text-[10px] font-black text-primary uppercase italic tracking-tighter mb-1">{order.id.substring(0, 8)}</p>
-                 <h3 className="font-black text-slate-900 text-sm uppercase italic">{order.storeName || 'Branch Node'}</h3>
+                 <h3 className="font-black text-slate-900 text-sm uppercase italic truncate">{order.storeName || 'Branch Node'}</h3>
                </div>
-               <Badge className={cn(
-                  "rounded-xl px-4 py-1 text-[8px] font-black uppercase tracking-widest border-none",
-                  order.status === 'delivered' ? 'bg-emerald-50 text-emerald-600' : 'bg-amber-50 text-amber-600'
-               )}>{order.status}</Badge>
+               <Select 
+                  defaultValue={order.status} 
+                  onValueChange={(val) => handleStatusUpdate(order.id, val)}
+                >
+                  <SelectTrigger className={cn(
+                    "h-8 w-[110px] text-[8px] font-black uppercase tracking-widest rounded-xl border-none bg-slate-50 shrink-0",
+                    order.status === 'delivered' ? 'text-emerald-600' :
+                    order.status === 'processing' ? 'text-blue-600' :
+                    order.status === 'shipped' ? 'text-purple-600' :
+                    order.status === 'cancelled' ? 'text-rose-600' :
+                    'text-amber-600'
+                  )}>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent className="bg-white border-slate-200 text-slate-900 rounded-2xl">
+                    <SelectItem value="pending" className="text-[10px] font-black tracking-widest uppercase">PENDING</SelectItem>
+                    <SelectItem value="processing" className="text-[10px] font-black tracking-widest uppercase">PROCESSING</SelectItem>
+                    <SelectItem value="shipped" className="text-[10px] font-black tracking-widest uppercase">SHIPPED</SelectItem>
+                    <SelectItem value="delivered" className="text-[10px] font-black tracking-widest uppercase text-emerald-600">DELIVERED</SelectItem>
+                    <SelectItem value="cancelled" className="text-[10px] font-black tracking-widest uppercase text-rose-600">CANCELLED</SelectItem>
+                  </SelectContent>
+                </Select>
             </div>
             
             <div className="space-y-3 bg-slate-50 p-4 rounded-2xl">
@@ -286,14 +328,19 @@ export default function AdminOrdersPage() {
             <div className="flex items-center justify-between border-t border-slate-50 pt-4">
                <div className="space-y-0.5">
                   <p className="text-xs font-black text-primary font-mono">${(order.total || 0).toFixed(2)}</p>
-                  <p className="text-[9px] text-slate-400 font-mono">{order.items || 'Payload'}</p>
+                  <p className="text-[9px] text-slate-400 font-mono truncate max-w-[150px]">{order.items || 'Payload'}</p>
                </div>
                <Button size="sm" variant="outline" className="h-10 rounded-xl font-black text-[9px] uppercase tracking-widest" onClick={() => downloadPO(order.id)}>
                  <Download className="h-3 w-3 mr-2" /> PO
                </Button>
             </div>
           </Card>
-        ))}
+        )) : (
+          <div className="text-center py-20 text-slate-400">
+             <Globe className="h-16 w-16 mx-auto mb-4 opacity-10" />
+             <p className="font-black uppercase tracking-[0.3em] text-[10px]">No packets match filters.</p>
+          </div>
+        )}
       </div>
     </div>
   );
