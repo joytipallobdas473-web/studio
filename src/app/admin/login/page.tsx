@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { Mail, Lock, Loader2, ArrowLeft, ShieldAlert, Zap, Globe, AlertTriangle } from "lucide-react";
+import { Mail, Lock, Loader2, ArrowLeft, ShieldAlert, Zap, Globe, AlertTriangle, Fingerprint } from "lucide-react";
 import { useAuth, useUser } from "@/firebase";
 import { signInWithEmailAndPassword, signOut } from "firebase/auth";
 import { toast } from "@/hooks/use-toast";
@@ -31,8 +31,7 @@ export default function AdminLoginPage() {
       if (isAdmin) {
         router.push("/admin");
       } else {
-        // If a non-admin is somehow here while logged in, clear error or show restricted message
-        setError("Unauthorized Identity. This terminal is restricted to regional controllers.");
+        setError("Unauthorized Identity Signature.");
       }
     }
   }, [user, isUserLoading, router]);
@@ -42,137 +41,115 @@ export default function AdminLoginPage() {
     setError(null);
     if (!auth) return;
     
-    const lowerEmail = email.toLowerCase().trim();
-    
     setIsLoading(true);
     try {
-      const userCredential = await signInWithEmailAndPassword(auth, lowerEmail, password);
+      const userCredential = await signInWithEmailAndPassword(auth, email.toLowerCase().trim(), password);
       const signedInUser = userCredential.user;
       
       const isAdmin = signedInUser.email?.toLowerCase().includes("admin") || signedInUser.uid === MASTER_ADMIN_UID;
       
       if (!isAdmin) {
-        // Strictly reject and sign out non-admins
         await signOut(auth);
         setIsLoading(false);
         setError("Access Denied: Unrecognized administrator signature.");
-        toast({
-          title: "Identity Protocol Failure",
-          description: "This portal is restricted to regional administrators only.",
-          variant: "destructive",
-        });
         return;
       }
 
-      toast({
-        title: "Command Access Authorized",
-        description: "Synchronizing regional telemetry...",
-      });
+      toast({ title: "Command Access Authorized" });
       router.push("/admin");
     } catch (error: any) {
       setIsLoading(false);
-      const isAuthError = error.code === 'auth/invalid-credential' || error.code === 'auth/user-not-found' || error.code === 'auth/invalid-email';
-      
-      setError(isAuthError ? "Identity not recognized. Ensure your controller account is pre-registered." : "Security Authentication Failure.");
-      
-      toast({
-        title: "Authentication Failed",
-        description: "Invalid credentials or unregistered node.",
-        variant: "destructive",
-      });
+      setError("Security Authentication Failure.");
+      toast({ title: "Authentication Failed", variant: "destructive" });
     }
   };
 
   if (isUserLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-[#020617]">
-        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      <div className="min-h-screen flex items-center justify-center bg-background">
+        <Loader2 className="h-10 w-10 animate-spin text-accent" />
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center p-4 md:p-6 bg-[#020617]">
-      <div className="w-full max-w-md space-y-6 md:space-y-8 animate-in fade-in duration-1000">
-        <Link href="/login" className="flex items-center gap-2 text-slate-500 hover:text-primary transition-colors font-black text-[10px] uppercase tracking-widest group">
-          <ArrowLeft className="h-3 w-3 group-hover:-translate-x-1 transition-transform" />
-          Switch to Branch Portal
-        </Link>
-
-        <div className="text-center space-y-3">
-          <div className="bg-primary p-4 rounded-[1.5rem] md:rounded-[2rem] shadow-xl inline-block mb-2">
-            <ShieldAlert className="h-6 w-6 md:h-8 md:w-8 text-white" />
+    <div className="min-h-screen flex flex-col items-center justify-center p-6 bg-background relative overflow-hidden">
+      {/* Background Decorative Elements */}
+      <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-primary/20 blur-[150px] rounded-full" />
+      <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-accent/10 blur-[150px] rounded-full" />
+      
+      <div className="w-full max-w-lg space-y-12 relative z-10 animate-in fade-in zoom-in duration-1000">
+        <div className="text-center space-y-6">
+          <div className="command-gradient p-6 rounded-[2.5rem] shadow-[0_0_50px_rgba(38,205,242,0.4)] inline-block mb-4">
+            <ShieldAlert className="h-10 w-10 text-white" />
           </div>
-          <h1 className="text-3xl md:text-4xl font-black text-white tracking-tighter uppercase italic leading-none">Command Portal</h1>
-          <p className="text-slate-500 font-bold flex items-center justify-center gap-2 text-[9px] md:text-[10px] uppercase tracking-[0.4em]">
-             <Globe className="h-3 w-3 text-accent animate-spin-slow" /> Regional Console
+          <h1 className="text-5xl font-black text-white tracking-tighter uppercase italic leading-none">Command Terminal</h1>
+          <p className="text-accent font-black flex items-center justify-center gap-4 text-[11px] uppercase tracking-[0.6em]">
+             <div className="h-1.5 w-1.5 rounded-full bg-accent animate-ping" />
+             Restricted Regional Access
           </p>
         </div>
 
         {error && (
-          <Alert variant="destructive" className="bg-rose-500/10 border-rose-500/20 text-rose-500 rounded-2xl md:rounded-3xl p-5 md:p-6 shadow-2xl">
-            <AlertTriangle className="h-4 w-4" />
-            <AlertTitle className="font-black uppercase text-[10px] tracking-widest mb-1">Authorization Error</AlertTitle>
-            <AlertDescription className="text-xs font-medium opacity-90">
-              {error}
-            </AlertDescription>
+          <Alert variant="destructive" className="bg-rose-500/10 border-rose-500/30 text-rose-400 rounded-3xl p-8 shadow-2xl animate-in shake duration-500">
+            <AlertTriangle className="h-5 w-5" />
+            <AlertTitle className="font-black uppercase text-xs tracking-widest mb-2">Authorization Error</AlertTitle>
+            <AlertDescription className="text-sm font-medium opacity-90">{error}</AlertDescription>
           </Alert>
         )}
 
-        <Card className="border-white/5 bg-slate-900/50 backdrop-blur-3xl rounded-3xl md:rounded-[2.5rem] overflow-hidden shadow-2xl">
-          <CardHeader className="p-8 md:p-10 pb-0">
-            <CardTitle className="text-xl font-black text-primary uppercase italic tracking-tighter">Controller Identity</CardTitle>
-            <CardDescription className="text-slate-500 font-medium text-xs md:text-sm">Restricted access for authorized North East controllers.</CardDescription>
+        <Card className="glass-panel rounded-[3.5rem] p-4 overflow-hidden shadow-2xl">
+          <CardHeader className="p-12 pb-0">
+            <CardTitle className="text-2xl font-black text-white uppercase italic tracking-tighter">Identity Sync</CardTitle>
+            <CardDescription className="text-muted-foreground/60 font-bold text-sm mt-2 uppercase tracking-wide">Enter Encrypted Controller Passkey</CardDescription>
           </CardHeader>
-          <CardContent className="p-8 md:p-10">
-            <form onSubmit={handleAdminSignIn} className="space-y-6 md:space-y-8">
-              <div className="space-y-3">
-                <Label className="text-[10px] font-black uppercase tracking-[0.3em] text-slate-500 ml-1">Admin Signature</Label>
-                <div className="relative">
-                  <Mail className="absolute left-5 top-1/2 -translate-y-1/2 h-5 w-5 text-slate-600" />
+          <CardContent className="p-12">
+            <form onSubmit={handleAdminSignIn} className="space-y-10">
+              <div className="space-y-4">
+                <Label className="text-[11px] font-black uppercase tracking-[0.4em] text-muted-foreground/50 ml-1">Admin Signature</Label>
+                <div className="relative group">
+                  <Mail className="absolute left-6 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground/40 group-focus-within:text-accent transition-colors" />
                   <Input 
                     type="email" 
-                    placeholder="admin@retail.com" 
-                    className="pl-14 h-14 md:h-16 bg-black/40 border-white/5 rounded-2xl focus:ring-primary font-bold text-white placeholder:text-slate-700" 
+                    placeholder="admin@hub.protocol" 
+                    className="pl-16 h-20 bg-white/5 border-white/5 rounded-3xl focus:ring-accent font-black text-white placeholder:text-white/10 uppercase tracking-widest text-xs" 
                     required 
                     value={email}
-                    autoComplete="email"
                     onChange={(e) => setEmail(e.target.value)}
                   />
                 </div>
               </div>
               
-              <div className="space-y-3">
-                <Label className="text-[10px] font-black uppercase tracking-[0.3em] text-slate-500 ml-1">Passkey</Label>
-                <div className="relative">
-                  <Lock className="absolute left-5 top-1/2 -translate-y-1/2 h-5 w-5 text-slate-600" />
+              <div className="space-y-4">
+                <Label className="text-[11px] font-black uppercase tracking-[0.4em] text-muted-foreground/50 ml-1">Secure Passkey</Label>
+                <div className="relative group">
+                  <Lock className="absolute left-6 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground/40 group-focus-within:text-accent transition-colors" />
                   <Input 
                     type="password" 
                     placeholder="••••••••" 
-                    className="pl-14 h-14 md:h-16 bg-black/40 border-white/5 rounded-2xl focus:ring-primary font-bold text-white" 
+                    className="pl-16 h-20 bg-white/5 border-white/5 rounded-3xl focus:ring-accent font-black text-white placeholder:text-white/10" 
                     required 
                     value={password}
-                    autoComplete="current-password"
                     onChange={(e) => setPassword(e.target.value)}
                   />
                 </div>
               </div>
 
-              <Button type="submit" className="w-full h-14 md:h-16 bg-primary text-white hover:bg-white hover:text-primary font-black rounded-2xl shadow-2xl group uppercase tracking-[0.2em] text-[10px] md:text-xs transition-all duration-500" disabled={isLoading}>
+              <Button type="submit" className="w-full h-20 command-gradient text-white hover:scale-105 transition-all duration-500 font-black rounded-3xl shadow-[0_0_40px_rgba(38,205,242,0.3)] uppercase tracking-[0.3em] text-[11px]" disabled={isLoading}>
                 {isLoading ? (
-                  <Loader2 className="h-6 w-6 animate-spin" />
+                  <Loader2 className="h-8 w-8 animate-spin" />
                 ) : (
-                  <div className="flex items-center gap-3">
-                    <Zap className="h-5 w-5" /> Initialize Console
+                  <div className="flex items-center gap-4">
+                    <Fingerprint className="h-6 w-6" /> Authorize Session
                   </div>
                 )}
               </Button>
             </form>
           </CardContent>
-          <div className="px-8 md:px-10 pb-10 text-center border-t border-white/5 pt-6 bg-black/20">
-            <p className="text-[9px] text-slate-600 font-bold uppercase tracking-widest leading-relaxed">
-              Branch Managers: Use the portal entry instead. <br /> Unauthorized access attempts are logged.
-            </p>
+          <div className="px-12 pb-12 text-center border-t border-white/5 pt-8 bg-black/40">
+             <Link href="/login" className="text-[11px] text-muted-foreground hover:text-accent transition-colors font-black uppercase tracking-widest flex items-center justify-center gap-3 group">
+               <ArrowLeft className="h-4 w-4 group-hover:-translate-x-2 transition-transform" /> Switch to Branch Portal
+             </Link>
           </div>
         </Card>
       </div>
