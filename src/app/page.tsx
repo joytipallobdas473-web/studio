@@ -1,6 +1,7 @@
 
 "use client";
 
+import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
@@ -18,20 +19,46 @@ import {
   Network,
   Share2
 } from "lucide-react";
-import { useUser } from "@/firebase";
+import { useUser, useFirestore, useDoc, useMemoFirebase } from "@/firebase";
+import { doc } from "firebase/firestore";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { toast } from "@/hooks/use-toast";
 
+const MASTER_ADMIN_UID = "j96izCkggNcL002AHiJjzGb18Bf2";
+
 export default function Home() {
-  const { isUserLoading } = useUser();
+  const router = useRouter();
+  const { user, isUserLoading } = useUser();
+  const db = useFirestore();
+
+  const storeRef = useMemoFirebase(() => {
+    if (!db || !user) return null;
+    return doc(db, "stores", user.uid);
+  }, [db, user]);
+
+  const { data: store, isLoading: storeLoading } = useDoc(storeRef);
+
+  // Instant redirect for authenticated users
+  useEffect(() => {
+    if (!isUserLoading && user) {
+      const isAdmin = user.email?.toLowerCase().includes("admin") || user.uid === MASTER_ADMIN_UID;
+      if (isAdmin) {
+        router.push("/admin");
+      } else if (!storeLoading && store) {
+        router.push("/dashboard");
+      }
+    }
+  }, [user, isUserLoading, store, storeLoading, router]);
 
   const handleShareSystem = () => {
-    const url = window.location.href;
-    navigator.clipboard.writeText(url);
-    toast({
-      title: "Protocol Link Copied",
-      description: "Regional hub address saved to clipboard.",
-    });
+    if (typeof window !== 'undefined') {
+      const url = window.location.href;
+      navigator.clipboard.writeText(url);
+      toast({
+        title: "Protocol Link Copied",
+        description: "Regional hub address saved to clipboard.",
+      });
+    }
   };
 
   if (isUserLoading) {
@@ -44,13 +71,13 @@ export default function Home() {
 
   return (
     <div className="min-h-screen flex flex-col items-center justify-center p-6 bg-[#ECF0F5]">
-      <div className="max-w-4xl w-full space-y-12">
+      <div className="max-w-4xl w-full space-y-12 animate-in fade-in duration-1000">
         <div className="flex flex-col items-center text-center space-y-4">
-          <div className="bg-primary p-4 rounded-[2rem] shadow-xl animate-in zoom-in duration-1000">
+          <div className="bg-primary p-4 rounded-[2rem] shadow-xl">
             <Boxes className="h-12 w-12 text-white" />
           </div>
           <div className="space-y-1">
-            <h1 className="text-5xl font-black tracking-tighter text-slate-900 uppercase italic">NE Retail Hub</h1>
+            <h1 className="text-5xl font-black tracking-tighter text-slate-900 uppercase italic leading-none">NE Retail Hub</h1>
             <p className="text-slate-500 font-bold flex items-center justify-center gap-3 text-[10px] uppercase tracking-[0.4em]">
               <MapPin className="h-4 w-4 text-accent" /> North East Regional Logistics
             </p>
@@ -96,7 +123,7 @@ export default function Home() {
           </Card>
         </div>
 
-        <div className="bg-white/50 backdrop-blur-sm rounded-[2.5rem] p-8 md:p-12 border border-white/50 space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-1000 delay-300">
+        <div className="bg-white/50 backdrop-blur-sm rounded-[2.5rem] p-8 md:p-12 border border-white/50 space-y-8">
            <div className="flex flex-col md:flex-row items-center justify-between gap-8">
               <div className="flex items-center gap-4">
                 <div className="h-12 w-12 rounded-2xl bg-primary/10 flex items-center justify-center">

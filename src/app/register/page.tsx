@@ -58,16 +58,17 @@ export default function RegisterPage() {
 
   const { data: store, isLoading: storeLoading } = useDoc(storeRef);
 
+  // High-priority redirect for Master Admin or verified branch managers
   useEffect(() => {
-    if (!isUserLoading && !storeLoading && user && isClient && !isSuccess) {
+    if (!isUserLoading && user && isClient) {
       const isAdmin = user.email?.toLowerCase().includes("admin") || user.uid === MASTER_ADMIN_UID;
       if (isAdmin) {
         router.push("/admin");
-      } else if (store) {
+      } else if (!storeLoading && store) {
         router.push("/dashboard");
       }
     }
-  }, [user, isUserLoading, store, storeLoading, router, isClient, isSuccess]);
+  }, [user, isUserLoading, store, storeLoading, router, isClient]);
 
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -143,7 +144,9 @@ export default function RegisterPage() {
     );
   }
 
-  if (isUserLoading || (user && storeLoading) || !isClient) {
+  // Prevent flash of content if user is already an admin
+  const isMasterAdmin = user?.uid === MASTER_ADMIN_UID;
+  if (isUserLoading || (user && (storeLoading || isMasterAdmin)) || !isClient) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-[#ECF0F5]">
         <div className="flex flex-col items-center gap-4">
