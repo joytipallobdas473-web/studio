@@ -1,7 +1,7 @@
 
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
@@ -58,17 +58,20 @@ export default function RegisterPage() {
 
   const { data: store, isLoading: storeLoading } = useDoc(storeRef);
 
+  const isAdmin = useMemo(() => {
+    return user?.email?.toLowerCase().includes("admin") || user?.uid === MASTER_ADMIN_UID;
+  }, [user]);
+
   // High-priority redirect for Master Admin or verified branch managers
   useEffect(() => {
     if (!isUserLoading && user && isClient) {
-      const isAdmin = user.email?.toLowerCase().includes("admin") || user.uid === MASTER_ADMIN_UID;
       if (isAdmin) {
         router.push("/admin");
-      } else if (!storeLoading && store) {
+      } else if (!storeLoading && store && !isSuccess) {
         router.push("/dashboard");
       }
     }
-  }, [user, isUserLoading, store, storeLoading, router, isClient]);
+  }, [user, isUserLoading, store, storeLoading, router, isClient, isAdmin, isSuccess]);
 
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -106,8 +109,8 @@ export default function RegisterPage() {
       });
       
       setTimeout(() => {
-        const isAdmin = currentUser.email?.toLowerCase().includes("admin") || currentUser.uid === MASTER_ADMIN_UID;
-        router.push(isAdmin ? "/admin" : "/dashboard");
+        const adminCheck = currentUser.email?.toLowerCase().includes("admin") || currentUser.uid === MASTER_ADMIN_UID;
+        router.push(adminCheck ? "/admin" : "/dashboard");
       }, 2500);
       
     } catch (error: any) {
@@ -120,6 +123,7 @@ export default function RegisterPage() {
     }
   };
 
+  // SUCCESS STATE: Must be first to prevent infinite loading spinner
   if (isSuccess) {
     return (
       <div className="min-h-screen flex flex-col items-center justify-center p-6 bg-[#ECF0F5]">
@@ -144,9 +148,8 @@ export default function RegisterPage() {
     );
   }
 
-  // Prevent flash of content if user is already an admin
-  const isMasterAdmin = user?.uid === MASTER_ADMIN_UID;
-  if (isUserLoading || (user && (storeLoading || isMasterAdmin)) || !isClient) {
+  // LOADING STATE
+  if (!isClient || isUserLoading || (user && (storeLoading || isAdmin))) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-[#ECF0F5]">
         <div className="flex flex-col items-center gap-4">

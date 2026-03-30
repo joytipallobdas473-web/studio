@@ -13,6 +13,8 @@ import { cn } from "@/lib/utils";
 import { toast } from "@/hooks/use-toast";
 import { format } from "date-fns";
 
+const MASTER_ADMIN_UID = "j96izCkggNcL002AHiJjzGb18Bf2";
+
 export default function AdminOverview() {
   const db = useFirestore();
   const { user } = useUser();
@@ -24,20 +26,24 @@ export default function AdminOverview() {
     setIsClient(true);
   }, []);
 
+  const isAdmin = useMemo(() => {
+    return user?.email?.toLowerCase().includes("admin") || user?.uid === MASTER_ADMIN_UID;
+  }, [user]);
+
   const storesQuery = useMemoFirebase(() => {
-    if (!db || !user) return null;
+    if (!db || !user || !isAdmin) return null;
     return query(collection(db, "stores"));
-  }, [db, user]);
+  }, [db, user, isAdmin]);
 
   const allOrdersQuery = useMemoFirebase(() => {
-    if (!db || !user) return null;
+    if (!db || !user || !isAdmin) return null;
     return query(collection(db, "orders"));
-  }, [db, user]);
+  }, [db, user, isAdmin]);
 
   const productsQuery = useMemoFirebase(() => {
-    if (!db || !user) return null;
+    if (!db || !user || !isAdmin) return null;
     return collection(db, "products");
-  }, [db, user]);
+  }, [db, user, isAdmin]);
 
   const { data: stores, isLoading: storesLoading } = useCollection(storesQuery);
   const { data: orders, isLoading: ordersLoading } = useCollection(allOrdersQuery);
@@ -90,7 +96,11 @@ export default function AdminOverview() {
     }
   };
 
-  if (storesLoading || ordersLoading || productsLoading || !isClient) {
+  if (!isClient || !isAdmin) {
+    return null;
+  }
+
+  if (storesLoading || ordersLoading || productsLoading) {
     return (
       <div className="flex h-[60vh] items-center justify-center">
         <Loader2 className="h-10 w-10 animate-spin text-primary opacity-50" />
