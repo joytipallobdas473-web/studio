@@ -8,6 +8,8 @@ import { doc } from "firebase/firestore";
 import { Navbar } from "@/components/navbar";
 import { Loader2 } from "lucide-react";
 
+const MASTER_ADMIN_UID = "j96izCkggNcL002AHiJjzGb18Bf2";
+
 export default function DashboardLayout({
   children,
 }: {
@@ -30,9 +32,16 @@ export default function DashboardLayout({
       return;
     }
 
-    // Compulsory Registration check
-    if (!isUserLoading && !storeLoading && user && !store) {
-      router.push("/register");
+    if (!isUserLoading && !storeLoading && user) {
+      const isAdmin = user.email?.toLowerCase().includes("admin") || user.uid === MASTER_ADMIN_UID;
+      if (isAdmin) {
+        router.push("/admin");
+        return;
+      }
+      
+      if (!store) {
+        router.push("/register");
+      }
     }
   }, [user, isUserLoading, store, storeLoading, router]);
 
@@ -47,10 +56,9 @@ export default function DashboardLayout({
     );
   }
 
-  // If we have a user but no store yet, the useEffect will handle the redirect.
-  // We return null here to prevent content flicker before redirect.
   if (user && !store && !storeLoading) {
-    return null;
+    const isAdmin = user.email?.toLowerCase().includes("admin") || user.uid === MASTER_ADMIN_UID;
+    if (!isAdmin) return null;
   }
 
   return (

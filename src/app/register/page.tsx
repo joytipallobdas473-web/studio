@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, useEffect } from "react";
@@ -57,11 +58,14 @@ export default function RegisterPage() {
 
   const { data: store, isLoading: storeLoading } = useDoc(storeRef);
 
-  // Auto-redirect if already fully registered
   useEffect(() => {
-    if (!isUserLoading && !storeLoading && user && store && isClient && !isSuccess) {
+    if (!isUserLoading && !storeLoading && user && isClient && !isSuccess) {
       const isAdmin = user.email?.toLowerCase().includes("admin") || user.uid === MASTER_ADMIN_UID;
-      router.push(isAdmin ? "/admin" : "/dashboard");
+      if (isAdmin) {
+        router.push("/admin");
+      } else if (store) {
+        router.push("/dashboard");
+      }
     }
   }, [user, isUserLoading, store, storeLoading, router, isClient, isSuccess]);
 
@@ -153,10 +157,15 @@ export default function RegisterPage() {
   return (
     <div className="min-h-screen flex flex-col items-center justify-center p-6 bg-[#ECF0F5]">
       <div className="w-full max-w-2xl space-y-8 pb-12 animate-in fade-in duration-700">
-        <Link href="/" className="flex items-center gap-2 text-slate-400 hover:text-primary transition-colors font-black text-[10px] uppercase tracking-widest group">
-          <ArrowLeft className="h-3 w-3 group-hover:-translate-x-1 transition-transform" />
-          Hub Selection
-        </Link>
+        <div className="flex justify-between items-center">
+          <Link href="/" className="flex items-center gap-2 text-slate-400 hover:text-primary transition-colors font-black text-[10px] uppercase tracking-widest group">
+            <ArrowLeft className="h-3 w-3 group-hover:-translate-x-1 transition-transform" />
+            Hub Selection
+          </Link>
+          <Link href="/login" className="text-[10px] font-black text-primary hover:underline uppercase tracking-widest">
+            Already registered? Sign in
+          </Link>
+        </div>
 
         <div className="text-center space-y-3">
           <div className="bg-primary p-5 rounded-[2rem] shadow-xl inline-block mb-4">

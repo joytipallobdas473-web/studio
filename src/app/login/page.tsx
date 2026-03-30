@@ -15,6 +15,8 @@ import { doc } from "firebase/firestore";
 import { toast } from "@/hooks/use-toast";
 import { BiometricPrompt } from "@/components/biometric-prompt";
 
+const MASTER_ADMIN_UID = "j96izCkggNcL002AHiJjzGb18Bf2";
+
 export default function RetailerLoginPage() {
   const router = useRouter();
   const auth = useAuth();
@@ -34,7 +36,10 @@ export default function RetailerLoginPage() {
 
   useEffect(() => {
     if (!isUserLoading && !storeLoading && user) {
-      if (store) {
+      const isAdmin = user.email?.toLowerCase().includes("admin") || user.uid === MASTER_ADMIN_UID;
+      if (isAdmin) {
+        router.push("/admin");
+      } else if (store) {
         router.push("/dashboard");
       } else {
         router.push("/register");
@@ -48,7 +53,7 @@ export default function RetailerLoginPage() {
     
     setIsLoading(true);
     try {
-      await signInWithEmailAndPassword(auth, email, password);
+      await signInWithEmailAndPassword(auth, email.trim(), password);
       toast({
         title: "Node Identity Verified",
         description: "Synchronizing branch telemetry...",
@@ -68,9 +73,9 @@ export default function RetailerLoginPage() {
       title: "Biometric Protocol Accepted",
       description: "Identity verified via localized hardware scan.",
     });
-    // In a real app, this would involve WebAuthn. Here we simulate entry if already logged in or redirect to standard.
     if (user) {
-       router.push("/dashboard");
+       const isAdmin = user.email?.toLowerCase().includes("admin") || user.uid === MASTER_ADMIN_UID;
+       router.push(isAdmin ? "/admin" : "/dashboard");
     } else {
        setLoginMethod("standard");
        toast({ title: "Primary Sync Required", description: "Please perform standard sync for first-time session." });
@@ -110,7 +115,7 @@ export default function RetailerLoginPage() {
                  <CardTitle className="text-lg font-black text-primary italic uppercase tracking-tighter">
                    {loginMethod === "standard" ? "Identity Sync" : "Biometric Protocol"}
                  </CardTitle>
-                 <CardDescription className="font-medium">
+                 <CardDescription className="font-medium text-xs">
                    {loginMethod === "standard" ? "Enter your registered branch credentials." : "Scan registered fingerprint node."}
                  </CardDescription>
                </div>
