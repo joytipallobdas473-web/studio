@@ -84,10 +84,10 @@ export default function AdminLoginPage() {
             <ShieldAlert className="h-10 w-10 text-white" />
           </div>
           <h1 className="text-5xl font-black text-white tracking-tighter uppercase italic leading-none">Command Terminal</h1>
-          <p className="text-accent font-black flex items-center justify-center gap-4 text-[11px] uppercase tracking-[0.6em]">
+          <div className="text-accent font-black flex items-center justify-center gap-4 text-[11px] uppercase tracking-[0.6em]">
              <div className="h-1.5 w-1.5 rounded-full bg-accent animate-ping" />
              Restricted Regional Access
-          </p>
+          </div>
         </div>
 
         {error && (
