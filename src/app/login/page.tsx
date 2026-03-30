@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
-import { Boxes, Mail, Lock, Loader2, ArrowLeft, ChevronRight, MapPin, Store, Fingerprint, Keyboard } from "lucide-react";
+import { Mail, Lock, Loader2, ArrowLeft, ChevronRight, MapPin, Store, Fingerprint, Keyboard } from "lucide-react";
 import { useAuth, useUser, useFirestore, useDoc, useMemoFirebase } from "@/firebase";
 import { signInWithEmailAndPassword } from "firebase/auth";
 import { doc } from "firebase/firestore";
@@ -93,9 +93,9 @@ export default function RetailerLoginPage() {
   return (
     <div className="min-h-screen flex flex-col items-center justify-center p-6 bg-[#ECF0F5]">
       <div className="w-full max-w-md space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
-        <Link href="/" className="flex items-center gap-2 text-slate-500 hover:text-primary transition-colors font-bold text-xs uppercase tracking-widest group">
+        <Link href="/admin" className="flex items-center gap-2 text-slate-400 hover:text-primary transition-colors font-bold text-xs uppercase tracking-widest group">
           <ArrowLeft className="h-4 w-4 group-hover:-translate-x-1 transition-transform" />
-          Hub Selection
+          Switch to Admin Console
         </Link>
 
         <div className="text-center space-y-2">

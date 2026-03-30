@@ -161,9 +161,9 @@ export default function RegisterPage() {
     <div className="min-h-screen flex flex-col items-center justify-center p-6 bg-[#ECF0F5]">
       <div className="w-full max-w-2xl space-y-8 pb-12 animate-in fade-in duration-700">
         <div className="flex justify-between items-center">
-          <Link href="/" className="flex items-center gap-2 text-slate-400 hover:text-primary transition-colors font-black text-[10px] uppercase tracking-widest group">
+          <Link href="/admin" className="flex items-center gap-2 text-slate-400 hover:text-primary transition-colors font-black text-[10px] uppercase tracking-widest group">
             <ArrowLeft className="h-3 w-3 group-hover:-translate-x-1 transition-transform" />
-            Hub Selection
+            Switch to Admin Console
           </Link>
           <Link href="/login" className="text-[10px] font-black text-primary hover:underline uppercase tracking-widest">
             Already registered? Sign in

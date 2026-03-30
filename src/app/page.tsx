@@ -3,26 +3,9 @@
 
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
-import Link from "next/link";
-import { Button } from "@/components/ui/button";
-import { 
-  ShieldCheck, 
-  Loader2, 
-  MapPin, 
-  Boxes,
-  UserPlus,
-  ArrowRight,
-  ChevronRight,
-  ShieldAlert,
-  Globe,
-  Zap,
-  Network,
-  Share2
-} from "lucide-react";
 import { useUser, useFirestore, useDoc, useMemoFirebase } from "@/firebase";
 import { doc } from "firebase/firestore";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { toast } from "@/hooks/use-toast";
+import { Loader2 } from "lucide-react";
 
 const MASTER_ADMIN_UID = "j96izCkggNcL002AHiJjzGb18Bf2";
 
@@ -38,116 +21,36 @@ export default function Home() {
 
   const { data: store, isLoading: storeLoading } = useDoc(storeRef);
 
-  // Instant redirect for authenticated users
+  // Direct Command Routing: Priority redirect to Admin Panel
   useEffect(() => {
-    if (!isUserLoading && user) {
-      const isAdmin = user.email?.toLowerCase().includes("admin") || user.uid === MASTER_ADMIN_UID;
-      if (isAdmin) {
+    if (!isUserLoading) {
+      if (user) {
+        const isAdmin = user.email?.toLowerCase().includes("admin") || user.uid === MASTER_ADMIN_UID;
+        if (isAdmin) {
+          router.push("/admin");
+        } else if (!storeLoading) {
+          if (store) {
+            router.push("/dashboard");
+          } else {
+            router.push("/register");
+          }
+        }
+      } else {
+        // Default entry for unauthenticated users is now the Admin Console
         router.push("/admin");
-      } else if (!storeLoading && store) {
-        router.push("/dashboard");
       }
     }
   }, [user, isUserLoading, store, storeLoading, router]);
 
-  const handleShareSystem = () => {
-    if (typeof window !== 'undefined') {
-      const url = window.location.href;
-      navigator.clipboard.writeText(url);
-      toast({
-        title: "Protocol Link Copied",
-        description: "Regional hub address saved to clipboard.",
-      });
-    }
-  };
-
-  if (isUserLoading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-[#ECF0F5]">
-        <Loader2 className="h-8 w-8 animate-spin text-primary" />
-      </div>
-    );
-  }
-
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center p-6 bg-[#ECF0F5]">
-      <div className="max-w-4xl w-full space-y-12 animate-in fade-in duration-1000">
-        <div className="flex flex-col items-center text-center space-y-4">
-          <div className="bg-primary p-4 rounded-[2rem] shadow-xl">
-            <Boxes className="h-12 w-12 text-white" />
-          </div>
-          <div className="space-y-1">
-            <h1 className="text-5xl font-black tracking-tighter text-slate-900 uppercase italic leading-none">NE Retail Hub</h1>
-            <p className="text-slate-500 font-bold flex items-center justify-center gap-3 text-[10px] uppercase tracking-[0.4em]">
-              <MapPin className="h-4 w-4 text-accent" /> North East Regional Logistics
-            </p>
-          </div>
+    <div className="min-h-screen flex items-center justify-center bg-[#ECF0F5]">
+      <div className="flex flex-col items-center gap-4 text-center">
+        <div className="bg-primary p-4 rounded-2xl shadow-xl animate-pulse">
+          <Loader2 className="h-10 w-10 animate-spin text-white" />
         </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-          <Card className="border-none shadow-sm hover:shadow-2xl transition-all duration-500 bg-white rounded-[3rem] overflow-hidden group">
-            <CardHeader className="pt-12 text-center">
-              <div className="mx-auto bg-primary/5 p-6 rounded-3xl text-primary group-hover:scale-110 transition-transform">
-                <UserPlus className="h-10 w-10" />
-              </div>
-              <CardTitle className="text-2xl font-black pt-6 uppercase italic tracking-tight">Branch Portal</CardTitle>
-              <CardDescription className="px-8 font-medium text-slate-500">Compulsory registration and inventory requests for retailer nodes.</CardDescription>
-            </CardHeader>
-            <CardContent className="pb-12 px-12 space-y-4">
-              <Link href="/register">
-                <Button className="w-full h-16 rounded-2xl bg-accent text-primary hover:bg-primary hover:text-white font-black text-xs transition-all uppercase tracking-widest shadow-lg">
-                  Register Branch <ArrowRight className="ml-3 h-5 w-5" />
-                </Button>
-              </Link>
-              <Link href="/login" className="block text-center text-[10px] font-black text-slate-400 uppercase tracking-widest hover:text-primary transition-colors">
-                Already registered? Sign in
-              </Link>
-            </CardContent>
-          </Card>
-
-          <Card className="border-none shadow-sm hover:shadow-2xl transition-all duration-500 bg-slate-900 rounded-[3rem] overflow-hidden group">
-            <CardHeader className="pt-12 text-center">
-              <div className="mx-auto bg-white/5 p-6 rounded-3xl text-accent group-hover:rotate-12 transition-transform">
-                <ShieldAlert className="h-10 w-10" />
-              </div>
-              <CardTitle className="text-2xl font-black pt-6 uppercase italic tracking-tight text-white">Command Console</CardTitle>
-              <CardDescription className="px-8 font-medium text-slate-500">Regional controller access for grid monitoring and SKU authorization.</CardDescription>
-            </CardHeader>
-            <CardContent className="pb-12 px-12">
-              <Link href="/admin/login">
-                <Button className="w-full h-16 rounded-2xl bg-white text-primary hover:bg-accent hover:text-primary font-black text-xs shadow-lg transition-all uppercase tracking-widest">
-                  Secure Identity Login <ChevronRight className="ml-3 h-5 w-5" />
-                </Button>
-              </Link>
-            </CardContent>
-          </Card>
-        </div>
-
-        <div className="bg-white/50 backdrop-blur-sm rounded-[2.5rem] p-8 md:p-12 border border-white/50 space-y-8">
-           <div className="flex flex-col md:flex-row items-center justify-between gap-8">
-              <div className="flex items-center gap-4">
-                <div className="h-12 w-12 rounded-2xl bg-primary/10 flex items-center justify-center">
-                  <Network className="h-6 w-6 text-primary" />
-                </div>
-                <div>
-                  <h4 className="font-black text-slate-900 uppercase italic tracking-tight">Regional Integrity</h4>
-                  <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Global Synchronization Active</p>
-                </div>
-              </div>
-              <div className="flex flex-wrap justify-center gap-8 text-[10px] text-slate-400 font-black uppercase tracking-[0.4em]">
-                <span className="flex items-center gap-3"><ShieldCheck className="h-4 w-4 text-emerald-500" /> Secure Grid</span>
-                <span className="flex items-center gap-3"><Globe className="h-4 w-4 text-accent" /> NE Cluster</span>
-                <button onClick={handleShareSystem} className="flex items-center gap-3 hover:text-primary transition-colors">
-                  <Share2 className="h-4 w-4" /> Share Hub
-                </button>
-              </div>
-           </div>
-        </div>
-
-        <div className="text-center">
-          <p className="text-[9px] text-slate-400 font-black uppercase tracking-[0.4em] opacity-40">
-            Proprietary Logistics Architecture • v2.8 PRD • North East Regional Grid
-          </p>
+        <div className="space-y-1">
+          <p className="text-[10px] font-black uppercase tracking-[0.4em] text-primary">Regional Logistics Grid</p>
+          <p className="text-sm font-black uppercase italic tracking-tighter text-slate-400">Initializing Command Console...</p>
         </div>
       </div>
     </div>

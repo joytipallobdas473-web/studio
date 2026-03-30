@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, useEffect } from "react";
@@ -72,9 +73,9 @@ export default function AdminLoginPage() {
   return (
     <div className="min-h-screen flex flex-col items-center justify-center p-4 md:p-6 bg-[#020617]">
       <div className="w-full max-w-md space-y-6 md:space-y-8 animate-in fade-in duration-1000">
-        <Link href="/" className="flex items-center gap-2 text-slate-500 hover:text-primary transition-colors font-black text-[10px] uppercase tracking-widest group">
+        <Link href="/login" className="flex items-center gap-2 text-slate-500 hover:text-primary transition-colors font-black text-[10px] uppercase tracking-widest group">
           <ArrowLeft className="h-3 w-3 group-hover:-translate-x-1 transition-transform" />
-          Abort to Selection
+          Switch to Branch Portal
         </Link>
 
         <div className="text-center space-y-3">
