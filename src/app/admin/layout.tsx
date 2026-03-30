@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useEffect } from "react";
@@ -87,13 +88,15 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   const pathname = usePathname();
 
   useEffect(() => {
-    if (!isUserLoading && !user && pathname !== "/admin/login") {
-      router.push("/admin/login");
-    } else if (!isUserLoading && user && pathname !== "/admin/login") {
-      const isAdmin = user.email?.toLowerCase().includes("admin") || user.uid === MASTER_ADMIN_UID;
-      if (!isAdmin) {
-        router.push("/");
-        toast({ title: "Restricted Node", description: "Admin identity required.", variant: "destructive" });
+    if (!isUserLoading) {
+      if (!user && pathname !== "/admin/login") {
+        router.push("/admin/login");
+      } else if (user && pathname !== "/admin/login") {
+        const isAdmin = user.email?.toLowerCase().includes("admin") || user.uid === MASTER_ADMIN_UID;
+        if (!isAdmin) {
+          router.push("/");
+          toast({ title: "Restricted Node", description: "Admin identity required.", variant: "destructive" });
+        }
       }
     }
   }, [user, isUserLoading, router, pathname]);
