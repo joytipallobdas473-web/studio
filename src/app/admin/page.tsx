@@ -2,7 +2,7 @@
 "use client";
 
 import { useState, useMemo, useEffect } from "react";
-import { useFirestore, useCollection, useMemoFirebase } from "@/firebase";
+import { useFirestore, useCollection, useMemoFirebase, useUser } from "@/firebase";
 import { collection, query, limit } from "firebase/firestore";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Store, Package, ShoppingCart, AlertCircle, Loader2, BrainCircuit, Activity, Zap, Share2 } from "lucide-react";
@@ -15,6 +15,7 @@ import { format } from "date-fns";
 
 export default function AdminOverview() {
   const db = useFirestore();
+  const { user } = useUser();
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [aiAnalysis, setAiAnalysis] = useState<InventoryAnalysisOutput | null>(null);
   const [isClient, setIsClient] = useState(false);
@@ -24,19 +25,19 @@ export default function AdminOverview() {
   }, []);
 
   const storesQuery = useMemoFirebase(() => {
-    if (!db) return null;
+    if (!db || !user) return null;
     return query(collection(db, "stores"));
-  }, [db]);
+  }, [db, user]);
 
   const allOrdersQuery = useMemoFirebase(() => {
-    if (!db) return null;
+    if (!db || !user) return null;
     return query(collection(db, "orders"));
-  }, [db]);
+  }, [db, user]);
 
   const productsQuery = useMemoFirebase(() => {
-    if (!db) return null;
+    if (!db || !user) return null;
     return collection(db, "products");
-  }, [db]);
+  }, [db, user]);
 
   const { data: stores, isLoading: storesLoading } = useCollection(storesQuery);
   const { data: orders, isLoading: ordersLoading } = useCollection(allOrdersQuery);

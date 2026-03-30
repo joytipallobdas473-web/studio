@@ -106,6 +106,12 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     return <>{children}</>;
   }
 
+  // Prevent admin components from mounting if the user is not a verified administrator
+  const isAdmin = user?.email?.toLowerCase().includes("admin");
+  if (!user || !isAdmin) {
+    return null;
+  }
+
   return (
     <SidebarProvider defaultOpen={true}>
       <div className="flex min-h-screen w-full bg-[#ECF0F5]">
