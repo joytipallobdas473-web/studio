@@ -30,7 +30,7 @@
     "Order": {
       "title": "Order",
       "type": "object",
-      "description": "A stock request from a retailer.",
+      "description": "A stock request or damage return from a retailer.",
       "properties": {
         "id": { "type": "string" },
         "userId": { "type": "string" },
@@ -96,7 +96,7 @@
     },
     "/orders/{orderId}": {
       "schema": "Order",
-      "description": "Consolidated store orders."
+      "description": "Consolidated store orders and damage reports."
     },
     "/stores/{storeId}": {
       "schema": "Store",

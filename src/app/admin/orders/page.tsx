@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Download, Search, FileText, Filter, Loader2, Phone, MapPin, Mail, Globe, CheckCircle2, Banknote, CreditCard } from "lucide-react";
+import { Download, Search, FileText, Filter, Loader2, Phone, MapPin, Mail, Globe, CheckCircle2, Banknote, CreditCard, AlertTriangle } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
 import { format } from "date-fns";
 import { updateDocumentNonBlocking } from "@/firebase";
@@ -24,8 +24,8 @@ const STATUS_OPTIONS = [
   { value: "shipped", label: "Shipped" },
   { value: "delivered", label: "Delivered" },
   { value: "cancelled", label: "Cancelled" },
-  { value: "return_pending", label: "Return Pending" },
-  { value: "returned", label: "Returned" },
+  { value: "return_pending", label: "Damage Reported" },
+  { value: "returned", label: "Damage Resolved" },
 ];
 
 export default function AdminOrdersPage() {
@@ -283,8 +283,8 @@ export default function AdminOrdersPage() {
                           <SelectItem value="shipped" className="text-[10px] font-black tracking-widest uppercase">SHIPPED</SelectItem>
                           <SelectItem value="delivered" className="text-[10px] font-black tracking-widest uppercase text-emerald-500">DELIVERED</SelectItem>
                           <SelectItem value="cancelled" className="text-[10px] font-black tracking-widest uppercase text-rose-500">CANCELLED</SelectItem>
-                          <SelectItem value="return_pending" className="text-[10px] font-black tracking-widest uppercase text-orange-500">RETURN REQ</SelectItem>
-                          <SelectItem value="returned" className="text-[10px] font-black tracking-widest uppercase text-slate-400">RETURNED</SelectItem>
+                          <SelectItem value="return_pending" className="text-[10px] font-black tracking-widest uppercase text-orange-500">DAMAGE REPT</SelectItem>
+                          <SelectItem value="returned" className="text-[10px] font-black tracking-widest uppercase text-slate-400">DMG RESOLVED</SelectItem>
                         </SelectContent>
                       </Select>
                     </TableCell>
@@ -339,8 +339,8 @@ export default function AdminOrdersPage() {
                     <SelectItem value="shipped" className="text-[10px] font-black tracking-widest uppercase">SHIPPED</SelectItem>
                     <SelectItem value="delivered" className="text-[10px] font-black tracking-widest uppercase text-emerald-500">DELIVERED</SelectItem>
                     <SelectItem value="cancelled" className="text-[10px] font-black tracking-widest uppercase text-rose-500">CANCELLED</SelectItem>
-                    <SelectItem value="return_pending" className="text-[10px] font-black tracking-widest uppercase text-orange-500">RETURN REQ</SelectItem>
-                    <SelectItem value="returned" className="text-[10px] font-black tracking-widest uppercase text-slate-400">RETURNED</SelectItem>
+                    <SelectItem value="return_pending" className="text-[10px] font-black tracking-widest uppercase text-orange-500">DAMAGE REPT</SelectItem>
+                    <SelectItem value="returned" className="text-[10px] font-black tracking-widest uppercase text-slate-400">DMG RESOLVED</SelectItem>
                   </SelectContent>
                 </Select>
             </div>
@@ -372,7 +372,7 @@ export default function AdminOrdersPage() {
                </Button>
             </div>
           </Card>
-        )) : null}
+        ))}
       </div>
     </div>
   );

@@ -17,7 +17,8 @@ import {
   RotateCcw,
   CheckCircle2,
   AlertCircle,
-  Undo2
+  Undo2,
+  AlertTriangle
 } from "lucide-react";
 import Link from "next/link";
 import { Badge } from "@/components/ui/badge";
@@ -74,7 +75,7 @@ export default function DashboardPage() {
     });
   }, [rawOrders]);
 
-  // Products that have been delivered and are eligible for return
+  // Products that have been delivered and are eligible for damage return
   const returnableProducts = useMemo(() => {
     if (!orders) return [];
     // Get unique delivered items
@@ -149,14 +150,14 @@ export default function DashboardPage() {
     setIsSubmittingReturn(true);
 
     const returnData = {
-      items: `RETURN: ${item.name}`,
+      items: `DAMAGE REPORT: ${item.name}`,
       productId: item.productId || "",
       userId: user.uid,
-      quantity: 1, // Defaulting to 1 for return request
+      quantity: 1, 
       total: item.pricePerUnit,
       phoneNumber: store?.phoneNumber || "",
       deliveryAddress: store?.location || "",
-      paymentMethod: "cash", // Logic placeholder
+      paymentMethod: "cash", 
       email: store?.email || user.email || "",
       status: "return_pending",
       storeName: store?.name || "Retailer Node",
@@ -167,11 +168,11 @@ export default function DashboardPage() {
       .then(() => {
         setIsSubmittingReturn(false);
         setIsReturnDialogOpen(false);
-        toast({ title: "Return Initialized", description: "Request sent to regional logistics hub." });
+        toast({ title: "Damage Report Filed", description: "Request sent to regional logistics hub for verification." });
       })
       .catch(() => {
         setIsSubmittingReturn(false);
-        toast({ title: "Network Failure", description: "Could not transmit return packet.", variant: "destructive" });
+        toast({ title: "Network Failure", description: "Could not transmit damage report.", variant: "destructive" });
       });
   };
 
@@ -205,8 +206,8 @@ export default function DashboardPage() {
             onClick={() => setIsReturnDialogOpen(true)}
             className="h-14 rounded-2xl px-6 border-slate-200 text-slate-600 font-black uppercase tracking-widest text-[11px]"
           >
-            <RotateCcw className="mr-3 h-5 w-5 text-orange-500" />
-            Stock Return
+            <AlertTriangle className="mr-3 h-5 w-5 text-orange-500" />
+            Damage Return
           </Button>
           <Link href="/dashboard/order">
             <Button className="bg-primary text-white font-black hover:scale-105 transition-all shadow-lg h-14 rounded-2xl px-8 uppercase tracking-widest text-[11px]">
@@ -258,7 +259,7 @@ export default function DashboardPage() {
                   <div className="flex items-center justify-between sm:justify-end gap-10">
                     <p className="text-base font-black text-slate-900 font-mono">${(order.total || 0).toFixed(2)}</p>
                     <Badge className={cn("capitalize h-9 px-5 font-black rounded-xl text-[9px] tracking-widest uppercase border", getStatusColor(order.status))}>
-                      {order.status}
+                      {order.status === 'return_pending' ? 'Damage Reported' : order.status}
                     </Badge>
                   </div>
                 </div>
@@ -306,15 +307,15 @@ export default function DashboardPage() {
         </Card>
       </div>
 
-      {/* Stock Return Dialog */}
+      {/* Damage Return Dialog */}
       <Dialog open={isReturnDialogOpen} onOpenChange={setIsReturnDialogOpen}>
         <DialogContent className="rounded-[2.5rem] border-none p-10 bg-white max-w-2xl shadow-2xl">
           <DialogHeader>
             <DialogTitle className="text-2xl font-black text-primary uppercase italic tracking-tighter flex items-center gap-3">
-              <Undo2 className="h-6 w-6" /> Reverse Logistics
+              <AlertTriangle className="h-6 w-6" /> Damage Reporting
             </DialogTitle>
             <DialogDescription className="font-medium text-slate-500 pt-2">
-              Select delivered items to return to the regional hub. Only products from confirmed 'Delivered' orders are eligible.
+              Report damaged items from your confirmed deliveries. The regional hub will review the claim for credit processing.
             </DialogDescription>
           </DialogHeader>
 
@@ -325,7 +326,7 @@ export default function DashboardPage() {
                   <div key={idx} className="flex items-center justify-between p-6 bg-slate-50 rounded-2xl border border-slate-100 group hover:border-primary/30 transition-all">
                     <div className="space-y-1">
                       <h4 className="font-black text-slate-900 uppercase italic text-sm">{item.name}</h4>
-                      <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Available: {item.totalQuantity} Units</p>
+                      <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Received Density: {item.totalQuantity} Units</p>
                     </div>
                     <Button 
                       size="sm" 
@@ -333,7 +334,7 @@ export default function DashboardPage() {
                       disabled={isSubmittingReturn}
                       className="h-10 px-6 rounded-xl bg-primary text-white font-black uppercase text-[9px] tracking-widest"
                     >
-                      {isSubmittingReturn ? <Loader2 className="h-4 w-4 animate-spin" /> : "Initiate Return"}
+                      {isSubmittingReturn ? <Loader2 className="h-4 w-4 animate-spin" /> : "Report Damage"}
                     </Button>
                   </div>
                 ))}
@@ -341,14 +342,14 @@ export default function DashboardPage() {
             ) : (
               <div className="text-center py-20 bg-slate-50 rounded-3xl border border-dashed border-slate-200">
                  <AlertCircle className="h-12 w-12 text-slate-300 mx-auto mb-4" />
-                 <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">No eligible return inventory found.</p>
-                 <p className="text-[9px] text-slate-400 uppercase mt-1">Only 'Delivered' orders can be returned.</p>
+                 <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">No delivered stock found.</p>
+                 <p className="text-[9px] text-slate-400 uppercase mt-1">Only successfully delivered packets can be reported for damage.</p>
               </div>
             )}
           </div>
 
           <DialogFooter>
-            <Button variant="ghost" onClick={() => setIsReturnDialogOpen(false)} className="h-12 rounded-xl font-black uppercase tracking-widest text-[10px] text-slate-400">Cancel</Button>
+            <Button variant="ghost" onClick={() => setIsReturnDialogOpen(false)} className="h-12 rounded-xl font-black uppercase tracking-widest text-[10px] text-slate-400">Abort</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
