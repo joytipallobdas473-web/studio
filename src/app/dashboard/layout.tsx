@@ -1,7 +1,7 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
+import { useEffect, useMemo } from "react";
+import { useRouter, usePathname } from "next/navigation";
 import { useUser, useFirestore, useDoc, useMemoFirebase } from "@/firebase";
 import { doc } from "firebase/firestore";
 import { Navbar } from "@/components/navbar";
@@ -15,6 +15,7 @@ export default function DashboardLayout({
   children: React.ReactNode;
 }) {
   const router = useRouter();
+  const pathname = usePathname();
   const { user, isUserLoading } = useUser();
   const db = useFirestore();
 
@@ -26,24 +27,30 @@ export default function DashboardLayout({
   const { data: store, isLoading: storeLoading } = useDoc(storeRef);
 
   useEffect(() => {
+    // 1. If auth is finished and no user, go to login
     if (!isUserLoading && !user) {
       router.push("/login");
       return;
     }
 
+    // 2. If user exists, check role and store status
     if (!isUserLoading && !storeLoading && user) {
       const isAdmin = user.email?.toLowerCase().includes("admin") || user.uid === MASTER_ADMIN_UID;
+      
+      // Redirect Admins to the command console
       if (isAdmin) {
         router.push("/admin");
         return;
       }
       
-      if (!store) {
+      // If a manager has no store record and isn't already on the register page, send them there
+      if (!store && pathname !== "/register") {
         router.push("/register");
       }
     }
-  }, [user, isUserLoading, store, storeLoading, router]);
+  }, [user, isUserLoading, store, storeLoading, router, pathname]);
 
+  // Show a clean loader while verifying the node session
   if (isUserLoading || (user && storeLoading)) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-[#f8fafc]">

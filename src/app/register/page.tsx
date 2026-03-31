@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState, useEffect, useMemo } from "react";
@@ -62,12 +61,12 @@ export default function RegisterPage() {
     return user?.email?.toLowerCase().includes("admin") || user?.uid === MASTER_ADMIN_UID;
   }, [user]);
 
-  // High-priority redirect for Master Admin or verified branch managers
   useEffect(() => {
     if (!isUserLoading && user && isClient) {
       if (isAdmin) {
         router.push("/admin");
       } else if (!storeLoading && store && !isSuccess) {
+        // Only redirect to dashboard if the store actually exists and we didn't just register it
         router.push("/dashboard");
       }
     }
@@ -109,9 +108,8 @@ export default function RegisterPage() {
       });
       
       setTimeout(() => {
-        const adminCheck = currentUser.email?.toLowerCase().includes("admin") || currentUser.uid === MASTER_ADMIN_UID;
-        router.push(adminCheck ? "/admin" : "/dashboard");
-      }, 2500);
+        router.push("/dashboard");
+      }, 2000);
       
     } catch (error: any) {
       setIsLoading(false);
@@ -123,7 +121,6 @@ export default function RegisterPage() {
     }
   };
 
-  // SUCCESS STATE: Must be first to prevent infinite loading spinner
   if (isSuccess) {
     return (
       <div className="min-h-screen flex flex-col items-center justify-center p-6 bg-[#ECF0F5]">
@@ -148,8 +145,7 @@ export default function RegisterPage() {
     );
   }
 
-  // LOADING STATE
-  if (!isClient || isUserLoading || (user && (storeLoading || isAdmin))) {
+  if (!isClient || isUserLoading || (user && storeLoading)) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-[#ECF0F5]">
         <div className="flex flex-col items-center gap-4">

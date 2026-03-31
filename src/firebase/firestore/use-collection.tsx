@@ -83,8 +83,6 @@ export function useCollection<T = any>(
             errorEmitter.emit('permission-error', contextualError);
             setError(contextualError);
           } else {
-            // For non-permission errors (like missing indexes), we set the error state
-            // but do not emit a global error to avoid intrusive UI overlays.
             setError(err);
           }
           
@@ -99,19 +97,15 @@ export function useCollection<T = any>(
     }
 
     return () => {
-      isMounted = true;
+      isMounted = false;
       if (unsubscribe) {
-        try {
-          unsubscribe();
-        } catch (e) {
-          // Ignore errors on unmount
-        }
+        unsubscribe();
       }
     };
   }, [memoizedTargetRefOrQuery]);
 
   if (memoizedTargetRefOrQuery && !memoizedTargetRefOrQuery.__memo) {
-    throw new Error('Firestore target was not properly memoized using useMemoFirebase.');
+    console.warn('Firestore target was not properly memoized. Use useMemoFirebase to avoid infinite loops.');
   }
 
   return { data, isLoading, error };

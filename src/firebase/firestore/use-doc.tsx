@@ -72,7 +72,6 @@ export function useDoc<T = any>(
             errorEmitter.emit('permission-error', contextualError);
             setError(contextualError);
           } else {
-            // Set error state but do not emit global error to avoid overlays
             setError(err);
           }
 
@@ -89,17 +88,14 @@ export function useDoc<T = any>(
     return () => {
       isMounted = false;
       if (unsubscribe) {
-        try {
-          unsubscribe();
-        } catch (e) {
-          // Ignore errors on unmount
-        }
+        unsubscribe();
       }
     };
   }, [memoizedDocRef]);
 
+  // Only perform the safety check if a reference is actually provided
   if (memoizedDocRef && !memoizedDocRef.__memo) {
-    throw new Error('Firestore target was not properly memoized using useMemoFirebase.');
+    console.warn(`Firestore reference at ${memoizedDocRef.path} was not properly memoized. Use useMemoFirebase to avoid infinite loops.`);
   }
 
   return { data, isLoading, error };
