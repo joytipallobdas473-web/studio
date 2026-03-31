@@ -92,31 +92,32 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   const [authorized, setAuthorized] = useState<boolean | null>(null);
 
   useEffect(() => {
-    if (!isUserLoading) {
-      if (!user) {
-        if (pathname !== "/admin/login") {
-          router.push("/admin/login");
-        }
+    if (isUserLoading) return;
+
+    if (!user) {
+      if (pathname !== "/admin/login") {
+        router.push("/admin/login");
+      }
+    } else {
+      const isAdmin = user.email?.toLowerCase().includes("admin") || user.uid === MASTER_ADMIN_UID;
+      if (isAdmin) {
+        setAuthorized(true);
       } else {
-        const isAdmin = user.email?.toLowerCase().includes("admin") || user.uid === MASTER_ADMIN_UID;
-        if (isAdmin) {
-          setAuthorized(true);
-        } else {
-          setAuthorized(false);
-          if (pathname !== "/admin/login") {
-            router.push("/dashboard");
-            toast({ 
-              title: "Access Restricted", 
-              description: "Manager nodes are restricted to the Branch Portal.", 
-              variant: "destructive" 
-            });
-          }
+        setAuthorized(false);
+        if (pathname !== "/admin/login") {
+          router.push("/dashboard");
+          toast({ 
+            title: "Access Restricted", 
+            description: "Manager nodes are restricted to the Branch Portal.", 
+            variant: "destructive" 
+          });
         }
       }
     }
   }, [user, isUserLoading, router, pathname]);
 
-  if (isUserLoading || authorized === null || (authorized === false && pathname !== "/admin/login")) {
+  // Always show loader if we're resolving auth or authorization
+  if (isUserLoading || (user && authorized === null)) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-[#020617]">
         <div className="flex flex-col items-center gap-6 text-primary">
@@ -125,6 +126,11 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         </div>
       </div>
     );
+  }
+
+  // Handle unauthorized state (unless on login page)
+  if (authorized === false && pathname !== "/admin/login") {
+    return null;
   }
 
   if (pathname === "/admin/login") {
@@ -150,7 +156,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
               <div className="ml-auto flex items-center gap-10">
                 <div className="hidden md:flex flex-col items-end">
                   <span className="text-[9px] font-black text-primary uppercase tracking-[0.3em]">Master Identity</span>
-                  <span className="text-[10px] font-bold text-muted-foreground tracking-tight mt-1">{user?.email}</span>
+                  <span className="text-[10px] font-bold text-muted-foreground tracking-tight mt-1">{user?.email || "Master"}</span>
                 </div>
                 <Button variant="ghost" size="icon" className="h-12 w-12 rounded-2xl text-muted-foreground hover:text-rose-500 hover:bg-rose-500/10 transition-all" onClick={async () => {
                   await signOut(auth);

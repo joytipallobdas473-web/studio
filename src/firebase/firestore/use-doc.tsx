@@ -44,11 +44,10 @@ export function useDoc<T = any>(
       return;
     }
 
-    // Set loading state only if not already loading
     setIsLoading(true);
 
     try {
-      unsubscribeRef.current = onSnapshot(
+      const unsubscribe = onSnapshot(
         memoizedDocRef,
         (snapshot: DocumentSnapshot<DocumentData>) => {
           if (!isMounted) return;
@@ -79,6 +78,7 @@ export function useDoc<T = any>(
           setIsLoading(false);
         }
       );
+      unsubscribeRef.current = unsubscribe;
     } catch (err) {
       if (isMounted) {
         setIsLoading(false);
@@ -89,10 +89,12 @@ export function useDoc<T = any>(
     return () => {
       isMounted = false;
       if (unsubscribeRef.current) {
-        const unsubscribe = unsubscribeRef.current;
+        const unsubscribeFunc = unsubscribeRef.current;
         unsubscribeRef.current = null;
-        // Small delay to prevent internal assertion failure on rapid unmount
-        setTimeout(() => unsubscribe(), 0);
+        // Crucial: Defer unsubscription to prevent internal SDK assertion errors
+        setTimeout(() => {
+          unsubscribeFunc();
+        }, 0);
       }
     };
   }, [memoizedDocRef]);

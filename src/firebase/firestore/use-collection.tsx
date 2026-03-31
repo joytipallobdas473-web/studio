@@ -53,7 +53,7 @@ export function useCollection<T = any>(
     setIsLoading(true);
 
     try {
-      unsubscribeRef.current = onSnapshot(
+      const unsubscribe = onSnapshot(
         memoizedTargetRefOrQuery,
         (snapshot: QuerySnapshot<DocumentData>) => {
           if (!isMounted) return;
@@ -89,6 +89,7 @@ export function useCollection<T = any>(
           setIsLoading(false);
         }
       );
+      unsubscribeRef.current = unsubscribe;
     } catch (err) {
       if (isMounted) {
         setIsLoading(false);
@@ -99,9 +100,12 @@ export function useCollection<T = any>(
     return () => {
       isMounted = false;
       if (unsubscribeRef.current) {
-        const unsubscribe = unsubscribeRef.current;
+        const unsubscribeFunc = unsubscribeRef.current;
         unsubscribeRef.current = null;
-        setTimeout(() => unsubscribe(), 0);
+        // Crucial: Defer unsubscription to prevent internal SDK assertion errors
+        setTimeout(() => {
+          unsubscribeFunc();
+        }, 0);
       }
     };
   }, [memoizedTargetRefOrQuery]);

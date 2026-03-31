@@ -91,9 +91,14 @@ export default function AdminOverview() {
     }
   };
 
+  // Prevent rendering if not admin or during initial client load
   if (!isClient || !isAdmin) return null;
 
-  if (storesLoading || ordersLoading || productsLoading) {
+  // Show internal loader only when queries have started but aren't finished
+  const anyLoading = storesLoading || ordersLoading || productsLoading;
+  const allNull = !stores && !orders && !products;
+
+  if (anyLoading && allNull) {
     return (
       <div className="flex h-[60vh] items-center justify-center">
         <Loader2 className="h-10 w-10 animate-spin text-primary opacity-30" />
