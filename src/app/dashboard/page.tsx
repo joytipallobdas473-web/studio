@@ -1,11 +1,10 @@
-
 "use client";
 
 import { useFirestore, useCollection, useUser, useMemoFirebase, useDoc } from "@/firebase";
 import { collection, query, orderBy, limit, doc, where } from "firebase/firestore";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Package, ShoppingCart, ArrowRight, Clock, Truck, PackageCheck, XCircle, PlusCircle, Activity, Loader2, AlertCircle } from "lucide-react";
+import { Package, ShoppingCart, ArrowRight, Truck, PackageCheck, PlusCircle, Activity, Loader2 } from "lucide-react";
 import Link from "next/link";
 import { Badge } from "@/components/ui/badge";
 import { format } from "date-fns";
@@ -43,36 +42,36 @@ export default function DashboardPage() {
 
   const stats = useMemo(() => [
     { 
-      label: "Pending", 
+      label: "Pending Packets", 
       value: orders?.filter(o => o.status === 'pending')?.length?.toString() || "0", 
       icon: ShoppingCart, 
-      color: "text-blue-500", 
+      color: "text-blue-600", 
       bg: "bg-blue-50" 
     },
     { 
-      label: "In Transit", 
+      label: "Regional Transit", 
       value: orders?.filter(o => o.status === 'shipped')?.length?.toString() || "0", 
       icon: Truck, 
-      color: "text-purple-500", 
-      bg: "bg-purple-50" 
+      color: "text-indigo-600", 
+      bg: "bg-indigo-50" 
     },
     { 
-      label: "Delivered", 
+      label: "Stock Logged", 
       value: orders?.filter(o => o.status === 'delivered')?.length?.toString() || "0", 
       icon: PackageCheck, 
-      color: "text-green-500", 
-      bg: "bg-green-50" 
+      color: "text-emerald-600", 
+      bg: "bg-emerald-50" 
     },
   ], [orders]);
 
   const getStatusColor = (status: string) => {
     switch ((status || "").toLowerCase()) {
-      case "delivered": return "text-green-700 bg-green-50 border-green-200";
-      case "processing": return "text-blue-700 bg-blue-50 border-blue-200";
-      case "pending": return "text-yellow-700 bg-yellow-50 border-yellow-200";
-      case "shipped": return "text-purple-700 bg-purple-50 border-purple-200";
-      case "cancelled": return "text-red-700 bg-red-50 border-red-200";
-      default: return "text-gray-700 bg-gray-50 border-gray-200";
+      case "delivered": return "text-emerald-700 bg-emerald-50 border-emerald-100";
+      case "processing": return "text-blue-700 bg-blue-50 border-blue-100";
+      case "pending": return "text-amber-700 bg-amber-50 border-amber-100";
+      case "shipped": return "text-indigo-700 bg-indigo-50 border-indigo-100";
+      case "cancelled": return "text-rose-700 bg-rose-50 border-rose-100";
+      default: return "text-slate-700 bg-slate-50 border-slate-100";
     }
   };
 
@@ -85,110 +84,114 @@ export default function DashboardPage() {
   }
 
   return (
-    <div className="space-y-8 animate-in fade-in duration-500">
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+    <div className="space-y-10 animate-in fade-in duration-700">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 bg-white p-8 rounded-[2rem] border border-slate-100 shadow-sm">
         <div className="space-y-1">
-          <div className="flex items-center gap-2">
-            <h1 className="text-3xl font-bold text-primary">Store Overview</h1>
+          <div className="flex items-center gap-3">
+            <h1 className="text-3xl font-black text-slate-900 uppercase italic tracking-tighter">Branch Overview</h1>
             {store && (
-              <Badge variant="outline" className="font-bold text-[9px] uppercase tracking-widest">
+              <Badge variant="outline" className="font-black text-[9px] uppercase tracking-widest text-primary border-primary/20">
                 {store.status}
               </Badge>
             )}
           </div>
-          <p className="text-muted-foreground font-medium">
-            Monitoring {store?.name || "your branch node"}.
+          <p className="text-slate-500 font-medium text-sm">
+            Node: <span className="text-slate-900 font-black">{store?.name || "Initializing..."}</span>
           </p>
         </div>
         <Link href="/dashboard/order">
-          <Button className="bg-accent text-primary font-black hover:bg-primary hover:text-white shadow-md h-12 rounded-xl px-6 transition-all uppercase tracking-widest text-xs">
-            <PlusCircle className="mr-2 h-5 w-5" />
-            New Order
+          <Button className="bg-primary text-white font-black hover:scale-105 transition-all shadow-lg h-14 rounded-2xl px-8 uppercase tracking-widest text-[11px]">
+            <PlusCircle className="mr-3 h-5 w-5" />
+            New Reorder
           </Button>
         </Link>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         {stats.map((stat, i) => (
-          <Card key={i} className="border-none shadow-sm overflow-hidden bg-white rounded-2xl">
-            <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
-              <CardTitle className="text-xs font-black uppercase tracking-wider text-slate-400">{stat.label}</CardTitle>
-              <div className={`${stat.bg} ${stat.color} p-2 rounded-xl`}>
+          <Card key={i} className="border-none shadow-sm overflow-hidden bg-white rounded-[1.5rem] hover:translate-y-[-2px] transition-all">
+            <CardHeader className="flex flex-row items-center justify-between pb-4">
+              <CardTitle className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">{stat.label}</CardTitle>
+              <div className={cn(stat.bg, stat.color, "p-2.5 rounded-xl")}>
                 <stat.icon className="h-4 w-4" />
               </div>
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold text-slate-900">{stat.value}</div>
+              <div className="text-3xl font-black text-slate-900 tracking-tighter italic">{stat.value}</div>
             </CardContent>
           </Card>
         ))}
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        <Card className="lg:col-span-2 shadow-sm border-none bg-white rounded-3xl overflow-hidden">
-          <CardHeader className="border-b bg-slate-50/50 pb-6">
+        <Card className="lg:col-span-2 shadow-sm border-none bg-white rounded-[2.5rem] overflow-hidden">
+          <CardHeader className="border-b border-slate-50 bg-slate-50/50 p-8">
             <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2 text-primary">
+              <div className="flex items-center gap-3 text-primary">
                 <Activity className="h-5 w-5" />
-                <CardTitle className="text-lg font-bold">Recent Orders</CardTitle>
+                <CardTitle className="text-xl font-black uppercase italic tracking-tighter">Telemetery Log</CardTitle>
               </div>
-              <Badge variant="outline" className="text-[9px] font-black uppercase tracking-tighter bg-emerald-50 text-emerald-700">
-                Live Status
-              </Badge>
+              <Badge className="text-[9px] font-black uppercase tracking-widest bg-emerald-50 text-emerald-600 border-none px-4 py-1.5 rounded-lg">LIVE</Badge>
             </div>
           </CardHeader>
           <CardContent className="p-0">
-            <div className="divide-y divide-slate-100">
+            <div className="divide-y divide-slate-50">
               {orders && orders.length > 0 ? orders.map((order) => (
-                <div key={order.id} className="flex flex-col sm:flex-row sm:items-center justify-between p-5 hover:bg-slate-50 transition-colors gap-4">
+                <div key={order.id} className="flex flex-col sm:flex-row sm:items-center justify-between p-8 hover:bg-slate-50/50 transition-colors gap-6">
                   <div>
-                    <p className="font-bold text-primary flex items-center gap-2 uppercase italic text-xs">
-                      {order.id.substring(0, 8)}
-                      <span className="text-[9px] font-mono text-slate-400 shrink-0">• {(order.createdAt as any)?.toDate ? format((order.createdAt as any).toDate(), 'MMM dd, h:mm a') : 'Syncing'}</span>
+                    <p className="font-black text-primary flex items-center gap-2 uppercase italic text-[10px] tracking-wide">
+                      PKT_{order.id.substring(0, 8)}
+                      <span className="text-[9px] font-bold text-slate-400">• {(order.createdAt as any)?.toDate ? format((order.createdAt as any).toDate(), 'MMM dd, HH:mm') : 'SYNCING'}</span>
                     </p>
-                    <p className="text-sm font-semibold text-slate-700 truncate">{order.items || 'Stock Items'}</p>
+                    <p className="text-sm font-bold text-slate-700 mt-1 uppercase tracking-tight">{order.items || 'Standard Payload'}</p>
                   </div>
-                  <div className="flex items-center justify-between sm:justify-end gap-6">
-                    <p className="text-sm font-black text-slate-900 tracking-tight">${(order.total || 0).toFixed(2)}</p>
-                    <Badge className={`capitalize h-8 px-4 font-bold rounded-xl text-[10px] ${getStatusColor(order.status)}`}>
+                  <div className="flex items-center justify-between sm:justify-end gap-10">
+                    <p className="text-base font-black text-slate-900 font-mono">${(order.total || 0).toFixed(2)}</p>
+                    <Badge className={cn("capitalize h-9 px-5 font-black rounded-xl text-[9px] tracking-widest uppercase border", getStatusColor(order.status))}>
                       {order.status}
                     </Badge>
                   </div>
                 </div>
               )) : (
-                <div className="p-20 text-center text-slate-400 font-medium italic">No recent orders.</div>
+                <div className="py-24 text-center text-slate-400 font-black uppercase text-[10px] tracking-widest italic">Awaiting telemetry sync...</div>
               )}
             </div>
-            <div className="p-4 border-t border-slate-50 bg-slate-50/30">
-              <Link href="/dashboard/history" className="block">
-                <Button variant="ghost" className="w-full text-primary font-bold">
-                  View Full History <ArrowRight className="ml-2 h-4 w-4" />
+            <div className="p-8 border-t border-slate-50 bg-slate-50/30">
+              <Link href="/dashboard/history" className="block text-center">
+                <Button variant="ghost" className="text-primary font-black uppercase tracking-widest text-[10px] hover:bg-primary/5">
+                  Access Full Grid Logs <ArrowRight className="ml-3 h-4 w-4" />
                 </Button>
               </Link>
             </div>
           </CardContent>
         </Card>
 
-        <Card className="bg-primary text-primary-foreground shadow-lg border-none rounded-3xl overflow-hidden">
-          <CardHeader className="bg-white/10">
-            <CardTitle className="text-lg font-bold flex items-center gap-2 uppercase italic">
-              <Package className="h-5 w-5" />
+        <Card className="bg-primary text-white shadow-xl border-none rounded-[2.5rem] overflow-hidden">
+          <CardHeader className="bg-white/10 p-8">
+            <CardTitle className="text-xl font-black flex items-center gap-3 uppercase italic tracking-tighter">
+              <Package className="h-6 w-6" />
               Regional Catalog
             </CardTitle>
           </CardHeader>
-          <CardContent className="pt-6 space-y-4">
+          <CardContent className="p-8 space-y-4">
             {products && products.length > 0 ? products.map((product) => (
               <Link key={product.id} href="/dashboard/order">
-                <Button variant="secondary" className="w-full justify-start text-xs font-bold h-14 bg-white/5 hover:bg-white/10 text-white rounded-xl">
+                <div className="w-full p-5 bg-white/5 hover:bg-white/10 border border-white/5 rounded-2xl transition-all group flex items-center justify-between cursor-pointer">
                   <div className="flex flex-col items-start min-w-0">
-                    <span className="truncate w-full uppercase tracking-tight italic">{product.name}</span>
-                    <span className="text-[9px] opacity-60 font-mono">${(product.price || 0).toFixed(2)}</span>
+                    <span className="font-black text-xs uppercase tracking-tight italic truncate w-full group-hover:text-accent transition-colors">{product.name}</span>
+                    <span className="text-[10px] font-mono font-bold opacity-60 mt-1">${(product.price || 0).toFixed(2)}</span>
                   </div>
-                </Button>
+                  <ChevronRight className="h-4 w-4 opacity-40 group-hover:opacity-100 group-hover:translate-x-1 transition-all" />
+                </div>
               </Link>
             )) : (
-              <p className="text-xs text-center opacity-70">No products available.</p>
+              <p className="text-xs text-center font-bold opacity-50 uppercase tracking-widest">No SKUs Provisioned</p>
             )}
+            <Link href="/dashboard/order" className="block pt-4">
+              <Button className="w-full h-14 bg-white text-primary hover:bg-slate-100 font-black uppercase tracking-widest text-[10px] rounded-2xl">
+                Browse Full Inventory
+              </Button>
+            </Link>
           </CardContent>
         </Card>
       </div>

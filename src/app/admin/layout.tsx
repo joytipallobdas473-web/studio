@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useMemo } from "react";
 import { SidebarProvider, Sidebar, SidebarContent, SidebarHeader, SidebarMenu, SidebarMenuItem, SidebarMenuButton, SidebarGroup, SidebarGroupLabel, SidebarGroupContent, SidebarInset, SidebarTrigger, SidebarFooter } from "@/components/ui/sidebar";
-import { LayoutDashboard, Store, Package, ShoppingCart, LogOut, Cpu, Loader2, Settings } from "lucide-react";
+import { LayoutDashboard, Store, Package, ShoppingCart, LogOut, Terminal, Loader2, Settings, Shield } from "lucide-react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { cn } from "@/lib/utils";
@@ -22,43 +22,43 @@ function AdminSidebar() {
     { title: "Retail Nodes", icon: Store, href: "/admin/stores" },
     { title: "Inventory", icon: Package, href: "/admin/inventory" },
     { title: "Traffic Logs", icon: ShoppingCart, href: "/admin/orders" },
-    { title: "Core Protocols", icon: Settings, href: "/admin/settings" },
+    { title: "Security Core", icon: Settings, href: "/admin/settings" },
   ];
 
   return (
-    <Sidebar className="glass-card border-none bg-sidebar">
+    <Sidebar className="bg-sidebar border-r border-white/5">
       <SidebarHeader className="h-28 flex items-center px-10">
         <Link href="/admin" className="flex items-center gap-4 group">
-          <div className="bg-primary p-3 rounded-2xl shadow-[0_0_20px_rgba(6,182,212,0.3)] group-hover:rotate-12 transition-transform duration-300">
-            <Cpu className="h-6 w-6 text-background" />
+          <div className="bg-primary p-3 rounded-2xl shadow-lg group-hover:scale-110 transition-transform duration-300">
+            <Terminal className="h-6 w-6 text-background" />
           </div>
           <div className="flex flex-col">
-            <span className="font-black text-xl leading-none uppercase italic tracking-tighter text-white">AETHER</span>
-            <span className="text-[9px] font-black text-primary uppercase tracking-[0.4em] mt-2">NETWORK GRID</span>
+            <span className="font-black text-xl leading-none uppercase tracking-tighter text-white">AETHER</span>
+            <span className="text-[9px] font-black text-primary uppercase tracking-[0.4em] mt-2">CORE CONSOLE</span>
           </div>
         </Link>
       </SidebarHeader>
       
       <SidebarContent className="px-6 py-8">
         <SidebarGroup>
-          <SidebarGroupLabel className="px-4 text-[9px] uppercase font-black tracking-[0.5em] text-muted-foreground mb-6">Operations Console</SidebarGroupLabel>
+          <SidebarGroupLabel className="px-4 text-[9px] uppercase font-black tracking-[0.5em] text-muted-foreground mb-6">Operations Hub</SidebarGroupLabel>
           <SidebarGroupContent>
-            <SidebarMenu className="gap-3">
+            <SidebarMenu className="gap-2">
               {menuItems.map((item) => (
                 <SidebarMenuItem key={item.title}>
                   <SidebarMenuButton 
                     asChild 
                     isActive={pathname === item.href}
                     className={cn(
-                      "h-14 rounded-2xl transition-all duration-300",
+                      "h-12 rounded-xl transition-all duration-300",
                       pathname === item.href 
-                        ? "bg-primary text-background font-black shadow-[0_0_30px_rgba(6,182,212,0.2)]" 
+                        ? "bg-primary text-background font-black shadow-lg" 
                         : "text-muted-foreground hover:bg-white/5 hover:text-white"
                     )}
                   >
                     <Link href={item.href}>
-                      <item.icon className={cn("h-5 w-5", pathname === item.href ? "text-background" : "text-primary/40")} />
-                      <span className="ml-4 uppercase italic tracking-tight font-black text-xs">{item.title}</span>
+                      <item.icon className={cn("h-4 w-4", pathname === item.href ? "text-background" : "text-primary/60")} />
+                      <span className="ml-3 uppercase tracking-tight font-black text-[11px]">{item.title}</span>
                     </Link>
                   </SidebarMenuButton>
                 </SidebarMenuItem>
@@ -69,14 +69,14 @@ function AdminSidebar() {
       </SidebarContent>
 
       <SidebarFooter className="p-8">
-        <div className="p-6 bg-white/5 rounded-3xl border border-white/5 relative overflow-hidden group">
-          <div className="absolute top-0 right-0 h-full w-1 bg-primary/30" />
+        <div className="p-6 bg-white/5 rounded-2xl border border-white/5 relative overflow-hidden group">
+          <div className="absolute top-0 right-0 h-full w-1 bg-primary/50" />
           <div className="flex items-center justify-between">
              <div className="flex flex-col">
-                <span className="text-[8px] font-black text-muted-foreground uppercase tracking-widest">Neural Link</span>
-                <span className="text-[10px] font-black text-white uppercase italic mt-1">Authorized Node</span>
+                <span className="text-[8px] font-black text-muted-foreground uppercase tracking-widest">Protocol Status</span>
+                <span className="text-[10px] font-black text-white uppercase mt-1">Verified Link</span>
              </div>
-             <div className="h-2 w-2 rounded-full bg-primary shadow-[0_0_10px_rgba(6,182,212,1)]" />
+             <Shield className="h-4 w-4 text-primary" />
           </div>
         </div>
       </SidebarFooter>
@@ -107,8 +107,8 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         if (pathname !== "/admin/login") {
           router.push("/dashboard");
           toast({ 
-            title: "Access Restricted", 
-            description: "Manager nodes are restricted to the Branch Portal.", 
+            title: "Security Violation", 
+            description: "Unauthorized access to Command Core detected.", 
             variant: "destructive" 
           });
         }
@@ -116,19 +116,17 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     }
   }, [user, isUserLoading, router, pathname]);
 
-  // Always show loader if we're resolving auth or authorization
   if (isUserLoading || (user && authorized === null)) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-[#020617]">
         <div className="flex flex-col items-center gap-6 text-primary">
           <Loader2 className="h-10 w-10 animate-spin" />
-          <span className="text-[10px] font-black uppercase tracking-[0.5em]">Identity Sync...</span>
+          <span className="text-[10px] font-black uppercase tracking-[0.5em]">Identity Handshake...</span>
         </div>
       </div>
     );
   }
 
-  // Handle unauthorized state (unless on login page)
   if (authorized === false && pathname !== "/admin/login") {
     return null;
   }
@@ -144,24 +142,24 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
           <AdminSidebar />
           <SidebarInset className="flex flex-col min-w-0 bg-transparent">
             <header className="sticky top-0 z-30 flex h-24 shrink-0 items-center gap-8 glass-card border-none border-b border-white/5 px-12">
-              <SidebarTrigger className="text-muted-foreground hover:text-primary h-12 w-12 rounded-2xl hover:bg-white/5 transition-all" />
-              <Separator orientation="vertical" className="h-10 bg-white/10" />
+              <SidebarTrigger className="text-muted-foreground hover:text-primary h-10 w-10 rounded-xl hover:bg-white/5 transition-all" />
+              <Separator orientation="vertical" className="h-8 bg-white/10" />
               <div className="flex flex-col">
-                <span className="text-xl font-black text-white uppercase italic tracking-tighter leading-none">Console Terminal</span>
+                <span className="text-xl font-black text-white uppercase tracking-tighter leading-none">Command Terminal</span>
                 <div className="flex items-center gap-3 text-[9px] text-muted-foreground font-black uppercase tracking-[0.3em] mt-2">
-                  <div className="h-1.5 w-1.5 rounded-full bg-primary animate-pulse shadow-[0_0_8px_rgba(6,182,212,0.8)]" />
-                  Regional Grid Live
+                  <div className="h-1.5 w-1.5 rounded-full bg-primary animate-pulse" />
+                  Regional Grid: Online
                 </div>
               </div>
               <div className="ml-auto flex items-center gap-10">
                 <div className="hidden md:flex flex-col items-end">
-                  <span className="text-[9px] font-black text-primary uppercase tracking-[0.3em]">Master Identity</span>
+                  <span className="text-[9px] font-black text-primary uppercase tracking-[0.3em]">Administrator</span>
                   <span className="text-[10px] font-bold text-muted-foreground tracking-tight mt-1">{user?.email || "Master"}</span>
                 </div>
-                <Button variant="ghost" size="icon" className="h-12 w-12 rounded-2xl text-muted-foreground hover:text-rose-500 hover:bg-rose-500/10 transition-all" onClick={async () => {
+                <Button variant="ghost" size="icon" className="h-12 w-12 rounded-xl text-muted-foreground hover:text-rose-500 hover:bg-rose-500/10 transition-all" onClick={async () => {
                   await signOut(auth);
                   router.push("/admin/login");
-                  toast({ title: "Console Terminated" });
+                  toast({ title: "Terminal Closed" });
                 }}>
                   <LogOut className="h-6 w-6" />
                 </Button>

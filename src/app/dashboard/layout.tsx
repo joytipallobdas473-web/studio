@@ -28,44 +28,37 @@ export default function DashboardLayout({
   const { data: store, isLoading: storeLoading } = useDoc(storeRef);
 
   useEffect(() => {
-    // Only proceed if authentication state is finished loading
     if (isUserLoading) return;
 
-    // 1. If no user, redirect to login
     if (!user) {
       router.push("/login");
       return;
     }
 
-    // 2. If user exists, check role (Redirect Admins immediately)
     const isAdmin = user.email?.toLowerCase().includes("admin") || user.uid === MASTER_ADMIN_UID;
     if (isAdmin) {
       router.push("/admin");
       return;
     }
 
-    // 3. Wait for store data to finish loading before deciding on registration
     if (storeLoading) return;
 
-    // If a manager has no store record, send them to onboarding
     if (!store) {
       router.push("/register");
     }
   }, [user, isUserLoading, store, storeLoading, router, pathname]);
 
-  // Show a clean loader while verifying the node session
   if (isUserLoading || (user && storeLoading)) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-[#f8fafc]">
+      <div className="min-h-screen flex items-center justify-center bg-slate-50">
         <div className="flex flex-col items-center gap-4 text-primary">
           <Loader2 className="h-10 w-10 animate-spin" />
-          <p className="text-[10px] font-black uppercase tracking-[0.2em]">Synchronizing Portal...</p>
+          <p className="text-[10px] font-black uppercase tracking-[0.2em]">Synchronizing Branch Node...</p>
         </div>
       </div>
     );
   }
 
-  // Final catch for unauthorized admins who shouldn't be here
   const isAdmin = user?.email?.toLowerCase().includes("admin") || user?.uid === MASTER_ADMIN_UID;
   if (isAdmin) return null;
 
