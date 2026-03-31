@@ -37,7 +37,7 @@
         "items": { "type": "string" },
         "quantity": { "type": "number" },
         "total": { "type": "number" },
-        "status": { "type": "string", "enum": ["pending", "processing", "shipped", "delivered", "cancelled"] },
+        "status": { "type": "string", "enum": ["pending", "processing", "shipped", "delivered", "cancelled", "return_pending", "returned"] },
         "paymentMethod": { "type": "string", "enum": ["cash", "after_delivery"] },
         "storeName": { "type": "string" },
         "email": { "type": "string", "format": "email" },

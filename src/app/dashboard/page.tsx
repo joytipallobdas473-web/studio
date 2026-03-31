@@ -1,15 +1,32 @@
 "use client";
 
 import { useFirestore, useCollection, useUser, useMemoFirebase, useDoc } from "@/firebase";
-import { collection, query, doc, where } from "firebase/firestore";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { collection, query, doc, where, serverTimestamp } from "firebase/firestore";
+import { Card, CardContent, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Package, ShoppingCart, ArrowRight, Truck, PackageCheck, PlusCircle, Activity, Loader2, ChevronRight } from "lucide-react";
+import { 
+  Package, 
+  ShoppingCart, 
+  ArrowRight, 
+  Truck, 
+  PackageCheck, 
+  PlusCircle, 
+  Activity, 
+  Loader2, 
+  ChevronRight, 
+  RotateCcw,
+  CheckCircle2,
+  AlertCircle,
+  Undo2
+} from "lucide-react";
 import Link from "next/link";
 import { Badge } from "@/components/ui/badge";
 import { format } from "date-fns";
 import { useMemo, useState, useEffect } from "react";
 import { cn } from "@/lib/utils";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from "@/components/ui/dialog";
+import { addDocumentNonBlocking } from "@/firebase";
+import { toast } from "@/hooks/use-toast";
 
 const MASTER_ADMIN_UID = "j96izCkggNcL002AHiJjzGb18Bf2";
 
@@ -17,6 +34,8 @@ export default function DashboardPage() {
   const db = useFirestore();
   const { user, isUserLoading: authLoading } = useUser();
   const [isClient, setIsClient] = useState(false);
+  const [isReturnDialogOpen, setIsReturnDialogOpen] = useState(false);
+  const [isSubmittingReturn, setIsSubmittingReturn] = useState(false);
 
   useEffect(() => {
     setIsClient(true);
@@ -31,7 +50,6 @@ export default function DashboardPage() {
 
   const ordersQuery = useMemoFirebase(() => {
     if (!db || !user) return null;
-    // Removed orderBy and limit to avoid index requirements
     return query(
       collection(db, "orders"), 
       where("userId", "==", user.uid)
@@ -40,7 +58,6 @@ export default function DashboardPage() {
 
   const productsQuery = useMemoFirebase(() => {
     if (!db) return null;
-    // We can still sort simple collection queries without indexes
     return query(collection(db, "products"));
   }, [db]);
 
@@ -54,11 +71,38 @@ export default function DashboardPage() {
       const dateA = a.createdAt?.seconds || 0;
       const dateB = b.createdAt?.seconds || 0;
       return dateB - dateA;
-    }).slice(0, 10);
+    });
   }, [rawOrders]);
 
+  // Products that have been delivered and are eligible for return
+  const returnableProducts = useMemo(() => {
+    if (!orders) return [];
+    // Get unique delivered items
+    const delivered = orders.filter(o => o.status === 'delivered');
+    const uniqueItemsMap = new Map();
+    
+    delivered.forEach(o => {
+      const key = o.items;
+      if (!uniqueItemsMap.has(key)) {
+        uniqueItemsMap.set(key, {
+          name: o.items,
+          totalQuantity: o.quantity || 0,
+          orders: [o.id],
+          productId: o.productId,
+          pricePerUnit: (o.total || 0) / (o.quantity || 1)
+        });
+      } else {
+        const existing = uniqueItemsMap.get(key);
+        existing.totalQuantity += (o.quantity || 0);
+        existing.orders.push(o.id);
+      }
+    });
+    
+    return Array.from(uniqueItemsMap.values());
+  }, [orders]);
+
   // In-memory sorting for products
-  const products = useMemo(() => {
+  const productsList = useMemo(() => {
     if (!rawProducts) return [];
     return [...rawProducts].sort((a, b) => (a.name || "").localeCompare(b.name || "")).slice(0, 5);
   }, [rawProducts]);
@@ -94,8 +138,41 @@ export default function DashboardPage() {
       case "pending": return "text-amber-700 bg-amber-50 border-amber-100";
       case "shipped": return "text-indigo-700 bg-indigo-50 border-indigo-100";
       case "cancelled": return "text-rose-700 bg-rose-50 border-rose-100";
+      case "return_pending": return "text-orange-700 bg-orange-50 border-orange-100";
+      case "returned": return "text-slate-700 bg-slate-100 border-slate-200";
       default: return "text-slate-700 bg-slate-50 border-slate-100";
     }
+  };
+
+  const handleInitiateReturn = (item: any) => {
+    if (!db || !user) return;
+    setIsSubmittingReturn(true);
+
+    const returnData = {
+      items: `RETURN: ${item.name}`,
+      productId: item.productId || "",
+      userId: user.uid,
+      quantity: 1, // Defaulting to 1 for return request
+      total: item.pricePerUnit,
+      phoneNumber: store?.phoneNumber || "",
+      deliveryAddress: store?.location || "",
+      paymentMethod: "cash", // Logic placeholder
+      email: store?.email || user.email || "",
+      status: "return_pending",
+      storeName: store?.name || "Retailer Node",
+      createdAt: serverTimestamp()
+    };
+
+    addDocumentNonBlocking(collection(db, "orders"), returnData)
+      .then(() => {
+        setIsSubmittingReturn(false);
+        setIsReturnDialogOpen(false);
+        toast({ title: "Return Initialized", description: "Request sent to regional logistics hub." });
+      })
+      .catch(() => {
+        setIsSubmittingReturn(false);
+        toast({ title: "Network Failure", description: "Could not transmit return packet.", variant: "destructive" });
+      });
   };
 
   if (!isClient || authLoading || storeLoading || ordersLoading || productsLoading) {
@@ -122,12 +199,22 @@ export default function DashboardPage() {
             Node: <span className="text-slate-900 font-black">{store?.name || "Initializing..."}</span>
           </p>
         </div>
-        <Link href="/dashboard/order">
-          <Button className="bg-primary text-white font-black hover:scale-105 transition-all shadow-lg h-14 rounded-2xl px-8 uppercase tracking-widest text-[11px]">
-            <PlusCircle className="mr-3 h-5 w-5" />
-            New Reorder
+        <div className="flex gap-4">
+          <Button 
+            variant="outline" 
+            onClick={() => setIsReturnDialogOpen(true)}
+            className="h-14 rounded-2xl px-6 border-slate-200 text-slate-600 font-black uppercase tracking-widest text-[11px]"
+          >
+            <RotateCcw className="mr-3 h-5 w-5 text-orange-500" />
+            Stock Return
           </Button>
-        </Link>
+          <Link href="/dashboard/order">
+            <Button className="bg-primary text-white font-black hover:scale-105 transition-all shadow-lg h-14 rounded-2xl px-8 uppercase tracking-widest text-[11px]">
+              <PlusCircle className="mr-3 h-5 w-5" />
+              New Reorder
+            </Button>
+          </Link>
+        </div>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -159,7 +246,7 @@ export default function DashboardPage() {
           </CardHeader>
           <CardContent className="p-0">
             <div className="divide-y divide-slate-50">
-              {orders && orders.length > 0 ? orders.map((order) => (
+              {orders && orders.length > 0 ? orders.slice(0, 10).map((order) => (
                 <div key={order.id} className="flex flex-col sm:flex-row sm:items-center justify-between p-8 hover:bg-slate-50/50 transition-colors gap-6">
                   <div>
                     <p className="font-black text-primary flex items-center gap-2 uppercase italic text-[10px] tracking-wide">
@@ -197,7 +284,7 @@ export default function DashboardPage() {
             </CardTitle>
           </CardHeader>
           <CardContent className="p-8 space-y-4">
-            {products && products.length > 0 ? products.map((product) => (
+            {productsList && productsList.length > 0 ? productsList.map((product) => (
               <Link key={product.id} href="/dashboard/order">
                 <div className="w-full p-5 bg-white/5 hover:bg-white/10 border border-white/5 rounded-2xl transition-all group flex items-center justify-between cursor-pointer">
                   <div className="flex flex-col items-start min-w-0">
@@ -218,6 +305,53 @@ export default function DashboardPage() {
           </CardContent>
         </Card>
       </div>
+
+      {/* Stock Return Dialog */}
+      <Dialog open={isReturnDialogOpen} onOpenChange={setIsReturnDialogOpen}>
+        <DialogContent className="rounded-[2.5rem] border-none p-10 bg-white max-w-2xl shadow-2xl">
+          <DialogHeader>
+            <DialogTitle className="text-2xl font-black text-primary uppercase italic tracking-tighter flex items-center gap-3">
+              <Undo2 className="h-6 w-6" /> Reverse Logistics
+            </DialogTitle>
+            <DialogDescription className="font-medium text-slate-500 pt-2">
+              Select delivered items to return to the regional hub. Only products from confirmed 'Delivered' orders are eligible.
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-6 py-6">
+            {returnableProducts.length > 0 ? (
+              <div className="grid gap-4 max-h-[50vh] overflow-y-auto pr-4 custom-scrollbar">
+                {returnableProducts.map((item, idx) => (
+                  <div key={idx} className="flex items-center justify-between p-6 bg-slate-50 rounded-2xl border border-slate-100 group hover:border-primary/30 transition-all">
+                    <div className="space-y-1">
+                      <h4 className="font-black text-slate-900 uppercase italic text-sm">{item.name}</h4>
+                      <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Available: {item.totalQuantity} Units</p>
+                    </div>
+                    <Button 
+                      size="sm" 
+                      onClick={() => handleInitiateReturn(item)}
+                      disabled={isSubmittingReturn}
+                      className="h-10 px-6 rounded-xl bg-primary text-white font-black uppercase text-[9px] tracking-widest"
+                    >
+                      {isSubmittingReturn ? <Loader2 className="h-4 w-4 animate-spin" /> : "Initiate Return"}
+                    </Button>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="text-center py-20 bg-slate-50 rounded-3xl border border-dashed border-slate-200">
+                 <AlertCircle className="h-12 w-12 text-slate-300 mx-auto mb-4" />
+                 <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">No eligible return inventory found.</p>
+                 <p className="text-[9px] text-slate-400 uppercase mt-1">Only 'Delivered' orders can be returned.</p>
+              </div>
+            )}
+          </div>
+
+          <DialogFooter>
+            <Button variant="ghost" onClick={() => setIsReturnDialogOpen(false)} className="h-12 rounded-xl font-black uppercase tracking-widest text-[10px] text-slate-400">Cancel</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

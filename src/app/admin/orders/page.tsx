@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Download, Search, FileText, Filter, Loader2, Phone, MapPin, Mail, Globe, CheckCircle2, Banknote, CreditCard } from "lucide-react";
+import { Download, Search, FileText, Filter, Loader2, Phone, MapPin, Mail, Globe, CheckCircle2, Banknote, CreditCard, RotateCcw } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
 import { format } from "date-fns";
 import { updateDocumentNonBlocking } from "@/firebase";
@@ -24,6 +24,8 @@ const STATUS_OPTIONS = [
   { value: "shipped", label: "Shipped" },
   { value: "delivered", label: "Delivered" },
   { value: "cancelled", label: "Cancelled" },
+  { value: "return_pending", label: "Return Pending" },
+  { value: "returned", label: "Returned" },
 ];
 
 export default function AdminOrdersPage() {
@@ -128,6 +130,18 @@ export default function AdminOrdersPage() {
         <Loader2 className="h-12 w-12 animate-spin text-primary opacity-50" />
       </div>
     );
+  }
+
+  const getStatusBadgeColor = (status: string) => {
+    switch (status) {
+      case 'delivered': return 'text-emerald-500';
+      case 'processing': return 'text-primary';
+      case 'shipped': return 'text-accent';
+      case 'cancelled': return 'text-rose-500';
+      case 'return_pending': return 'text-orange-500';
+      case 'returned': return 'text-slate-400';
+      default: return 'text-amber-500';
+    }
   }
 
   return (
@@ -257,11 +271,7 @@ export default function AdminOrdersPage() {
                       >
                         <SelectTrigger className={cn(
                           "h-10 w-[140px] text-[10px] font-black uppercase tracking-[0.15em] rounded-xl border-white/10 bg-white/5",
-                          order.status === 'delivered' ? 'text-emerald-500' :
-                          order.status === 'processing' ? 'text-primary' :
-                          order.status === 'shipped' ? 'text-accent' :
-                          order.status === 'cancelled' ? 'text-rose-500' :
-                          'text-amber-500'
+                          getStatusBadgeColor(order.status)
                         )}>
                           <div className="flex items-center gap-2">
                             <SelectValue />
@@ -273,6 +283,8 @@ export default function AdminOrdersPage() {
                           <SelectItem value="shipped" className="text-[10px] font-black tracking-widest uppercase">SHIPPED</SelectItem>
                           <SelectItem value="delivered" className="text-[10px] font-black tracking-widest uppercase text-emerald-500">DELIVERED</SelectItem>
                           <SelectItem value="cancelled" className="text-[10px] font-black tracking-widest uppercase text-rose-500">CANCELLED</SelectItem>
+                          <SelectItem value="return_pending" className="text-[10px] font-black tracking-widest uppercase text-orange-500">RETURN REQ</SelectItem>
+                          <SelectItem value="returned" className="text-[10px] font-black tracking-widest uppercase text-slate-400">RETURNED</SelectItem>
                         </SelectContent>
                       </Select>
                     </TableCell>
@@ -309,18 +321,6 @@ export default function AdminOrdersPage() {
                  <p className="text-[10px] font-black text-primary uppercase italic tracking-tighter mb-1">{order.id.substring(0, 8)}</p>
                  <div className="flex items-center gap-2">
                     <h3 className="font-black text-white text-sm uppercase italic truncate">{order.storeName || 'Branch Node'}</h3>
-                    <Select 
-                      value={order.paymentMethod || 'cash'} 
-                      onValueChange={(val) => handlePaymentUpdate(order.id, val)}
-                    >
-                      <SelectTrigger className="h-7 w-[70px] text-[7px] font-black uppercase tracking-widest rounded-lg border-none bg-white/5 text-white shrink-0">
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent className="glass-card border-white/10 text-white rounded-xl">
-                        <SelectItem value="cash" className="text-[9px] font-black tracking-widest uppercase">CASH</SelectItem>
-                        <SelectItem value="after_delivery" className="text-[9px] font-black tracking-widest uppercase">CREDIT</SelectItem>
-                      </SelectContent>
-                    </Select>
                  </div>
                </div>
                <Select 
@@ -329,11 +329,7 @@ export default function AdminOrdersPage() {
                 >
                   <SelectTrigger className={cn(
                     "h-8 w-[110px] text-[8px] font-black uppercase tracking-widest rounded-xl border-none bg-white/5 shrink-0",
-                    order.status === 'delivered' ? 'text-emerald-500' :
-                    order.status === 'processing' ? 'text-primary' :
-                    order.status === 'shipped' ? 'text-accent' :
-                    order.status === 'cancelled' ? 'text-rose-500' :
-                    'text-amber-500'
+                    getStatusBadgeColor(order.status)
                   )}>
                     <SelectValue />
                   </SelectTrigger>
@@ -343,6 +339,8 @@ export default function AdminOrdersPage() {
                     <SelectItem value="shipped" className="text-[10px] font-black tracking-widest uppercase">SHIPPED</SelectItem>
                     <SelectItem value="delivered" className="text-[10px] font-black tracking-widest uppercase text-emerald-500">DELIVERED</SelectItem>
                     <SelectItem value="cancelled" className="text-[10px] font-black tracking-widest uppercase text-rose-500">CANCELLED</SelectItem>
+                    <SelectItem value="return_pending" className="text-[10px] font-black tracking-widest uppercase text-orange-500">RETURN REQ</SelectItem>
+                    <SelectItem value="returned" className="text-[10px] font-black tracking-widest uppercase text-slate-400">RETURNED</SelectItem>
                   </SelectContent>
                 </Select>
             </div>
@@ -374,12 +372,7 @@ export default function AdminOrdersPage() {
                </Button>
             </div>
           </Card>
-        )) : (
-          <div className="text-center py-20 text-muted-foreground">
-             <Globe className="h-16 w-16 mx-auto mb-4 opacity-10" />
-             <p className="font-black uppercase tracking-[0.3em] text-[10px]">No packets match filters.</p>
-          </div>
-        )}
+        ))}
       </div>
     </div>
   );
