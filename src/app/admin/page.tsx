@@ -4,13 +4,12 @@ import { useState, useMemo, useEffect } from "react";
 import { useFirestore, useCollection, useMemoFirebase, useUser } from "@/firebase";
 import { collection, query } from "firebase/firestore";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Store, Package, ShoppingCart, AlertCircle, Loader2, Cpu, Activity, Zap, Globe, TrendingUp, AlertTriangle, ArrowRight } from "lucide-react";
+import { Store, Package, ShoppingCart, AlertCircle, Loader2, Cpu, Activity, Zap, Globe, TrendingUp, CheckCircle2 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { analyzeInventory, type InventoryAnalysisOutput } from "@/ai/flows/inventory-analyst";
 import { cn } from "@/lib/utils";
 import { toast } from "@/hooks/use-toast";
-import Link from "next/link";
 
 const MASTER_ADMIN_UID = "j96izCkggNcL002AHiJjzGb18Bf2";
 
@@ -60,6 +59,38 @@ export default function AdminOverview() {
       { label: "Inventory Risk", value: lowStockCount.toString(), icon: AlertCircle, color: "text-rose-500", bg: "bg-rose-500/10" },
     ];
   }, [stores, orders, products]);
+
+  const handleRunAIAnalysis = async () => {
+    if (!products || !orders) {
+      toast({ title: "Insufficient Data", description: "Telemetry sync incomplete.", variant: "destructive" });
+      return;
+    }
+
+    setIsAnalyzing(true);
+    try {
+      const input = {
+        products: products.map(p => ({
+          name: p.name || "Unknown",
+          currentStock: p.stockQuantity || 0,
+          category: p.category || "General",
+          mrp: p.price || 0
+        })),
+        recentOrders: orders.slice(0, 10).map(o => ({
+          items: o.items || "Unspecified",
+          status: o.status || "pending",
+          total: o.total || 0
+        }))
+      };
+
+      const result = await analyzeInventory(input);
+      setAiAnalysis(result);
+      toast({ title: "Analysis Complete", description: "Strategic recommendations updated." });
+    } catch (error) {
+      toast({ title: "AI Sync Failure", description: "Could not establish neural link.", variant: "destructive" });
+    } finally {
+      setIsAnalyzing(false);
+    }
+  };
 
   if (!isClient || !isAdmin) return null;
 
@@ -222,8 +253,4 @@ export default function AdminOverview() {
       </div>
     </div>
   );
-}
-
-async function handleRunAIAnalysis() {
-  // Placeholder for internal handler
 }

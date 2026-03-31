@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState, useMemo, useEffect } from "react";
@@ -24,7 +23,6 @@ import {
   PhoneCall,
   CreditCard,
   Banknote,
-  ChevronRight,
   ShoppingCart
 } from "lucide-react";
 import { useFirestore, useCollection, useUser, useMemoFirebase, useDoc } from "@/firebase";
@@ -32,7 +30,6 @@ import { collection, serverTimestamp, query, doc } from "firebase/firestore";
 import { toast } from "@/hooks/use-toast";
 import { addDocumentNonBlocking } from "@/firebase";
 import { cn } from "@/lib/utils";
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 
 const CATEGORIES = [
   { id: "all", name: "All Categories", icon: ShoppingBag },
@@ -149,7 +146,7 @@ export default function NewOrderPage() {
         toast({ title: "Order Transmitted", description: `Reorder request for ${selectedProduct.name} saved.` });
         setTimeout(() => router.push("/dashboard"), 2000);
       })
-      .catch((err) => {
+      .catch(() => {
         setIsSubmitting(false);
         toast({ title: "Protocol Refused", description: "Could not sync order telemetry.", variant: "destructive" });
       });
@@ -177,7 +174,7 @@ export default function NewOrderPage() {
   }
 
   return (
-    <div className="space-y-8 pb-12 animate-in fade-in duration-500">
+    <div className="space-y-8 pb-12 animate-in fade-in duration-700">
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 bg-white p-8 rounded-[2rem] shadow-sm border border-slate-100">
         <div className="space-y-1">
           <h1 className="text-3xl font-black text-primary tracking-tight italic uppercase">Stock Catalog</h1>
@@ -196,14 +193,6 @@ export default function NewOrderPage() {
           />
         </div>
       </div>
-
-      <Alert className="bg-white border-primary/20 rounded-[2rem] shadow-sm py-6">
-        <PhoneCall className="h-5 w-5 text-primary" />
-        <AlertTitle className="text-xs font-black uppercase tracking-widest text-primary">Support Node Active</AlertTitle>
-        <AlertDescription className="text-sm font-medium text-slate-600">
-          For help with your order or node verification, contact the regional support node at <span className="font-black text-primary text-lg ml-2">9085067897</span>.
-        </AlertDescription>
-      </Alert>
 
       <div className="flex flex-col lg:flex-row gap-8">
         <aside className="w-full lg:w-72 shrink-0 space-y-6">
@@ -295,7 +284,7 @@ export default function NewOrderPage() {
             </DialogTitle>
           </DialogHeader>
           
-          <div className="flex-1 overflow-y-auto px-6 md:px-10 py-4 space-y-8 scrollbar-thin scrollbar-thumb-primary/10">
+          <div className="flex-1 overflow-y-auto px-6 md:px-10 py-4 space-y-8">
             {selectedProduct && (
               <>
                 <div className="flex gap-6 p-6 bg-slate-50 rounded-3xl border border-slate-100 items-center">
@@ -353,7 +342,7 @@ export default function NewOrderPage() {
                     </div>
                   </div>
 
-                  <div className="grid grid-cols-2 gap-6">
+                  <div className="grid grid-cols-2 gap-6 pb-4">
                      <div className="space-y-3">
                        <Label className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 ml-1">Node Density</Label>
                        <Input 
