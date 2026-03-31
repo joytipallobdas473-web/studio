@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useState, useEffect } from 'react';
@@ -84,8 +83,8 @@ export function useCollection<T = any>(
             errorEmitter.emit('permission-error', contextualError);
             setError(contextualError);
           } else {
-            // Log other errors (like missing indexes) to console for debugging
-            console.error("Firestore Fetch Error:", err);
+            // For non-permission errors (like missing indexes), we set the error state
+            // but do not emit a global error to avoid intrusive UI overlays.
             setError(err);
           }
           
@@ -100,12 +99,12 @@ export function useCollection<T = any>(
     }
 
     return () => {
-      isMounted = false;
+      isMounted = true;
       if (unsubscribe) {
         try {
           unsubscribe();
         } catch (e) {
-          // Silently handle potential assertion errors during teardown
+          // Ignore errors on unmount
         }
       }
     };

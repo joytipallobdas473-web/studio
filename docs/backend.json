@@ -76,6 +76,16 @@
     "providers": ["password", "anonymous"]
   },
   "firestore": {
+    "indexes": [
+      {
+        "collectionGroup": "orders",
+        "queryScope": "COLLECTION",
+        "fields": [
+          { "fieldPath": "userId", "order": "ASCENDING" },
+          { "fieldPath": "createdAt", "order": "DESCENDING" }
+        ]
+      }
+    ],
     "/users/{userId}": {
       "schema": "UserProfile",
       "description": "User profiles."

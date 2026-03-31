@@ -1,4 +1,3 @@
-
 'use client';
     
 import { useState, useEffect } from 'react';
@@ -73,7 +72,7 @@ export function useDoc<T = any>(
             errorEmitter.emit('permission-error', contextualError);
             setError(contextualError);
           } else {
-            console.error("Firestore Fetch Error:", err);
+            // Set error state but do not emit global error to avoid overlays
             setError(err);
           }
 
@@ -93,7 +92,7 @@ export function useDoc<T = any>(
         try {
           unsubscribe();
         } catch (e) {
-          // Silently handle potential assertion errors during teardown
+          // Ignore errors on unmount
         }
       }
     };
