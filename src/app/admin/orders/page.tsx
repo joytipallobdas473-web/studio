@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Download, Search, FileText, Filter, Loader2, Phone, MapPin, Mail, Globe, CheckCircle2, Banknote, CreditCard, RotateCcw } from "lucide-react";
+import { Download, Search, FileText, Filter, Loader2, Phone, MapPin, Mail, Globe, CheckCircle2, Banknote, CreditCard } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
 import { format } from "date-fns";
 import { updateDocumentNonBlocking } from "@/firebase";
@@ -372,7 +372,7 @@ export default function AdminOrdersPage() {
                </Button>
             </div>
           </Card>
-        ))}
+        )) : null}
       </div>
     </div>
   );
