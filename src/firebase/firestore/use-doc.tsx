@@ -1,3 +1,4 @@
+
 'use client';
     
 import { useState, useEffect } from 'react';
@@ -27,8 +28,6 @@ export interface UseDocResult<T> {
 /**
  * React hook to subscribe to a single Firestore document in real-time.
  * Handles nullable references.
- * 
- * IMPORTANT! YOU MUST MEMOIZE the inputted memoizedDocRef or BAD THINGS WILL HAPPEN
  */
 export function useDoc<T = any>(
   memoizedDocRef: (DocumentReference<DocumentData> & {__memo?: boolean}) | null | undefined,
@@ -52,7 +51,7 @@ export function useDoc<T = any>(
     setIsLoading(true);
     setError(null);
 
-    let unsubscribe: () => void;
+    let unsubscribe: (() => void) | undefined;
 
     try {
       unsubscribe = onSnapshot(
@@ -82,10 +81,8 @@ export function useDoc<T = any>(
         }
       );
     } catch (err) {
-      // Catching potential internal SDK initialization errors during HMR
       if (isMounted) {
         setIsLoading(false);
-        console.warn('Firestore listener initialization interrupted.');
       }
       return;
     }

@@ -1,8 +1,9 @@
+
 "use client";
 
-import { useEffect } from "react";
-import { SidebarProvider, Sidebar, SidebarContent, SidebarHeader, SidebarHeader as SBHeader, SidebarMenu, SidebarMenuItem, SidebarMenuButton, SidebarGroup, SidebarGroupLabel, SidebarGroupContent, SidebarInset, SidebarTrigger, SidebarFooter } from "@/components/ui/sidebar";
-import { LayoutDashboard, Store, Package, ShoppingCart, LogOut, Cpu, Loader2, Settings, Zap } from "lucide-react";
+import { useEffect, useState } from "react";
+import { SidebarProvider, Sidebar, SidebarContent, SidebarHeader, SidebarMenu, SidebarMenuItem, SidebarMenuButton, SidebarGroup, SidebarGroupLabel, SidebarGroupContent, SidebarInset, SidebarTrigger, SidebarFooter } from "@/components/ui/sidebar";
+import { LayoutDashboard, Store, Package, ShoppingCart, LogOut, Cpu, Loader2, Settings } from "lucide-react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { cn } from "@/lib/utils";
@@ -89,27 +90,29 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   const router = useRouter();
   const { user, isUserLoading } = useUser();
   const pathname = usePathname();
+  const [authorized, setAuthorized] = useState(false);
 
   useEffect(() => {
     if (!isUserLoading) {
       if (!user && pathname !== "/admin/login") {
         router.push("/admin/login");
-      } else if (user && pathname !== "/admin/login") {
+      } else if (user) {
         const isAdmin = user.email?.toLowerCase().includes("admin") || user.uid === MASTER_ADMIN_UID;
-        if (!isAdmin) {
-          // Instead of sign out, redirect to store dashboard to prevent session loss
+        if (isAdmin) {
+          setAuthorized(true);
+        } else if (pathname !== "/admin/login") {
           router.push("/dashboard");
           toast({ 
             title: "Access Restricted", 
-            description: "Unauthorized node signatures are routed to the Branch Portal.", 
+            description: "Manager nodes are restricted to the Branch Portal.", 
             variant: "destructive" 
           });
         }
       }
     }
-  }, [user, isUserLoading, router, pathname, auth]);
+  }, [user, isUserLoading, router, pathname]);
 
-  if (isUserLoading) {
+  if (isUserLoading || (!authorized && pathname !== "/admin/login")) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
         <div className="flex flex-col items-center gap-6">
@@ -122,11 +125,6 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 
   if (pathname === "/admin/login") {
     return <>{children}</>;
-  }
-
-  const isAdmin = user?.email?.toLowerCase().includes("admin") || user?.uid === MASTER_ADMIN_UID;
-  if (!user || !isAdmin) {
-    return null;
   }
 
   return (
@@ -147,7 +145,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
             <div className="ml-auto flex items-center gap-10">
               <div className="hidden md:flex flex-col items-end">
                 <span className="text-[9px] font-black text-primary uppercase tracking-[0.3em]">Master Identity</span>
-                <span className="text-[10px] font-bold text-muted-foreground tracking-tight mt-1">{user.email}</span>
+                <span className="text-[10px] font-bold text-muted-foreground tracking-tight mt-1">{user?.email}</span>
               </div>
               <Button variant="ghost" size="icon" className="h-12 w-12 rounded-2xl text-muted-foreground hover:text-rose-500 hover:bg-rose-500/10 transition-all" onClick={async () => {
                 await signOut(auth);
