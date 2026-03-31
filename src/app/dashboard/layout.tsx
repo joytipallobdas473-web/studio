@@ -1,7 +1,6 @@
-
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useUser, useFirestore, useDoc, useMemoFirebase } from "@/firebase";
 import { doc } from "firebase/firestore";
@@ -47,22 +46,17 @@ export default function DashboardLayout({
 
   if (isUserLoading || (user && storeLoading)) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-[#ECF0F5]">
-        <div className="flex flex-col items-center gap-4">
-          <Loader2 className="h-10 w-10 animate-spin text-primary" />
-          <p className="text-xs font-black text-slate-400 uppercase tracking-[0.2em]">Syncing Registry...</p>
+      <div className="min-h-screen flex items-center justify-center bg-[#f8fafc]">
+        <div className="flex flex-col items-center gap-4 text-primary">
+          <Loader2 className="h-10 w-10 animate-spin" />
+          <p className="text-[10px] font-black uppercase tracking-[0.2em]">Synchronizing Portal...</p>
         </div>
       </div>
     );
   }
 
-  if (user && !store && !storeLoading) {
-    const isAdmin = user.email?.toLowerCase().includes("admin") || user.uid === MASTER_ADMIN_UID;
-    if (!isAdmin) return null;
-  }
-
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background portal-surface">
       <Navbar />
       <main className="container mx-auto px-4 py-8">
         <div className="max-w-6xl mx-auto">

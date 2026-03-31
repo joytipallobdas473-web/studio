@@ -1,7 +1,6 @@
-
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import { SidebarProvider, Sidebar, SidebarContent, SidebarHeader, SidebarMenu, SidebarMenuItem, SidebarMenuButton, SidebarGroup, SidebarGroupLabel, SidebarGroupContent, SidebarInset, SidebarTrigger, SidebarFooter } from "@/components/ui/sidebar";
 import { LayoutDashboard, Store, Package, ShoppingCart, LogOut, Cpu, Loader2, Settings } from "lucide-react";
 import Link from "next/link";
@@ -27,7 +26,7 @@ function AdminSidebar() {
   ];
 
   return (
-    <Sidebar className="glass-card border-none">
+    <Sidebar className="glass-card border-none bg-sidebar">
       <SidebarHeader className="h-28 flex items-center px-10">
         <Link href="/admin" className="flex items-center gap-4 group">
           <div className="bg-primary p-3 rounded-2xl shadow-[0_0_20px_rgba(6,182,212,0.3)] group-hover:rotate-12 transition-transform duration-300">
@@ -90,80 +89,87 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   const router = useRouter();
   const { user, isUserLoading } = useUser();
   const pathname = usePathname();
-  const [authorized, setAuthorized] = useState(false);
+  const [authorized, setAuthorized] = useState<boolean | null>(null);
 
   useEffect(() => {
     if (!isUserLoading) {
-      if (!user && pathname !== "/admin/login") {
-        router.push("/admin/login");
-      } else if (user) {
+      if (!user) {
+        if (pathname !== "/admin/login") {
+          router.push("/admin/login");
+        }
+      } else {
         const isAdmin = user.email?.toLowerCase().includes("admin") || user.uid === MASTER_ADMIN_UID;
         if (isAdmin) {
           setAuthorized(true);
-        } else if (pathname !== "/admin/login") {
-          router.push("/dashboard");
-          toast({ 
-            title: "Access Restricted", 
-            description: "Manager nodes are restricted to the Branch Portal.", 
-            variant: "destructive" 
-          });
+        } else {
+          setAuthorized(false);
+          if (pathname !== "/admin/login") {
+            router.push("/dashboard");
+            toast({ 
+              title: "Access Restricted", 
+              description: "Manager nodes are restricted to the Branch Portal.", 
+              variant: "destructive" 
+            });
+          }
         }
       }
     }
   }, [user, isUserLoading, router, pathname]);
 
-  if (isUserLoading || (!authorized && pathname !== "/admin/login")) {
+  if (isUserLoading || authorized === null || (authorized === false && pathname !== "/admin/login")) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-background">
-        <div className="flex flex-col items-center gap-6">
-          <Loader2 className="h-10 w-10 animate-spin text-primary" />
-          <span className="text-[10px] font-black text-primary uppercase tracking-[0.5em]">Syncing Identity...</span>
+      <div className="min-h-screen flex items-center justify-center bg-[#020617]">
+        <div className="flex flex-col items-center gap-6 text-primary">
+          <Loader2 className="h-10 w-10 animate-spin" />
+          <span className="text-[10px] font-black uppercase tracking-[0.5em]">Identity Sync...</span>
         </div>
       </div>
     );
   }
 
   if (pathname === "/admin/login") {
-    return <>{children}</>;
+    return <div className="dark-admin admin-grid min-h-screen">{children}</div>;
   }
 
   return (
-    <SidebarProvider defaultOpen={true}>
-      <div className="flex min-h-screen w-full bg-background text-foreground">
-        <AdminSidebar />
-        <SidebarInset className="flex flex-col min-w-0 bg-transparent">
-          <header className="sticky top-0 z-30 flex h-24 shrink-0 items-center gap-8 glass-card border-none border-b border-white/5 px-12">
-            <SidebarTrigger className="text-muted-foreground hover:text-primary h-12 w-12 rounded-2xl hover:bg-white/5 transition-all" />
-            <Separator orientation="vertical" className="h-10 bg-white/10" />
-            <div className="flex flex-col">
-              <span className="text-xl font-black text-white uppercase italic tracking-tighter leading-none">Console Terminal</span>
-              <div className="flex items-center gap-3 text-[9px] text-muted-foreground font-black uppercase tracking-[0.3em] mt-2">
-                <div className="h-1.5 w-1.5 rounded-full bg-primary animate-pulse shadow-[0_0_8px_rgba(6,182,212,0.8)]" />
-                Regional Grid Live
+    <div className="dark-admin admin-grid">
+      <SidebarProvider defaultOpen={true}>
+        <div className="flex min-h-screen w-full bg-background text-foreground">
+          <AdminSidebar />
+          <SidebarInset className="flex flex-col min-w-0 bg-transparent">
+            <header className="sticky top-0 z-30 flex h-24 shrink-0 items-center gap-8 glass-card border-none border-b border-white/5 px-12">
+              <SidebarTrigger className="text-muted-foreground hover:text-primary h-12 w-12 rounded-2xl hover:bg-white/5 transition-all" />
+              <Separator orientation="vertical" className="h-10 bg-white/10" />
+              <div className="flex flex-col">
+                <span className="text-xl font-black text-white uppercase italic tracking-tighter leading-none">Console Terminal</span>
+                <div className="flex items-center gap-3 text-[9px] text-muted-foreground font-black uppercase tracking-[0.3em] mt-2">
+                  <div className="h-1.5 w-1.5 rounded-full bg-primary animate-pulse shadow-[0_0_8px_rgba(6,182,212,0.8)]" />
+                  Regional Grid Live
+                </div>
               </div>
-            </div>
-            <div className="ml-auto flex items-center gap-10">
-              <div className="hidden md:flex flex-col items-end">
-                <span className="text-[9px] font-black text-primary uppercase tracking-[0.3em]">Master Identity</span>
-                <span className="text-[10px] font-bold text-muted-foreground tracking-tight mt-1">{user?.email}</span>
+              <div className="ml-auto flex items-center gap-10">
+                <div className="hidden md:flex flex-col items-end">
+                  <span className="text-[9px] font-black text-primary uppercase tracking-[0.3em]">Master Identity</span>
+                  <span className="text-[10px] font-bold text-muted-foreground tracking-tight mt-1">{user?.email}</span>
+                </div>
+                <Button variant="ghost" size="icon" className="h-12 w-12 rounded-2xl text-muted-foreground hover:text-rose-500 hover:bg-rose-500/10 transition-all" onClick={async () => {
+                  await signOut(auth);
+                  router.push("/admin/login");
+                  toast({ title: "Console Terminated" });
+                }}>
+                  <LogOut className="h-6 w-6" />
+                </Button>
               </div>
-              <Button variant="ghost" size="icon" className="h-12 w-12 rounded-2xl text-muted-foreground hover:text-rose-500 hover:bg-rose-500/10 transition-all" onClick={async () => {
-                await signOut(auth);
-                router.push("/admin/login");
-                toast({ title: "Console Terminated" });
-              }}>
-                <LogOut className="h-6 w-6" />
-              </Button>
-            </div>
-          </header>
-          
-          <main className="flex-1 p-12 overflow-y-auto">
-            <div className="max-w-7xl mx-auto">
-              {children}
-            </div>
-          </main>
-        </SidebarInset>
-      </div>
-    </SidebarProvider>
+            </header>
+            
+            <main className="flex-1 p-12 overflow-y-auto">
+              <div className="max-w-7xl mx-auto">
+                {children}
+              </div>
+            </main>
+          </SidebarInset>
+        </div>
+      </SidebarProvider>
+    </div>
   );
 }

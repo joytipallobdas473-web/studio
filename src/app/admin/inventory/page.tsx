@@ -2,7 +2,7 @@
 
 import { useState, useMemo, useRef, useEffect } from "react";
 import Image from "next/image";
-import { useFirestore, useCollection, useMemoFirebase } from "@/firebase";
+import { useFirestore, useCollection, useMemoFirebase, useUser } from "@/firebase";
 import { collection, doc, serverTimestamp } from "firebase/firestore";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -19,17 +19,23 @@ import { cn } from "@/lib/utils";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 
 const CATEGORIES = ["Electronics", "Apparel", "Grocery", "Office Supplies"];
+const MASTER_ADMIN_UID = "j96izCkggNcL002AHiJjzGb18Bf2";
 
 export default function InventoryControl() {
   const db = useFirestore();
+  const { user } = useUser();
   const videoRef = useRef<HTMLVideoElement>(null);
   const [hasCameraPermission, setHasCameraPermission] = useState<boolean | null>(null);
   const [isCameraActive, setIsCameraActive] = useState(false);
   
+  const isAdmin = useMemo(() => {
+    return user?.email?.toLowerCase().includes("admin") || user?.uid === MASTER_ADMIN_UID;
+  }, [user]);
+
   const productsQuery = useMemoFirebase(() => {
-    if (!db) return null;
+    if (!db || !isAdmin) return null;
     return collection(db, "products");
-  }, [db]);
+  }, [db, isAdmin]);
 
   const { data: products, isLoading: loading } = useCollection(productsQuery);
 
@@ -287,57 +293,12 @@ export default function InventoryControl() {
               </Table>
             </CardContent>
           </Card>
-
-          <div className="md:hidden grid grid-cols-1 gap-4">
-            {filteredProducts.map((product) => (
-              <Card key={product.id} className="border-none glass-card rounded-3xl overflow-hidden shadow-sm">
-                <CardContent className="p-0">
-                   <div className="flex p-4 gap-4">
-                      <div className="relative h-24 w-24 rounded-2xl overflow-hidden bg-white/5 shrink-0">
-                        <Image src={product.imageUrl || `https://picsum.photos/seed/${product.sku}/100/100`} alt={product.name} fill className="object-cover" />
-                      </div>
-                      <div className="flex flex-col justify-between flex-1 min-w-0">
-                        <div className="space-y-1">
-                           <div className="flex justify-between items-start">
-                              <span className="font-black text-white text-sm uppercase italic truncate pr-2">{product.name}</span>
-                              <Badge className="text-[8px] font-black uppercase px-2 py-0 h-4 bg-white/5 text-muted-foreground border-none shrink-0">{product.category}</Badge>
-                           </div>
-                           <p className="text-[9px] font-mono text-muted-foreground uppercase font-bold">{product.sku}</p>
-                        </div>
-                        <div className="flex justify-between items-end">
-                           <div className="space-y-1">
-                              <p className="text-[9px] text-muted-foreground font-black uppercase tracking-widest">Density</p>
-                              <p className={cn("text-xs font-black font-mono", (product.stockQuantity || 0) < 10 ? "text-rose-500" : "text-emerald-500")}>
-                                {product.stockQuantity || 0}
-                              </p>
-                           </div>
-                           <div className="text-right">
-                              <p className="text-xs font-black text-primary font-mono">${(product.price || 0).toFixed(2)}</p>
-                           </div>
-                        </div>
-                      </div>
-                   </div>
-                   <div className="flex border-t border-white/5">
-                      <Button variant="ghost" className="flex-1 h-12 rounded-none text-muted-foreground hover:text-primary font-black uppercase text-[10px] tracking-widest" onClick={() => handleOpenDialog(product)}>
-                        <Edit2 className="h-4 w-4 mr-2" /> Edit
-                      </Button>
-                      <Button variant="ghost" className="flex-1 h-12 rounded-none text-rose-500 hover:text-rose-600 font-black uppercase text-[10px] tracking-widest" onClick={() => handleDelete(product)}>
-                        <Trash2 className="h-4 w-4 mr-2" /> Purge
-                      </Button>
-                   </div>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
         </>
       ) : (
         <div className="text-center py-32 glass-card rounded-[2.5rem] border border-dashed border-white/10">
            <Globe className="h-20 w-20 mx-auto mb-6 text-primary animate-spin-slow opacity-20" />
            <p className="text-white font-black uppercase italic tracking-tighter text-sm">No SKU Nodes Detected</p>
            <p className="text-[10px] text-muted-foreground font-bold uppercase tracking-widest mt-2">Adjust your cluster filters or query signature.</p>
-           {searchQuery && (
-             <Button variant="link" className="mt-4 text-primary font-black uppercase text-[10px]" onClick={() => setSearchQuery("")}>Clear Active Search</Button>
-           )}
         </div>
       )}
 
@@ -387,12 +348,6 @@ export default function InventoryControl() {
                      )}
                    </div>
                  </div>
-                 {hasCameraPermission === false && (
-                    <Alert variant="destructive" className="mt-4 rounded-2xl bg-rose-500/10 border-rose-500/20">
-                        <AlertTitle className="text-xs font-black uppercase">Camera Required</AlertTitle>
-                        <AlertDescription className="text-[10px]">Enable browser permissions for live capture.</AlertDescription>
-                    </Alert>
-                 )}
                </div>
             </div>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
