@@ -53,24 +53,26 @@ export default function RegisterPage() {
   const storeRef = useMemoFirebase(() => {
     if (!db || !user) return null;
     return doc(db, "stores", user.uid);
-  }, [db, user]);
+  }, [db, user?.uid]);
 
   const { data: store, isLoading: storeLoading } = useDoc(storeRef);
 
-  const isAdmin = useMemo(() => {
-    return user?.email?.toLowerCase().includes("admin") || user?.uid === MASTER_ADMIN_UID;
-  }, [user]);
-
   useEffect(() => {
-    if (!isUserLoading && user && isClient) {
+    if (!isClient || isUserLoading) return;
+
+    if (user) {
+      const isAdmin = user.email?.toLowerCase().includes("admin") || user.uid === MASTER_ADMIN_UID;
       if (isAdmin) {
         router.push("/admin");
-      } else if (!storeLoading && store && !isSuccess) {
-        // Only redirect to dashboard if the store actually exists and we didn't just register it
+        return;
+      }
+      
+      // If store is found and we are not in the middle of a success transition, go to dashboard
+      if (!storeLoading && store && !isSuccess) {
         router.push("/dashboard");
       }
     }
-  }, [user, isUserLoading, store, storeLoading, router, isClient, isAdmin, isSuccess]);
+  }, [user, isUserLoading, store, storeLoading, router, isClient, isSuccess]);
 
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -109,7 +111,7 @@ export default function RegisterPage() {
       
       setTimeout(() => {
         router.push("/dashboard");
-      }, 2000);
+      }, 1500);
       
     } catch (error: any) {
       setIsLoading(false);

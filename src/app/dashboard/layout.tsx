@@ -6,6 +6,7 @@ import { useUser, useFirestore, useDoc, useMemoFirebase } from "@/firebase";
 import { doc } from "firebase/firestore";
 import { Navbar } from "@/components/navbar";
 import { Loader2 } from "lucide-react";
+import { toast } from "@/hooks/use-toast";
 
 const MASTER_ADMIN_UID = "j96izCkggNcL002AHiJjzGb18Bf2";
 
@@ -22,31 +23,33 @@ export default function DashboardLayout({
   const storeRef = useMemoFirebase(() => {
     if (!db || !user) return null;
     return doc(db, "stores", user.uid);
-  }, [db, user]);
+  }, [db, user?.uid]);
 
   const { data: store, isLoading: storeLoading } = useDoc(storeRef);
 
   useEffect(() => {
-    // 1. If auth is finished and no user, go to login
-    if (!isUserLoading && !user) {
+    // Only proceed if authentication state is finished loading
+    if (isUserLoading) return;
+
+    // 1. If no user, redirect to login
+    if (!user) {
       router.push("/login");
       return;
     }
 
-    // 2. If user exists, check role and store status
-    if (!isUserLoading && !storeLoading && user) {
-      const isAdmin = user.email?.toLowerCase().includes("admin") || user.uid === MASTER_ADMIN_UID;
-      
-      // Redirect Admins to the command console
-      if (isAdmin) {
-        router.push("/admin");
-        return;
-      }
-      
-      // If a manager has no store record and isn't already on the register page, send them there
-      if (!store && pathname !== "/register") {
-        router.push("/register");
-      }
+    // 2. If user exists, check role (Redirect Admins immediately)
+    const isAdmin = user.email?.toLowerCase().includes("admin") || user.uid === MASTER_ADMIN_UID;
+    if (isAdmin) {
+      router.push("/admin");
+      return;
+    }
+
+    // 3. Wait for store data to finish loading before deciding on registration
+    if (storeLoading) return;
+
+    // If a manager has no store record, send them to onboarding
+    if (!store) {
+      router.push("/register");
     }
   }, [user, isUserLoading, store, storeLoading, router, pathname]);
 
@@ -61,6 +64,10 @@ export default function DashboardLayout({
       </div>
     );
   }
+
+  // Final catch for unauthorized admins who shouldn't be here
+  const isAdmin = user?.email?.toLowerCase().includes("admin") || user?.uid === MASTER_ADMIN_UID;
+  if (isAdmin) return null;
 
   return (
     <div className="min-h-screen bg-background portal-surface">

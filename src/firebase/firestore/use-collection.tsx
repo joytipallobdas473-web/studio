@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import {
   Query,
   onSnapshot,
@@ -36,12 +36,12 @@ export function useCollection<T = any>(
     memoizedTargetRefOrQuery: ((CollectionReference<DocumentData> | Query<DocumentData>) & {__memo?: boolean})  | null | undefined,
 ): UseCollectionResult<T> {
   const [data, setData] = useState<WithId<T>[] | null>(null);
-  const [isLoading, setIsLoading] = useState<boolean>(false);
+  const [isLoading, setIsLoading] = useState<boolean>(!!memoizedTargetRefOrQuery);
   const [error, setError] = useState<FirestoreError | Error | null>(null);
+  const unsubscribeRef = useRef<(() => void) | null>(null);
 
   useEffect(() => {
     let isMounted = true;
-    let unsubscribe: (() => void) | null = null;
 
     if (!memoizedTargetRefOrQuery) {
       setData(null);
@@ -51,17 +51,16 @@ export function useCollection<T = any>(
     }
 
     setIsLoading(true);
-    setError(null);
 
     try {
-      unsubscribe = onSnapshot(
+      unsubscribeRef.current = onSnapshot(
         memoizedTargetRefOrQuery,
         (snapshot: QuerySnapshot<DocumentData>) => {
           if (!isMounted) return;
-          const results: WithId<T>[] = [];
-          for (const doc of snapshot.docs) {
-            results.push({ ...(doc.data() as T), id: doc.id });
-          }
+          const results: WithId<T>[] = snapshot.docs.map(doc => ({
+            ...(doc.data() as T),
+            id: doc.id
+          }));
           setData(results);
           setError(null);
           setIsLoading(false);
@@ -93,20 +92,19 @@ export function useCollection<T = any>(
     } catch (err) {
       if (isMounted) {
         setIsLoading(false);
+        setError(err instanceof Error ? err : new Error('Unknown error'));
       }
     }
 
     return () => {
       isMounted = false;
-      if (unsubscribe) {
-        unsubscribe();
+      if (unsubscribeRef.current) {
+        const unsubscribe = unsubscribeRef.current;
+        unsubscribeRef.current = null;
+        setTimeout(() => unsubscribe(), 0);
       }
     };
   }, [memoizedTargetRefOrQuery]);
-
-  if (memoizedTargetRefOrQuery && !memoizedTargetRefOrQuery.__memo) {
-    console.warn('Firestore target was not properly memoized. Use useMemoFirebase to avoid infinite loops.');
-  }
 
   return { data, isLoading, error };
 }

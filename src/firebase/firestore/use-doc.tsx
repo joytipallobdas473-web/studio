@@ -1,6 +1,6 @@
 'use client';
     
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import {
   DocumentReference,
   onSnapshot,
@@ -30,12 +30,12 @@ export function useDoc<T = any>(
   memoizedDocRef: (DocumentReference<DocumentData> & {__memo?: boolean}) | null | undefined,
 ): UseDocResult<T> {
   const [data, setData] = useState<WithId<T> | null>(null);
-  const [isLoading, setIsLoading] = useState<boolean>(false);
+  const [isLoading, setIsLoading] = useState<boolean>(!!memoizedDocRef);
   const [error, setError] = useState<FirestoreError | Error | null>(null);
+  const unsubscribeRef = useRef<(() => void) | null>(null);
 
   useEffect(() => {
     let isMounted = true;
-    let unsubscribe: (() => void) | null = null;
 
     if (!memoizedDocRef) {
       setData(null);
@@ -44,19 +44,19 @@ export function useDoc<T = any>(
       return;
     }
 
+    // Set loading state only if not already loading
     setIsLoading(true);
-    setError(null);
 
     try {
-      unsubscribe = onSnapshot(
+      unsubscribeRef.current = onSnapshot(
         memoizedDocRef,
         (snapshot: DocumentSnapshot<DocumentData>) => {
           if (!isMounted) return;
-          if (snapshot.exists()) {
-            setData({ ...(snapshot.data() as T), id: snapshot.id });
-          } else {
-            setData(null);
-          }
+          const docData = snapshot.exists() 
+            ? { ...(snapshot.data() as T), id: snapshot.id } 
+            : null;
+          
+          setData(docData);
           setError(null);
           setIsLoading(false);
         },
@@ -82,21 +82,20 @@ export function useDoc<T = any>(
     } catch (err) {
       if (isMounted) {
         setIsLoading(false);
+        setError(err instanceof Error ? err : new Error('Unknown error'));
       }
     }
 
     return () => {
       isMounted = false;
-      if (unsubscribe) {
-        unsubscribe();
+      if (unsubscribeRef.current) {
+        const unsubscribe = unsubscribeRef.current;
+        unsubscribeRef.current = null;
+        // Small delay to prevent internal assertion failure on rapid unmount
+        setTimeout(() => unsubscribe(), 0);
       }
     };
   }, [memoizedDocRef]);
-
-  // Only perform the safety check if a reference is actually provided
-  if (memoizedDocRef && !memoizedDocRef.__memo) {
-    console.warn(`Firestore reference at ${memoizedDocRef.path} was not properly memoized. Use useMemoFirebase to avoid infinite loops.`);
-  }
 
   return { data, isLoading, error };
 }

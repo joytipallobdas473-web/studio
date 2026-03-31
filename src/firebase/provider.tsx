@@ -66,7 +66,10 @@ export const FirebaseProvider: React.FC<FirebaseProviderProps> = ({
     const unsubscribe = onAuthStateChanged(
       auth,
       (firebaseUser) => {
-        setUserAuthState({ user: firebaseUser, isUserLoading: false, userError: null });
+        setUserAuthState(prev => {
+          if (prev.user?.uid === firebaseUser?.uid && !prev.isUserLoading) return prev;
+          return { user: firebaseUser, isUserLoading: false, userError: null };
+        });
       },
       (error) => {
         setUserAuthState({ user: null, isUserLoading: false, userError: error });
@@ -132,18 +135,17 @@ export const useFirebaseApp = (): FirebaseApp => {
   return firebaseApp;
 };
 
-type MemoFirebase<T> = T & { __memo?: boolean };
-
 /**
  * Stabilizes Firebase references or queries.
  * Only re-creates the reference when the provided dependencies change.
- * Adds a internal __memo flag to satisfy safety checks in useCollection/useDoc.
  */
-export function useMemoFirebase<T>(factory: () => T, deps: DependencyList): T | (MemoFirebase<T>) {
+export function useMemoFirebase<T>(factory: () => T, deps: DependencyList): T {
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   const memoized = useMemo(factory, deps);
   
-  if (typeof memoized !== 'object' || memoized === null) return memoized;
-  (memoized as MemoFirebase<T>).__memo = true;
+  if (memoized && typeof memoized === 'object') {
+    (memoized as any).__memo = true;
+  }
   
   return memoized;
 }
