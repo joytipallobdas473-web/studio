@@ -75,7 +75,7 @@ export default function DashboardPage() {
     });
   }, [rawOrders]);
 
-  // Products that have been delivered and are eligible for damage return
+  // Products that have been delivered and are eligible for damage reporting
   const returnableProducts = useMemo(() => {
     if (!orders) return [];
     // Get unique delivered items
@@ -207,7 +207,7 @@ export default function DashboardPage() {
             className="h-14 rounded-2xl px-6 border-slate-200 text-slate-600 font-black uppercase tracking-widest text-[11px]"
           >
             <AlertTriangle className="mr-3 h-5 w-5 text-orange-500" />
-            Damage Return
+            Damage Reporting
           </Button>
           <Link href="/dashboard/order">
             <Button className="bg-primary text-white font-black hover:scale-105 transition-all shadow-lg h-14 rounded-2xl px-8 uppercase tracking-widest text-[11px]">

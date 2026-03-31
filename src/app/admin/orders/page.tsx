@@ -372,7 +372,7 @@ export default function AdminOrdersPage() {
                </Button>
             </div>
           </Card>
-        ))}
+        )) : null}
       </div>
     </div>
   );
