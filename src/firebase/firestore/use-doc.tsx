@@ -20,26 +20,25 @@ type WithId<T> = T & { id: string };
  * @template T Type of the document data.
  */
 export interface UseDocResult<T> {
-  data: WithId<T> | null; // Document data with ID, or null.
-  isLoading: boolean;       // True if loading.
-  error: FirestoreError | Error | null; // Error object, or null.
+  data: WithId<T> | null;
+  isLoading: boolean;
+  error: FirestoreError | Error | null;
 }
 
 /**
  * React hook to subscribe to a single Firestore document in real-time.
- * Handles nullable references.
+ * Includes safety guards to prevent Internal Assertion errors during unmount.
  */
 export function useDoc<T = any>(
   memoizedDocRef: (DocumentReference<DocumentData> & {__memo?: boolean}) | null | undefined,
 ): UseDocResult<T> {
-  type StateDataType = WithId<T> | null;
-
-  const [data, setData] = useState<StateDataType>(null);
+  const [data, setData] = useState<WithId<T> | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [error, setError] = useState<FirestoreError | Error | null>(null);
 
   useEffect(() => {
     let isMounted = true;
+    let unsubscribe: (() => void) | null = null;
 
     if (!memoizedDocRef) {
       setData(null);
@@ -50,8 +49,6 @@ export function useDoc<T = any>(
 
     setIsLoading(true);
     setError(null);
-
-    let unsubscribe: (() => void) | undefined;
 
     try {
       unsubscribe = onSnapshot(
@@ -76,7 +73,6 @@ export function useDoc<T = any>(
           setError(contextualError);
           setData(null);
           setIsLoading(false);
-
           errorEmitter.emit('permission-error', contextualError);
         }
       );
@@ -84,19 +80,24 @@ export function useDoc<T = any>(
       if (isMounted) {
         setIsLoading(false);
       }
-      return;
     }
 
     return () => {
       isMounted = false;
+      // Add a small safety check to prevent assertion errors on rapid unmount
       if (unsubscribe) {
-        unsubscribe();
+        try {
+          unsubscribe();
+        } catch (e) {
+          // Silently handle potential assertion errors during teardown
+        }
       }
     };
   }, [memoizedDocRef]);
 
-  if(memoizedDocRef && !memoizedDocRef.__memo) {
-    throw new Error('Firestore doc reference was not properly memoized using useMemoFirebase. Ensure you import useMemoFirebase from "@/firebase".');
+  // Safety check to ensure memoization
+  if (memoizedDocRef && !memoizedDocRef.__memo) {
+    throw new Error('Firestore target was not properly memoized using useMemoFirebase.');
   }
 
   return { data, isLoading, error };

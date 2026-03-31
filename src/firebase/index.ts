@@ -1,9 +1,10 @@
+
 'use client';
 
 import { firebaseConfig } from '@/firebase/config';
-import { initializeApp, getApps, FirebaseApp } from 'firebase/app';
+import { initializeApp, getApps, FirebaseApp, type FirebaseOptions } from 'firebase/app';
 import { getAuth, Auth } from 'firebase/auth';
-import { getFirestore, Firestore } from 'firebase/firestore'
+import { getFirestore, Firestore } from 'firebase/firestore';
 
 // Global singleton to prevent "INTERNAL ASSERTION FAILED" during HMR
 const globalForFirebase = globalThis as unknown as {
@@ -12,25 +13,32 @@ const globalForFirebase = globalThis as unknown as {
   db: Firestore | undefined;
 };
 
+/**
+ * Initializes Firebase services as a singleton.
+ * Ensures that the app, auth, and firestore instances are created once.
+ */
 export function initializeFirebase() {
-  if (typeof window === 'undefined') return { firebaseApp: null, auth: null, firestore: null };
+  if (typeof window === 'undefined') {
+    return { firebaseApp: null, auth: null, firestore: null };
+  }
 
-  if (!globalForFirebase.app) {
-    const apps = getApps();
-    if (apps.length > 0) {
-      globalForFirebase.app = apps[0];
-    } else {
-      globalForFirebase.app = initializeApp(firebaseConfig);
+  try {
+    if (!globalForFirebase.app) {
+      const apps = getApps();
+      globalForFirebase.app = apps.length > 0 
+        ? apps[0] 
+        : initializeApp(firebaseConfig as FirebaseOptions);
     }
-  }
 
-  // Ensure services are only initialized once and linked to the same app instance
-  if (!globalForFirebase.auth && globalForFirebase.app) {
-    globalForFirebase.auth = getAuth(globalForFirebase.app);
-  }
-  
-  if (!globalForFirebase.db && globalForFirebase.app) {
-    globalForFirebase.db = getFirestore(globalForFirebase.app);
+    if (!globalForFirebase.auth && globalForFirebase.app) {
+      globalForFirebase.auth = getAuth(globalForFirebase.app);
+    }
+    
+    if (!globalForFirebase.db && globalForFirebase.app) {
+      globalForFirebase.db = getFirestore(globalForFirebase.app);
+    }
+  } catch (error) {
+    console.error("Firebase initialization failed:", error);
   }
 
   return {
