@@ -17,7 +17,6 @@ type WithId<T> = T & { id: string };
 
 /**
  * Interface for the return value of the useDoc hook.
- * @template T Type of the document data.
  */
 export interface UseDocResult<T> {
   data: WithId<T> | null;
@@ -27,7 +26,6 @@ export interface UseDocResult<T> {
 
 /**
  * React hook to subscribe to a single Firestore document in real-time.
- * Includes safety guards to prevent Internal Assertion errors during unmount.
  */
 export function useDoc<T = any>(
   memoizedDocRef: (DocumentReference<DocumentData> & {__memo?: boolean}) | null | undefined,
@@ -65,15 +63,22 @@ export function useDoc<T = any>(
         },
         (err: FirestoreError) => {
           if (!isMounted) return;
-          const contextualError = new FirestorePermissionError({
-            operation: 'get',
-            path: memoizedDocRef.path,
-          });
+          
+          if (err.code === 'permission-denied') {
+            const contextualError = new FirestorePermissionError({
+              operation: 'get',
+              path: memoizedDocRef.path,
+            });
 
-          setError(contextualError);
+            errorEmitter.emit('permission-error', contextualError);
+            setError(contextualError);
+          } else {
+            console.error("Firestore Fetch Error:", err);
+            setError(err);
+          }
+
           setData(null);
           setIsLoading(false);
-          errorEmitter.emit('permission-error', contextualError);
         }
       );
     } catch (err) {
@@ -84,7 +89,6 @@ export function useDoc<T = any>(
 
     return () => {
       isMounted = false;
-      // Add a small safety check to prevent assertion errors on rapid unmount
       if (unsubscribe) {
         try {
           unsubscribe();
@@ -95,7 +99,6 @@ export function useDoc<T = any>(
     };
   }, [memoizedDocRef]);
 
-  // Safety check to ensure memoization
   if (memoizedDocRef && !memoizedDocRef.__memo) {
     throw new Error('Firestore target was not properly memoized using useMemoFirebase.');
   }

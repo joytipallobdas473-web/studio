@@ -32,7 +32,6 @@ export interface InternalQuery extends Query<DocumentData> {
 
 /**
  * React hook to subscribe to a Firestore collection or query in real-time.
- * Includes safety guards to prevent Internal Assertion errors during unmount.
  */
 export function useCollection<T = any>(
     memoizedTargetRefOrQuery: ((CollectionReference<DocumentData> | Query<DocumentData>) & {__memo?: boolean})  | null | undefined,
@@ -71,20 +70,27 @@ export function useCollection<T = any>(
         (err: FirestoreError) => {
           if (!isMounted) return;
           
-          const path: string =
-            memoizedTargetRefOrQuery.type === 'collection'
-              ? (memoizedTargetRefOrQuery as CollectionReference).path
-              : (memoizedTargetRefOrQuery as unknown as InternalQuery)._query?.path?.canonicalString() || 'unknown';
+          if (err.code === 'permission-denied') {
+            const path: string =
+              memoizedTargetRefOrQuery.type === 'collection'
+                ? (memoizedTargetRefOrQuery as CollectionReference).path
+                : (memoizedTargetRefOrQuery as unknown as InternalQuery)._query?.path?.canonicalString() || 'unknown';
 
-          const contextualError = new FirestorePermissionError({
-            operation: 'list',
-            path,
-          });
+            const contextualError = new FirestorePermissionError({
+              operation: 'list',
+              path,
+            });
 
-          setError(contextualError);
+            errorEmitter.emit('permission-error', contextualError);
+            setError(contextualError);
+          } else {
+            // Log other errors (like missing indexes) to console for debugging
+            console.error("Firestore Fetch Error:", err);
+            setError(err);
+          }
+          
           setData(null);
           setIsLoading(false);
-          errorEmitter.emit('permission-error', contextualError);
         }
       );
     } catch (err) {
