@@ -266,7 +266,7 @@ export default function InventoryControl() {
                           {product.category}
                         </Badge>
                       </TableCell>
-                      <TableCell className="font-mono text-sm text-primary font-black">${(product.price || 0).toFixed(2)}</TableCell>
+                      <TableCell className="font-mono text-sm text-primary font-black">₹{(product.price || 0).toFixed(2)}</TableCell>
                       <TableCell>
                         <div className="flex items-center gap-4">
                           <div className={cn("h-1.5 w-24 rounded-full bg-white/5 overflow-hidden")}>
@@ -314,7 +314,7 @@ export default function InventoryControl() {
                     </div>
                     
                     <div className="flex items-center justify-between">
-                       <span className="font-mono text-sm text-primary font-black">${(product.price || 0).toFixed(2)}</span>
+                       <span className="font-mono text-sm text-primary font-black">₹{(product.price || 0).toFixed(2)}</span>
                        <div className="flex items-center gap-2">
                          <Box className={cn("h-3 w-3", (product.stockQuantity || 0) < 10 ? "text-rose-500" : "text-emerald-500")} />
                          <span className={cn("text-xs font-black font-mono", (product.stockQuantity || 0) < 10 ? "text-rose-500" : "text-emerald-500")}>
@@ -402,7 +402,7 @@ export default function InventoryControl() {
                 </Select>
               </div>
               <div className="space-y-3">
-                <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Unit Val ($)</Label>
+                <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Unit Val (₹)</Label>
                 <Input type="number" value={formData.price} onChange={(e) => setFormData({...formData, price: e.target.value})} className="h-14 rounded-2xl bg-white/5 border-none font-mono text-white" />
               </div>
               <div className="space-y-3">

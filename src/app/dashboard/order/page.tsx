@@ -251,7 +251,7 @@ export default function NewOrderPage() {
                       <p className="text-[9px] text-slate-400 font-mono font-bold tracking-widest uppercase">SKU: {product.sku}</p>
                     </div>
                     <div className="flex items-end justify-between">
-                      <p className="text-3xl font-black text-primary tracking-tighter font-mono">${(product.price || 0).toFixed(2)}</p>
+                      <p className="text-3xl font-black text-primary tracking-tighter font-mono">₹{(product.price || 0).toFixed(2)}</p>
                     </div>
                   </CardContent>
                   <CardFooter className="p-6 pt-0">
@@ -290,7 +290,7 @@ export default function NewOrderPage() {
                 <div className="flex gap-6 p-6 bg-slate-50 rounded-3xl border border-slate-100 items-center">
                   <div className="flex-1 space-y-1">
                     <h4 className="font-black text-slate-900 text-lg uppercase italic tracking-tight">{selectedProduct.name}</h4>
-                    <p className="text-xl font-black text-primary font-mono">${(selectedProduct.price || 0).toFixed(2)} / Unit</p>
+                    <p className="text-xl font-black text-primary font-mono">₹{(selectedProduct.price || 0).toFixed(2)} / Unit</p>
                   </div>
                 </div>
                 
@@ -356,7 +356,7 @@ export default function NewOrderPage() {
                      <div className="space-y-3">
                        <Label className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 ml-1">Net Value</Label>
                        <div className="h-16 flex items-center justify-center bg-primary text-white font-black rounded-2xl text-xl font-mono">
-                          ${(parseFloat(orderQuantity || "0") * (selectedProduct.price || 0)).toFixed(2)}
+                          ₹{(parseFloat(orderQuantity || "0") * (selectedProduct.price || 0)).toFixed(2)}
                        </div>
                      </div>
                   </div>

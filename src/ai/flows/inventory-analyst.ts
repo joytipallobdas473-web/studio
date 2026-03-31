@@ -46,12 +46,12 @@ const prompt = ai.definePrompt({
     
     PRODUCTS:
     {{#each products}}
-    - {{{name}}} (Category: {{{category}}}, Stock: {{{currentStock}}}, Price: \${{{mrp}}})
+    - {{{name}}} (Category: {{{category}}}, Stock: {{{currentStock}}}, Price: ₹{{{mrp}}})
     {{/each}}
     
     RECENT ORDERS:
     {{#each recentOrders}}
-    - Items: {{{items}}}, Status: {{{status}}}, Value: \${{{total}}}
+    - Items: {{{items}}}, Status: {{{status}}}, Value: ₹{{{total}}}
     {{/each}}
     
     Based on this data, provide:

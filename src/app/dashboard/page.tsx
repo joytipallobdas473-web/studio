@@ -257,7 +257,7 @@ export default function DashboardPage() {
                     <p className="text-sm font-bold text-slate-700 mt-1 uppercase tracking-tight">{order.items || 'Standard Payload'}</p>
                   </div>
                   <div className="flex items-center justify-between sm:justify-end gap-10">
-                    <p className="text-base font-black text-slate-900 font-mono">${(order.total || 0).toFixed(2)}</p>
+                    <p className="text-base font-black text-slate-900 font-mono">₹{(order.total || 0).toFixed(2)}</p>
                     <Badge className={cn("capitalize h-9 px-5 font-black rounded-xl text-[9px] tracking-widest uppercase border", getStatusColor(order.status))}>
                       {order.status === 'return_pending' ? 'Damage Reported' : order.status}
                     </Badge>
@@ -290,7 +290,7 @@ export default function DashboardPage() {
                 <div className="w-full p-5 bg-white/5 hover:bg-white/10 border border-white/5 rounded-2xl transition-all group flex items-center justify-between cursor-pointer">
                   <div className="flex flex-col items-start min-w-0">
                     <span className="font-black text-xs uppercase tracking-tight italic truncate w-full group-hover:text-accent transition-colors">{product.name}</span>
-                    <span className="text-[10px] font-mono font-bold opacity-60 mt-1">${(product.price || 0).toFixed(2)}</span>
+                    <span className="text-[10px] font-mono font-bold opacity-60 mt-1">₹{(product.price || 0).toFixed(2)}</span>
                   </div>
                   <ChevronRight className="h-4 w-4 opacity-40 group-hover:opacity-100 group-hover:translate-x-1 transition-all" />
                 </div>

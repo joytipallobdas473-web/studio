@@ -17,7 +17,6 @@ export default function HistoryPage() {
 
   const historyQuery = useMemoFirebase(() => {
     if (!db || !user) return null;
-    // Removed orderBy to bypass the need for a composite index
     return query(
       collection(db, "orders"), 
       where("userId", "==", user.uid)
@@ -26,7 +25,6 @@ export default function HistoryPage() {
 
   const { data: rawOrders, isLoading: loading } = useCollection(historyQuery);
 
-  // Perform sorting in memory to avoid index requirements
   const orders = useMemo(() => {
     if (!rawOrders) return [];
     return [...rawOrders].sort((a, b) => {
@@ -145,7 +143,7 @@ export default function HistoryPage() {
                     {order.items || 'Restock Packet'}
                     <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest mt-0.5">Qty: {order.quantity || 1}</p>
                   </TableCell>
-                  <TableCell className="font-black text-primary text-base tracking-tight">${(order.total || 0).toFixed(2)}</TableCell>
+                  <TableCell className="font-black text-primary text-base tracking-tight">₹{(order.total || 0).toFixed(2)}</TableCell>
                   <TableCell className="pr-8">
                     <Badge variant="outline" className={`capitalize flex items-center w-fit h-8 px-4 text-[9px] font-black tracking-[0.1em] rounded-xl ${getStatusColor(order.status)}`}>
                       {getStatusIcon(order.status)}

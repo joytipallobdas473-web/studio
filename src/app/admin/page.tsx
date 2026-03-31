@@ -181,7 +181,7 @@ export default function AdminOverview() {
                       </div>
                     </div>
                     <div className="text-right">
-                      <p className="text-sm font-black text-primary font-mono">${(order.total || 0).toFixed(2)}</p>
+                      <p className="text-sm font-black text-primary font-mono">₹{(order.total || 0).toFixed(2)}</p>
                       <span className={cn(
                         "text-[9px] font-black uppercase tracking-widest mt-1 block",
                         order.status === 'delivered' ? 'text-emerald-500' : 

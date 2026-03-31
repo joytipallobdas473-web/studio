@@ -92,7 +92,7 @@ export default function AdminOrdersPage() {
     const ordersToExport = orderId ? orders.filter(o => o.id === orderId) : filteredOrders;
     if (!ordersToExport || ordersToExport.length === 0) return;
 
-    const headers = ["Packet ID", "Node", "Gmail", "Phone", "Delivery Address", "Payment", "Timestamp", "Items", "Quantity", "Total ($)", "Status"];
+    const headers = ["Packet ID", "Node", "Gmail", "Phone", "Delivery Address", "Payment", "Timestamp", "Items", "Quantity", "Total (₹)", "Status"];
     const csvContent = [
       headers,
       ...ordersToExport.map(o => [
@@ -124,7 +124,7 @@ export default function AdminOrdersPage() {
     });
   };
 
-  if (loading || !isClient) {
+  if (loading) {
     return (
       <div className="flex h-[70vh] items-center justify-center">
         <Loader2 className="h-12 w-12 animate-spin text-primary opacity-50" />
@@ -256,7 +256,7 @@ export default function AdminOrdersPage() {
                           </Select>
                         </div>
                         <div className="flex items-center gap-2">
-                           <span className="text-[10px] font-black text-primary tracking-widest">${(order.total || 0).toFixed(2)}</span>
+                           <span className="text-[10px] font-black text-primary tracking-widest">₹{(order.total || 0).toFixed(2)}</span>
                            <span className="text-[9px] text-muted-foreground font-mono">Qty: {order.quantity || 1}</span>
                         </div>
                         <span className="text-[9px] text-muted-foreground font-mono">
@@ -364,7 +364,7 @@ export default function AdminOrdersPage() {
 
             <div className="flex items-center justify-between border-t border-white/5 pt-4">
                <div className="space-y-0.5">
-                  <p className="text-xs font-black text-primary font-mono">${(order.total || 0).toFixed(2)}</p>
+                  <p className="text-xs font-black text-primary font-mono">₹{(order.total || 0).toFixed(2)}</p>
                   <p className="text-[9px] text-muted-foreground font-mono truncate max-w-[150px]">{order.items || 'Payload'}</p>
                </div>
                <Button size="sm" variant="outline" className="h-10 rounded-xl glass-card border-white/10 text-white font-black text-[9px] uppercase tracking-widest" onClick={() => downloadPO(order.id)}>
