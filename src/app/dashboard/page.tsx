@@ -4,21 +4,28 @@ import { useFirestore, useCollection, useUser, useMemoFirebase, useDoc } from "@
 import { collection, query, orderBy, limit, doc, where } from "firebase/firestore";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Package, ShoppingCart, ArrowRight, Truck, PackageCheck, PlusCircle, Activity, Loader2 } from "lucide-react";
+import { Package, ShoppingCart, ArrowRight, Truck, PackageCheck, PlusCircle, Activity, Loader2, ChevronRight } from "lucide-react";
 import Link from "next/link";
 import { Badge } from "@/components/ui/badge";
 import { format } from "date-fns";
-import { useMemo } from "react";
+import { useMemo, useState, useEffect } from "react";
 import { cn } from "@/lib/utils";
+
+const MASTER_ADMIN_UID = "j96izCkggNcL002AHiJjzGb18Bf2";
 
 export default function DashboardPage() {
   const db = useFirestore();
   const { user, isUserLoading: authLoading } = useUser();
+  const [isClient, setIsClient] = useState(false);
+
+  useEffect(() => {
+    setIsClient(true);
+  }, []);
 
   const storeRef = useMemoFirebase(() => {
     if (!db || !user) return null;
     return doc(db, "stores", user.uid);
-  }, [db, user]);
+  }, [db, user?.uid]);
 
   const { data: store, isLoading: storeLoading } = useDoc(storeRef);
 
@@ -30,7 +37,7 @@ export default function DashboardPage() {
       orderBy("createdAt", "desc"), 
       limit(10)
     );
-  }, [db, user]);
+  }, [db, user?.uid]);
 
   const productsQuery = useMemoFirebase(() => {
     if (!db) return null;
@@ -75,7 +82,7 @@ export default function DashboardPage() {
     }
   };
 
-  if (authLoading || storeLoading || ordersLoading || productsLoading) {
+  if (!isClient || authLoading || storeLoading || ordersLoading || productsLoading) {
     return (
       <div className="flex h-[400px] items-center justify-center">
         <Loader2 className="h-8 w-8 animate-spin text-primary opacity-50" />
@@ -88,7 +95,7 @@ export default function DashboardPage() {
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 bg-white p-8 rounded-[2rem] border border-slate-100 shadow-sm">
         <div className="space-y-1">
           <div className="flex items-center gap-3">
-            <h1 className="text-3xl font-black text-slate-900 uppercase italic tracking-tighter">Branch Overview</h1>
+            <h1 className="text-3xl font-black text-slate-900 uppercase italic tracking-tighter text-primary">Branch Overview</h1>
             {store && (
               <Badge variant="outline" className="font-black text-[9px] uppercase tracking-widest text-primary border-primary/20">
                 {store.status}
@@ -141,7 +148,7 @@ export default function DashboardPage() {
                   <div>
                     <p className="font-black text-primary flex items-center gap-2 uppercase italic text-[10px] tracking-wide">
                       PKT_{order.id.substring(0, 8)}
-                      <span className="text-[9px] font-bold text-slate-400">• {(order.createdAt as any)?.toDate ? format((order.createdAt as any).toDate(), 'MMM dd, HH:mm') : 'SYNCING'}</span>
+                      <span className="text-[9px] font-bold text-slate-400">• {order.createdAt?.seconds ? format(order.createdAt.seconds * 1000, 'MMM dd, HH:mm') : 'SYNCING'}</span>
                     </p>
                     <p className="text-sm font-bold text-slate-700 mt-1 uppercase tracking-tight">{order.items || 'Standard Payload'}</p>
                   </div>
