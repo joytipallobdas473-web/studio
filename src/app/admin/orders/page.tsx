@@ -2,7 +2,7 @@
 
 import { useState, useMemo, useEffect } from "react";
 import { useFirestore, useCollection, useMemoFirebase, useUser } from "@/firebase";
-import { collection, doc, updateDoc, query } from "firebase/firestore";
+import { collection, doc, query } from "firebase/firestore";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -11,8 +11,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Download, Search, FileText, Filter, Loader2, Phone, MapPin, Mail, Globe, CheckCircle2, Banknote, CreditCard } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
 import { format } from "date-fns";
-import { errorEmitter } from "@/firebase/error-emitter";
-import { FirestorePermissionError } from "@/firebase/errors";
+import { updateDocumentNonBlocking } from "@/firebase";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 
@@ -44,7 +43,6 @@ export default function AdminOrdersPage() {
   }, [user]);
 
   const ordersQuery = useMemoFirebase(() => {
-    // CRITICAL: Guard the query with isAdmin to prevent Permission Denied errors for managers
     if (!db || !user || !isAdmin) return null;
     return query(collection(db, "orders"));
   }, [db, user, isAdmin]);
@@ -64,34 +62,16 @@ export default function AdminOrdersPage() {
     if (!db) return;
     const orderRef = doc(db, "orders", orderId);
     
-    updateDoc(orderRef, { status: newStatus })
-      .then(() => {
-        toast({ title: "Protocol Synchronized", description: `Packet ${orderId.substring(0, 6)} updated.` });
-      })
-      .catch(async (err) => {
-        errorEmitter.emit('permission-error', new FirestorePermissionError({
-          path: orderRef.path,
-          operation: 'update',
-          requestResourceData: { status: newStatus }
-        }));
-      });
+    updateDocumentNonBlocking(orderRef, { status: newStatus });
+    toast({ title: "Protocol Synchronized", description: `Packet ${orderId.substring(0, 6)} status updated.` });
   };
 
   const handlePaymentUpdate = (orderId: string, newPaymentMethod: string) => {
     if (!db) return;
     const orderRef = doc(db, "orders", orderId);
     
-    updateDoc(orderRef, { paymentMethod: newPaymentMethod })
-      .then(() => {
-        toast({ title: "Payment Protocol Synchronized", description: `Packet ${orderId.substring(0, 6)} updated.` });
-      })
-      .catch(async (err) => {
-        errorEmitter.emit('permission-error', new FirestorePermissionError({
-          path: orderRef.path,
-          operation: 'update',
-          requestResourceData: { paymentMethod: newPaymentMethod }
-        }));
-      });
+    updateDocumentNonBlocking(orderRef, { paymentMethod: newPaymentMethod });
+    toast({ title: "Payment Protocol Synchronized", description: `Packet ${orderId.substring(0, 6)} updated.` });
   };
 
   const filteredOrders = orders.filter(order => {
@@ -161,7 +141,7 @@ export default function AdminOrdersPage() {
           <h1 className="text-4xl md:text-5xl font-black tracking-tighter text-white uppercase italic leading-none">Global Orders</h1>
           <p className="text-muted-foreground font-medium text-sm tracking-wide">Real-time restock orchestration across the regional grid.</p>
         </div>
-        <Button onClick={() => downloadPO()} className="w-full md:w-auto h-14 md:h-16 px-8 rounded-2xl glass-card border-white/10 text-white hover:text-primary transition-all font-black uppercase tracking-widest text-[10px] md:text-xs">
+        <Button onClick={() => downloadPO()} className="w-full md:w-auto h-14 md:h-16 px-8 glass-card border-white/10 text-white hover:text-primary transition-all font-black uppercase tracking-widest text-[10px] md:text-xs">
           <Download className="mr-3 h-5 w-5" /> Export All Logs
         </Button>
       </div>
@@ -249,7 +229,7 @@ export default function AdminOrdersPage() {
                         <div className="flex items-center gap-2">
                           <span className="text-xs font-bold text-white truncate max-w-[140px] uppercase tracking-tight">{order.items || 'Logistics Cluster'}</span>
                           <Select 
-                            defaultValue={order.paymentMethod || 'cash'} 
+                            value={order.paymentMethod || 'cash'} 
                             onValueChange={(val) => handlePaymentUpdate(order.id, val)}
                           >
                             <SelectTrigger className="h-7 w-[90px] text-[7px] font-black uppercase tracking-widest rounded-lg border-none bg-white/5 text-white shrink-0">
@@ -272,7 +252,7 @@ export default function AdminOrdersPage() {
                     </TableCell>
                     <TableCell>
                       <Select 
-                        defaultValue={order.status} 
+                        value={order.status} 
                         onValueChange={(val) => handleStatusUpdate(order.id, val)}
                       >
                         <SelectTrigger className={cn(
@@ -330,7 +310,7 @@ export default function AdminOrdersPage() {
                  <div className="flex items-center gap-2">
                     <h3 className="font-black text-white text-sm uppercase italic truncate">{order.storeName || 'Branch Node'}</h3>
                     <Select 
-                      defaultValue={order.paymentMethod || 'cash'} 
+                      value={order.paymentMethod || 'cash'} 
                       onValueChange={(val) => handlePaymentUpdate(order.id, val)}
                     >
                       <SelectTrigger className="h-7 w-[70px] text-[7px] font-black uppercase tracking-widest rounded-lg border-none bg-white/5 text-white shrink-0">
@@ -344,7 +324,7 @@ export default function AdminOrdersPage() {
                  </div>
                </div>
                <Select 
-                  defaultValue={order.status} 
+                  value={order.status} 
                   onValueChange={(val) => handleStatusUpdate(order.id, val)}
                 >
                   <SelectTrigger className={cn(
