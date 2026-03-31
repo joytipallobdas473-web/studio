@@ -1,8 +1,7 @@
-
 "use client";
 
 import { useState, useMemo, useEffect } from "react";
-import { useFirestore, useCollection, useMemoFirebase } from "@/firebase";
+import { useFirestore, useCollection, useMemoFirebase, useUser } from "@/firebase";
 import { collection, doc, updateDoc, query } from "firebase/firestore";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -17,6 +16,8 @@ import { FirestorePermissionError } from "@/firebase/errors";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 
+const MASTER_ADMIN_UID = "j96izCkggNcL002AHiJjzGb18Bf2";
+
 const STATUS_OPTIONS = [
   { value: "all", label: "All Statuses" },
   { value: "pending", label: "Pending" },
@@ -28,6 +29,7 @@ const STATUS_OPTIONS = [
 
 export default function AdminOrdersPage() {
   const db = useFirestore();
+  const { user } = useUser();
   const [storeFilter, setStoreFilter] = useState("all");
   const [statusFilter, setStatusFilter] = useState("all");
   const [searchQuery, setSearchQuery] = useState("");
@@ -37,10 +39,15 @@ export default function AdminOrdersPage() {
     setIsClient(true);
   }, []);
 
+  const isAdmin = useMemo(() => {
+    return user?.email?.toLowerCase().includes("admin") || user?.uid === MASTER_ADMIN_UID;
+  }, [user]);
+
   const ordersQuery = useMemoFirebase(() => {
-    if (!db) return null;
+    // CRITICAL: Guard the query with isAdmin to prevent Permission Denied errors for managers
+    if (!db || !user || !isAdmin) return null;
     return query(collection(db, "orders"));
-  }, [db]);
+  }, [db, user, isAdmin]);
 
   const { data: rawOrders, isLoading: loading } = useCollection(ordersQuery);
 
@@ -151,32 +158,32 @@ export default function AdminOrdersPage() {
              <div className="h-2 w-2 rounded-full bg-primary" />
              <span className="text-[10px] font-black tracking-[0.4em] text-primary uppercase">Traffic Controller</span>
           </div>
-          <h1 className="text-4xl md:text-5xl font-black tracking-tighter text-slate-900 uppercase italic leading-none">Global Orders</h1>
-          <p className="text-slate-500 font-medium text-sm tracking-wide">Real-time restock orchestration across the regional grid.</p>
+          <h1 className="text-4xl md:text-5xl font-black tracking-tighter text-white uppercase italic leading-none">Global Orders</h1>
+          <p className="text-muted-foreground font-medium text-sm tracking-wide">Real-time restock orchestration across the regional grid.</p>
         </div>
-        <Button onClick={() => downloadPO()} className="w-full md:w-auto h-14 md:h-16 px-8 rounded-2xl bg-white border border-slate-200 text-slate-600 hover:text-primary transition-all font-black uppercase tracking-widest text-[10px] md:text-xs shadow-sm">
+        <Button onClick={() => downloadPO()} className="w-full md:w-auto h-14 md:h-16 px-8 rounded-2xl glass-card border-white/10 text-white hover:text-primary transition-all font-black uppercase tracking-widest text-[10px] md:text-xs">
           <Download className="mr-3 h-5 w-5" /> Export All Logs
         </Button>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4 md:gap-6">
         <div className="md:col-span-2 relative">
-          <Search className="absolute left-6 top-1/2 -translate-y-1/2 h-5 w-5 text-slate-400" />
+          <Search className="absolute left-6 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
           <Input 
             placeholder="Search Node, Email, Phone..." 
-            className="pl-16 h-14 md:h-16 bg-white border-slate-200 text-slate-900 placeholder:text-slate-400 rounded-2xl md:rounded-[1.5rem] focus:ring-primary text-sm md:text-base font-medium" 
+            className="pl-16 h-14 md:h-16 glass-card border-white/10 text-white placeholder:text-muted-foreground rounded-2xl md:rounded-[1.5rem] focus:ring-primary text-sm md:text-base font-medium" 
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
           />
         </div>
         <Select value={storeFilter} onValueChange={setStoreFilter}>
-          <SelectTrigger className="h-14 md:h-16 bg-white border-slate-200 text-slate-900 rounded-2xl md:rounded-[1.5rem] px-6">
+          <SelectTrigger className="h-14 md:h-16 glass-card border-white/10 text-white rounded-2xl md:rounded-[1.5rem] px-6">
             <div className="flex items-center gap-3">
-              <Filter className="h-5 w-5 text-slate-400" />
+              <Filter className="h-5 w-5 text-muted-foreground" />
               <SelectValue placeholder="Node Selection" />
             </div>
           </SelectTrigger>
-          <SelectContent className="bg-white border-slate-200 text-slate-900 rounded-2xl">
+          <SelectContent className="glass-card border-white/10 text-white rounded-2xl">
             <SelectItem value="all" className="font-bold uppercase tracking-widest text-[10px]">All Active Nodes</SelectItem>
             {Array.from(new Set(orders.map(o => o.storeName).filter(Boolean) || [])).map(store => (
               <SelectItem key={store} value={store} className="font-bold uppercase tracking-widest text-[10px]">{store}</SelectItem>
@@ -184,13 +191,13 @@ export default function AdminOrdersPage() {
           </SelectContent>
         </Select>
         <Select value={statusFilter} onValueChange={setStatusFilter}>
-          <SelectTrigger className="h-14 md:h-16 bg-white border-slate-200 text-slate-900 rounded-2xl md:rounded-[1.5rem] px-6">
+          <SelectTrigger className="h-14 md:h-16 glass-card border-white/10 text-white rounded-2xl md:rounded-[1.5rem] px-6">
             <div className="flex items-center gap-3">
-              <CheckCircle2 className="h-5 w-5 text-slate-400" />
+              <CheckCircle2 className="h-5 w-5 text-muted-foreground" />
               <SelectValue placeholder="Status Filter" />
             </div>
           </SelectTrigger>
-          <SelectContent className="bg-white border-slate-200 text-slate-900 rounded-2xl">
+          <SelectContent className="glass-card border-white/10 text-white rounded-2xl">
             {STATUS_OPTIONS.map(opt => (
               <SelectItem key={opt.value} value={opt.value} className="font-bold uppercase tracking-widest text-[10px]">{opt.label}</SelectItem>
             ))}
@@ -198,40 +205,40 @@ export default function AdminOrdersPage() {
         </Select>
       </div>
 
-      <Card className="hidden md:block border-none bg-white rounded-[2.5rem] overflow-hidden shadow-sm">
+      <Card className="hidden md:block border-none glass-card rounded-[2.5rem] overflow-hidden">
         <CardContent className="p-0">
           <Table>
-            <TableHeader className="bg-slate-50/50">
-              <TableRow className="border-slate-100 h-20">
-                <TableHead className="text-slate-500 uppercase text-[10px] font-black tracking-[0.3em] pl-10">Packet Signature</TableHead>
-                <TableHead className="text-slate-500 uppercase text-[10px] font-black tracking-[0.3em]">Origin & Destination</TableHead>
-                <TableHead className="text-slate-500 uppercase text-[10px] font-black tracking-[0.3em]">Payload Data</TableHead>
-                <TableHead className="text-slate-500 uppercase text-[10px] font-black tracking-[0.3em]">Flow Control</TableHead>
-                <TableHead className="text-slate-500 uppercase text-[10px] font-black tracking-[0.3em] text-right pr-10">Protocol</TableHead>
+            <TableHeader className="bg-white/5">
+              <TableRow className="border-white/5 h-20 hover:bg-transparent">
+                <TableHead className="text-muted-foreground uppercase text-[10px] font-black tracking-[0.3em] pl-10">Packet Signature</TableHead>
+                <TableHead className="text-muted-foreground uppercase text-[10px] font-black tracking-[0.3em]">Origin & Destination</TableHead>
+                <TableHead className="text-muted-foreground uppercase text-[10px] font-black tracking-[0.3em]">Payload Data</TableHead>
+                <TableHead className="text-muted-foreground uppercase text-[10px] font-black tracking-[0.3em]">Flow Control</TableHead>
+                <TableHead className="text-muted-foreground uppercase text-[10px] font-black tracking-[0.3em] text-right pr-10">Protocol</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {filteredOrders.length ? (
                 filteredOrders.map((order) => (
-                  <TableRow key={order.id} className="border-slate-50 hover:bg-slate-50/50 transition-all group h-32">
+                  <TableRow key={order.id} className="border-white/5 hover:bg-white/5 transition-all group h-32">
                     <TableCell className="pl-10">
                       <div className="flex items-center gap-4">
-                        <div className="h-2 w-2 rounded-full bg-primary" />
-                        <span className="font-mono text-xs font-black text-slate-400 uppercase tracking-widest">{order.id.substring(0, 8)}</span>
+                        <div className="h-2 w-2 rounded-full bg-primary shadow-[0_0_10px_rgba(6,182,212,0.5)]" />
+                        <span className="font-mono text-xs font-black text-muted-foreground uppercase tracking-widest">{order.id.substring(0, 8)}</span>
                       </div>
                     </TableCell>
                     <TableCell>
                       <div className="flex flex-col gap-1.5 py-4">
-                        <span className="font-black text-slate-900 text-sm uppercase italic">{order.storeName || 'ROOT_SYSTEM'}</span>
+                        <span className="font-black text-white text-sm uppercase italic">{order.storeName || 'ROOT_SYSTEM'}</span>
                         <div className="flex items-center gap-2 text-[10px] text-primary font-bold">
                           <Mail className="h-2.5 w-2.5 opacity-50" />
                           {order.email || 'NO_EMAIL'}
                         </div>
-                        <div className="flex items-center gap-2 text-[10px] text-slate-600 font-bold">
+                        <div className="flex items-center gap-2 text-[10px] text-muted-foreground font-bold">
                           <Phone className="h-2.5 w-2.5 opacity-50" />
                           {order.phoneNumber || 'NO_CONTACT'}
                         </div>
-                        <div className="flex items-start gap-2 text-[9px] text-slate-500 font-medium max-w-[200px]">
+                        <div className="flex items-start gap-2 text-[9px] text-muted-foreground font-medium max-w-[200px]">
                           <MapPin className="h-2.5 w-2.5 shrink-0 mt-0.5 text-accent" />
                           <span className="truncate">{order.deliveryAddress || 'NO_ADDRESS'}</span>
                         </div>
@@ -240,15 +247,15 @@ export default function AdminOrdersPage() {
                     <TableCell>
                       <div className="flex flex-col gap-1">
                         <div className="flex items-center gap-2">
-                          <span className="text-xs font-bold text-slate-700 truncate max-w-[140px] uppercase tracking-tight">{order.items || 'Logistics Cluster'}</span>
+                          <span className="text-xs font-bold text-white truncate max-w-[140px] uppercase tracking-tight">{order.items || 'Logistics Cluster'}</span>
                           <Select 
                             defaultValue={order.paymentMethod || 'cash'} 
                             onValueChange={(val) => handlePaymentUpdate(order.id, val)}
                           >
-                            <SelectTrigger className="h-7 w-[90px] text-[7px] font-black uppercase tracking-widest rounded-lg border-none bg-slate-100 shrink-0">
+                            <SelectTrigger className="h-7 w-[90px] text-[7px] font-black uppercase tracking-widest rounded-lg border-none bg-white/5 text-white shrink-0">
                               <SelectValue />
                             </SelectTrigger>
-                            <SelectContent className="bg-white border-slate-200 text-slate-900 rounded-xl">
+                            <SelectContent className="glass-card border-white/10 text-white rounded-xl">
                               <SelectItem value="cash" className="text-[10px] font-black tracking-widest uppercase">CASH</SelectItem>
                               <SelectItem value="after_delivery" className="text-[10px] font-black tracking-widest uppercase">CREDIT</SelectItem>
                             </SelectContent>
@@ -256,9 +263,9 @@ export default function AdminOrdersPage() {
                         </div>
                         <div className="flex items-center gap-2">
                            <span className="text-[10px] font-black text-primary tracking-widest">${(order.total || 0).toFixed(2)}</span>
-                           <span className="text-[9px] text-slate-400 font-mono">Qty: {order.quantity || 1}</span>
+                           <span className="text-[9px] text-muted-foreground font-mono">Qty: {order.quantity || 1}</span>
                         </div>
-                        <span className="text-[9px] text-slate-400 font-mono">
+                        <span className="text-[9px] text-muted-foreground font-mono">
                           {order.createdAt?.seconds ? format(order.createdAt.seconds * 1000, 'MMM dd • HH:mm') : 'SYNCING'}
                         </span>
                       </div>
@@ -269,23 +276,23 @@ export default function AdminOrdersPage() {
                         onValueChange={(val) => handleStatusUpdate(order.id, val)}
                       >
                         <SelectTrigger className={cn(
-                          "h-10 w-[140px] text-[10px] font-black uppercase tracking-[0.15em] rounded-xl border-slate-100 bg-slate-50",
-                          order.status === 'delivered' ? 'text-emerald-600' :
-                          order.status === 'processing' ? 'text-blue-600' :
-                          order.status === 'shipped' ? 'text-purple-600' :
-                          order.status === 'cancelled' ? 'text-rose-600' :
-                          'text-amber-600'
+                          "h-10 w-[140px] text-[10px] font-black uppercase tracking-[0.15em] rounded-xl border-white/10 bg-white/5",
+                          order.status === 'delivered' ? 'text-emerald-500' :
+                          order.status === 'processing' ? 'text-primary' :
+                          order.status === 'shipped' ? 'text-accent' :
+                          order.status === 'cancelled' ? 'text-rose-500' :
+                          'text-amber-500'
                         )}>
                           <div className="flex items-center gap-2">
                             <SelectValue />
                           </div>
                         </SelectTrigger>
-                        <SelectContent className="bg-white border-slate-200 text-slate-900 rounded-2xl">
+                        <SelectContent className="glass-card border-white/10 text-white rounded-2xl">
                           <SelectItem value="pending" className="text-[10px] font-black tracking-widest uppercase">PENDING</SelectItem>
                           <SelectItem value="processing" className="text-[10px] font-black tracking-widest uppercase">PROCESSING</SelectItem>
                           <SelectItem value="shipped" className="text-[10px] font-black tracking-widest uppercase">SHIPPED</SelectItem>
-                          <SelectItem value="delivered" className="text-[10px] font-black tracking-widest uppercase text-emerald-600">DELIVERED</SelectItem>
-                          <SelectItem value="cancelled" className="text-[10px] font-black tracking-widest uppercase text-rose-600">CANCELLED</SelectItem>
+                          <SelectItem value="delivered" className="text-[10px] font-black tracking-widest uppercase text-emerald-500">DELIVERED</SelectItem>
+                          <SelectItem value="cancelled" className="text-[10px] font-black tracking-widest uppercase text-rose-500">CANCELLED</SelectItem>
                         </SelectContent>
                       </Select>
                     </TableCell>
@@ -293,7 +300,7 @@ export default function AdminOrdersPage() {
                       <Button 
                         size="sm" 
                         variant="ghost" 
-                        className="text-slate-400 hover:text-primary h-11 rounded-2xl px-6 hover:bg-slate-50 font-bold uppercase tracking-widest text-[10px]"
+                        className="text-muted-foreground hover:text-primary h-11 rounded-2xl px-6 hover:bg-white/5 font-bold uppercase tracking-widest text-[10px]"
                         onClick={() => downloadPO(order.id)}
                       >
                         <FileText className="h-4 w-4 mr-3" /> Packet PO
@@ -303,7 +310,7 @@ export default function AdminOrdersPage() {
                 ))
               ) : (
                 <TableRow>
-                  <TableCell colSpan={5} className="text-center py-40 text-slate-400">
+                  <TableCell colSpan={5} className="text-center py-40 text-muted-foreground">
                     <Globe className="h-20 w-20 mx-auto mb-6 opacity-10 animate-spin-slow" />
                     <p className="font-black uppercase tracking-[0.3em] text-xs italic">Awaiting telemetry synchronization...</p>
                   </TableCell>
@@ -316,20 +323,20 @@ export default function AdminOrdersPage() {
 
       <div className="md:hidden space-y-4">
         {filteredOrders.length ? filteredOrders.map((order) => (
-          <Card key={order.id} className="border-none bg-white rounded-3xl p-6 shadow-sm space-y-6">
+          <Card key={order.id} className="border-none glass-card rounded-3xl p-6 space-y-6">
             <div className="flex justify-between items-start">
                <div className="min-w-0 flex-1 pr-2">
                  <p className="text-[10px] font-black text-primary uppercase italic tracking-tighter mb-1">{order.id.substring(0, 8)}</p>
                  <div className="flex items-center gap-2">
-                    <h3 className="font-black text-slate-900 text-sm uppercase italic truncate">{order.storeName || 'Branch Node'}</h3>
+                    <h3 className="font-black text-white text-sm uppercase italic truncate">{order.storeName || 'Branch Node'}</h3>
                     <Select 
                       defaultValue={order.paymentMethod || 'cash'} 
                       onValueChange={(val) => handlePaymentUpdate(order.id, val)}
                     >
-                      <SelectTrigger className="h-7 w-[70px] text-[7px] font-black uppercase tracking-widest rounded-lg border-none bg-slate-50 shrink-0">
+                      <SelectTrigger className="h-7 w-[70px] text-[7px] font-black uppercase tracking-widest rounded-lg border-none bg-white/5 text-white shrink-0">
                         <SelectValue />
                       </SelectTrigger>
-                      <SelectContent className="bg-white border-slate-200 text-slate-900 rounded-xl">
+                      <SelectContent className="glass-card border-white/10 text-white rounded-xl">
                         <SelectItem value="cash" className="text-[9px] font-black tracking-widest uppercase">CASH</SelectItem>
                         <SelectItem value="after_delivery" className="text-[9px] font-black tracking-widest uppercase">CREDIT</SelectItem>
                       </SelectContent>
@@ -341,54 +348,54 @@ export default function AdminOrdersPage() {
                   onValueChange={(val) => handleStatusUpdate(order.id, val)}
                 >
                   <SelectTrigger className={cn(
-                    "h-8 w-[110px] text-[8px] font-black uppercase tracking-widest rounded-xl border-none bg-slate-50 shrink-0",
-                    order.status === 'delivered' ? 'text-emerald-600' :
-                    order.status === 'processing' ? 'text-blue-600' :
-                    order.status === 'shipped' ? 'text-purple-600' :
-                    order.status === 'cancelled' ? 'text-rose-600' :
-                    'text-amber-600'
+                    "h-8 w-[110px] text-[8px] font-black uppercase tracking-widest rounded-xl border-none bg-white/5 shrink-0",
+                    order.status === 'delivered' ? 'text-emerald-500' :
+                    order.status === 'processing' ? 'text-primary' :
+                    order.status === 'shipped' ? 'text-accent' :
+                    order.status === 'cancelled' ? 'text-rose-500' :
+                    'text-amber-500'
                   )}>
                     <SelectValue />
                   </SelectTrigger>
-                  <SelectContent className="bg-white border-slate-200 text-slate-900 rounded-2xl">
+                  <SelectContent className="glass-card border-white/10 text-white rounded-2xl">
                     <SelectItem value="pending" className="text-[10px] font-black tracking-widest uppercase">PENDING</SelectItem>
                     <SelectItem value="processing" className="text-[10px] font-black tracking-widest uppercase">PROCESSING</SelectItem>
                     <SelectItem value="shipped" className="text-[10px] font-black tracking-widest uppercase">SHIPPED</SelectItem>
-                    <SelectItem value="delivered" className="text-[10px] font-black tracking-widest uppercase text-emerald-600">DELIVERED</SelectItem>
-                    <SelectItem value="cancelled" className="text-[10px] font-black tracking-widest uppercase text-rose-600">CANCELLED</SelectItem>
+                    <SelectItem value="delivered" className="text-[10px] font-black tracking-widest uppercase text-emerald-500">DELIVERED</SelectItem>
+                    <SelectItem value="cancelled" className="text-[10px] font-black tracking-widest uppercase text-rose-500">CANCELLED</SelectItem>
                   </SelectContent>
                 </Select>
             </div>
             
-            <div className="space-y-3 bg-slate-50 p-4 rounded-2xl">
+            <div className="space-y-3 bg-white/5 p-4 rounded-2xl border border-white/5">
                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-3 text-xs font-bold text-slate-600">
+                  <div className="flex items-center gap-3 text-xs font-bold text-muted-foreground">
                     <Phone className="h-3 w-3 text-primary opacity-50" />
                     {order.phoneNumber || 'N/A'}
                   </div>
-                  <div className="flex items-center gap-1.5 text-[8px] font-black text-slate-400 uppercase">
+                  <div className="flex items-center gap-1.5 text-[8px] font-black text-muted-foreground uppercase">
                     {order.paymentMethod === 'cash' ? <Banknote className="h-3 w-3" /> : <CreditCard className="h-3 w-3" />}
                     {order.paymentMethod === 'after_delivery' ? 'CREDIT' : 'CASH'}
                   </div>
                </div>
-               <div className="flex items-start gap-3 text-[10px] text-slate-500 font-medium">
+               <div className="flex items-start gap-3 text-[10px] text-muted-foreground font-medium">
                   <MapPin className="h-3 w-3 text-accent shrink-0 mt-0.5" />
                   <span>{order.deliveryAddress || 'NO_ADDRESS'}</span>
                </div>
             </div>
 
-            <div className="flex items-center justify-between border-t border-slate-50 pt-4">
+            <div className="flex items-center justify-between border-t border-white/5 pt-4">
                <div className="space-y-0.5">
                   <p className="text-xs font-black text-primary font-mono">${(order.total || 0).toFixed(2)}</p>
-                  <p className="text-[9px] text-slate-400 font-mono truncate max-w-[150px]">{order.items || 'Payload'}</p>
+                  <p className="text-[9px] text-muted-foreground font-mono truncate max-w-[150px]">{order.items || 'Payload'}</p>
                </div>
-               <Button size="sm" variant="outline" className="h-10 rounded-xl font-black text-[9px] uppercase tracking-widest" onClick={() => downloadPO(order.id)}>
+               <Button size="sm" variant="outline" className="h-10 rounded-xl glass-card border-white/10 text-white font-black text-[9px] uppercase tracking-widest" onClick={() => downloadPO(order.id)}>
                  <Download className="h-3 w-3 mr-2" /> PO
                </Button>
             </div>
           </Card>
         )) : (
-          <div className="text-center py-20 text-slate-400">
+          <div className="text-center py-20 text-muted-foreground">
              <Globe className="h-16 w-16 mx-auto mb-4 opacity-10" />
              <p className="font-black uppercase tracking-[0.3em] text-[10px]">No packets match filters.</p>
           </div>
