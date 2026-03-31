@@ -8,7 +8,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Plus, Search, Edit2, Trash2, Loader2, Filter, CheckCircle2, ImageIcon, Camera, CameraOff, Sparkles, Globe, X } from "lucide-react";
+import { Plus, Search, Edit2, Trash2, Loader2, Filter, CheckCircle2, ImageIcon, Camera, CameraOff, Sparkles, Globe, X, Box } from "lucide-react";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -16,7 +16,6 @@ import { toast } from "@/hooks/use-toast";
 import { addDocumentNonBlocking, updateDocumentNonBlocking, deleteDocumentNonBlocking } from "@/firebase";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 
 const CATEGORIES = ["Electronics", "Apparel", "Grocery", "Office Supplies"];
 const MASTER_ADMIN_UID = "j96izCkggNcL002AHiJjzGb18Bf2";
@@ -235,6 +234,7 @@ export default function InventoryControl() {
 
       {filteredProducts.length > 0 ? (
         <>
+          {/* Desktop View */}
           <Card className="hidden md:block border-none glass-card rounded-[2.5rem] overflow-hidden">
             <CardContent className="p-0">
               <Table>
@@ -293,6 +293,49 @@ export default function InventoryControl() {
               </Table>
             </CardContent>
           </Card>
+
+          {/* Mobile View */}
+          <div className="md:hidden grid grid-cols-1 gap-4">
+            {filteredProducts.map((product) => (
+              <Card key={product.id} className="border-none glass-card rounded-3xl overflow-hidden p-6 relative group">
+                <div className="flex gap-6 items-start">
+                  <div className="relative h-20 w-20 rounded-2xl overflow-hidden bg-white/5 border border-white/10 shrink-0">
+                    <Image src={product.imageUrl || `https://picsum.photos/seed/${product.sku}/100/100`} alt={product.name} fill className="object-cover" />
+                  </div>
+                  <div className="flex-1 space-y-3 min-w-0">
+                    <div className="flex justify-between items-start">
+                      <div className="flex flex-col">
+                        <span className="font-black text-white text-base uppercase italic truncate">{product.name}</span>
+                        <span className="text-[10px] font-mono text-muted-foreground uppercase">{product.sku}</span>
+                      </div>
+                      <Badge variant="outline" className="text-[8px] uppercase font-black px-2 py-0.5 rounded-lg border-white/10 text-primary">
+                        {product.category}
+                      </Badge>
+                    </div>
+                    
+                    <div className="flex items-center justify-between">
+                       <span className="font-mono text-sm text-primary font-black">${(product.price || 0).toFixed(2)}</span>
+                       <div className="flex items-center gap-2">
+                         <Box className={cn("h-3 w-3", (product.stockQuantity || 0) < 10 ? "text-rose-500" : "text-emerald-500")} />
+                         <span className={cn("text-xs font-black font-mono", (product.stockQuantity || 0) < 10 ? "text-rose-500" : "text-emerald-500")}>
+                           {product.stockQuantity || 0}
+                         </span>
+                       </div>
+                    </div>
+
+                    <div className="flex gap-3 pt-2">
+                      <Button variant="outline" className="flex-1 h-10 rounded-xl bg-white/5 border-white/10 text-white font-black uppercase tracking-widest text-[9px]" onClick={() => handleOpenDialog(product)}>
+                        <Edit2 className="h-3.5 w-3.5 mr-2 text-primary" /> Modify
+                      </Button>
+                      <Button variant="outline" className="h-10 w-10 rounded-xl bg-white/5 border-white/10 text-rose-500 flex items-center justify-center p-0" onClick={() => handleDelete(product)}>
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  </div>
+                </div>
+              </Card>
+            ))}
+          </div>
         </>
       ) : (
         <div className="text-center py-32 glass-card rounded-[2.5rem] border border-dashed border-white/10">
