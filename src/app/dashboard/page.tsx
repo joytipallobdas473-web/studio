@@ -1,7 +1,7 @@
 "use client";
 
 import { useFirestore, useCollection, useUser, useMemoFirebase, useDoc } from "@/firebase";
-import { collection, query, orderBy, limit, doc, where } from "firebase/firestore";
+import { collection, query, doc, where } from "firebase/firestore";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Package, ShoppingCart, ArrowRight, Truck, PackageCheck, PlusCircle, Activity, Loader2, ChevronRight } from "lucide-react";
@@ -31,21 +31,37 @@ export default function DashboardPage() {
 
   const ordersQuery = useMemoFirebase(() => {
     if (!db || !user) return null;
+    // Removed orderBy and limit to avoid index requirements
     return query(
       collection(db, "orders"), 
-      where("userId", "==", user.uid),
-      orderBy("createdAt", "desc"), 
-      limit(10)
+      where("userId", "==", user.uid)
     );
   }, [db, user?.uid]);
 
   const productsQuery = useMemoFirebase(() => {
     if (!db) return null;
-    return query(collection(db, "products"), orderBy("name"), limit(5));
+    // We can still sort simple collection queries without indexes
+    return query(collection(db, "products"));
   }, [db]);
 
-  const { data: orders, isLoading: ordersLoading } = useCollection(ordersQuery);
-  const { data: products, isLoading: productsLoading } = useCollection(productsQuery);
+  const { data: rawOrders, isLoading: ordersLoading } = useCollection(ordersQuery);
+  const { data: rawProducts, isLoading: productsLoading } = useCollection(productsQuery);
+
+  // In-memory sorting for orders
+  const orders = useMemo(() => {
+    if (!rawOrders) return [];
+    return [...rawOrders].sort((a, b) => {
+      const dateA = a.createdAt?.seconds || 0;
+      const dateB = b.createdAt?.seconds || 0;
+      return dateB - dateA;
+    }).slice(0, 10);
+  }, [rawOrders]);
+
+  // In-memory sorting for products
+  const products = useMemo(() => {
+    if (!rawProducts) return [];
+    return [...rawProducts].sort((a, b) => (a.name || "").localeCompare(b.name || "")).slice(0, 5);
+  }, [rawProducts]);
 
   const stats = useMemo(() => [
     { 

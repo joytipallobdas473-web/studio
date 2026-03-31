@@ -1,15 +1,14 @@
 "use client";
 
 import { useFirestore, useCollection, useUser, useMemoFirebase } from "@/firebase";
-import { collection, query, orderBy, where } from "firebase/firestore";
+import { collection, query, where } from "firebase/firestore";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
-import { Search, Filter, ArrowUpDown, Clock, Truck, PackageCheck, XCircle, Loader2, Phone, MapPin, Banknote, CreditCard, AlertTriangle, ExternalLink } from "lucide-react";
+import { Search, Filter, ArrowUpDown, Clock, Truck, PackageCheck, XCircle, Loader2, Phone, MapPin, Banknote, CreditCard } from "lucide-react";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { format } from "date-fns";
-import { Button } from "@/components/ui/button";
 
 export default function HistoryPage() {
   const db = useFirestore();
@@ -18,21 +17,33 @@ export default function HistoryPage() {
 
   const historyQuery = useMemoFirebase(() => {
     if (!db || !user) return null;
+    // Removed orderBy to bypass the need for a composite index
     return query(
       collection(db, "orders"), 
-      where("userId", "==", user.uid),
-      orderBy("createdAt", "desc")
+      where("userId", "==", user.uid)
     );
   }, [db, user]);
 
-  const { data: orders, isLoading: loading, error } = useCollection(historyQuery);
+  const { data: rawOrders, isLoading: loading } = useCollection(historyQuery);
 
-  const filteredOrders = orders?.filter(o => 
-    o.id.toLowerCase().includes(searchTerm.toLowerCase()) || 
-    (o.items || "").toLowerCase().includes(searchTerm.toLowerCase()) ||
-    (o.phoneNumber || "").toLowerCase().includes(searchTerm.toLowerCase()) ||
-    (o.deliveryAddress || "").toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  // Perform sorting in memory to avoid index requirements
+  const orders = useMemo(() => {
+    if (!rawOrders) return [];
+    return [...rawOrders].sort((a, b) => {
+      const dateA = a.createdAt?.seconds || 0;
+      const dateB = b.createdAt?.seconds || 0;
+      return dateB - dateA;
+    });
+  }, [rawOrders]);
+
+  const filteredOrders = useMemo(() => {
+    return orders.filter(o => 
+      o.id.toLowerCase().includes(searchTerm.toLowerCase()) || 
+      (o.items || "").toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (o.phoneNumber || "").toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (o.deliveryAddress || "").toLowerCase().includes(searchTerm.toLowerCase())
+    );
+  }, [orders, searchTerm]);
 
   const getStatusIcon = (status: string) => {
     switch ((status || "").toLowerCase()) {
@@ -60,29 +71,6 @@ export default function HistoryPage() {
     return (
       <div className="flex h-[400px] items-center justify-center">
         <Loader2 className="h-8 w-8 animate-spin text-primary opacity-50" />
-      </div>
-    );
-  }
-
-  // Handle Index Errors specifically
-  if (error && error.message.includes("index")) {
-    const indexUrl = error.message.match(/https:\/\/console\.firebase\.google\.com[^\s]*/)?.[0];
-    return (
-      <div className="flex flex-col items-center justify-center py-20 text-center animate-in fade-in duration-500">
-        <div className="bg-amber-100 p-6 rounded-full mb-6">
-          <AlertTriangle className="h-12 w-12 text-amber-600" />
-        </div>
-        <h2 className="text-2xl font-black text-slate-900 uppercase italic tracking-tighter">Index Required</h2>
-        <p className="text-slate-500 max-w-md mt-4 font-medium">
-          The regional grid requires a composite index to sort and filter your history logs.
-        </p>
-        {indexUrl && (
-          <Button asChild className="mt-8 bg-primary text-white font-black rounded-2xl h-14 px-10 uppercase tracking-widest text-[10px]">
-            <a href={indexUrl} target="_blank" rel="noopener noreferrer">
-              Deploy Index <ExternalLink className="ml-2 h-4 w-4" />
-            </a>
-          </Button>
-        )}
       </div>
     );
   }
