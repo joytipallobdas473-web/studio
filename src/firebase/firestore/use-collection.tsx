@@ -66,44 +66,54 @@ export function useCollection<T = any>(
     setIsLoading(true);
     setError(null);
 
-    // Using a delay to ensure the Firestore instance is fully ready
-    // This helps mitigate internal assertion failures during rapid HMR cycles.
-    const unsubscribe = onSnapshot(
-      memoizedTargetRefOrQuery,
-      (snapshot: QuerySnapshot<DocumentData>) => {
-        if (!isMounted) return;
-        const results: ResultItemType[] = [];
-        for (const doc of snapshot.docs) {
-          results.push({ ...(doc.data() as T), id: doc.id });
+    let unsubscribe: () => void;
+
+    try {
+      unsubscribe = onSnapshot(
+        memoizedTargetRefOrQuery,
+        (snapshot: QuerySnapshot<DocumentData>) => {
+          if (!isMounted) return;
+          const results: ResultItemType[] = [];
+          for (const doc of snapshot.docs) {
+            results.push({ ...(doc.data() as T), id: doc.id });
+          }
+          setData(results);
+          setError(null);
+          setIsLoading(false);
+        },
+        (err: FirestoreError) => {
+          if (!isMounted) return;
+          
+          const path: string =
+            memoizedTargetRefOrQuery.type === 'collection'
+              ? (memoizedTargetRefOrQuery as CollectionReference).path
+              : (memoizedTargetRefOrQuery as unknown as InternalQuery)._query?.path?.canonicalString() || 'unknown';
+
+          const contextualError = new FirestorePermissionError({
+            operation: 'list',
+            path,
+          });
+
+          setError(contextualError);
+          setData(null);
+          setIsLoading(false);
+
+          errorEmitter.emit('permission-error', contextualError);
         }
-        setData(results);
-        setError(null);
+      );
+    } catch (err) {
+      if (isMounted) {
         setIsLoading(false);
-      },
-      (err: FirestoreError) => {
-        if (!isMounted) return;
-        
-        const path: string =
-          memoizedTargetRefOrQuery.type === 'collection'
-            ? (memoizedTargetRefOrQuery as CollectionReference).path
-            : (memoizedTargetRefOrQuery as unknown as InternalQuery)._query?.path?.canonicalString() || 'unknown';
-
-        const contextualError = new FirestorePermissionError({
-          operation: 'list',
-          path,
-        });
-
-        setError(contextualError);
-        setData(null);
-        setIsLoading(false);
-
-        errorEmitter.emit('permission-error', contextualError);
+        console.warn('Firestore collection listener initialization interrupted.');
       }
-    );
+      return;
+    }
 
     return () => {
       isMounted = false;
-      unsubscribe();
+      if (unsubscribe) {
+        unsubscribe();
+      }
     };
   }, [memoizedTargetRefOrQuery]);
 

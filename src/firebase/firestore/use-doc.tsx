@@ -52,36 +52,49 @@ export function useDoc<T = any>(
     setIsLoading(true);
     setError(null);
 
-    const unsubscribe = onSnapshot(
-      memoizedDocRef,
-      (snapshot: DocumentSnapshot<DocumentData>) => {
-        if (!isMounted) return;
-        if (snapshot.exists()) {
-          setData({ ...(snapshot.data() as T), id: snapshot.id });
-        } else {
+    let unsubscribe: () => void;
+
+    try {
+      unsubscribe = onSnapshot(
+        memoizedDocRef,
+        (snapshot: DocumentSnapshot<DocumentData>) => {
+          if (!isMounted) return;
+          if (snapshot.exists()) {
+            setData({ ...(snapshot.data() as T), id: snapshot.id });
+          } else {
+            setData(null);
+          }
+          setError(null);
+          setIsLoading(false);
+        },
+        (err: FirestoreError) => {
+          if (!isMounted) return;
+          const contextualError = new FirestorePermissionError({
+            operation: 'get',
+            path: memoizedDocRef.path,
+          });
+
+          setError(contextualError);
           setData(null);
+          setIsLoading(false);
+
+          errorEmitter.emit('permission-error', contextualError);
         }
-        setError(null);
+      );
+    } catch (err) {
+      // Catching potential internal SDK initialization errors during HMR
+      if (isMounted) {
         setIsLoading(false);
-      },
-      (err: FirestoreError) => {
-        if (!isMounted) return;
-        const contextualError = new FirestorePermissionError({
-          operation: 'get',
-          path: memoizedDocRef.path,
-        });
-
-        setError(contextualError);
-        setData(null);
-        setIsLoading(false);
-
-        errorEmitter.emit('permission-error', contextualError);
+        console.warn('Firestore listener initialization interrupted.');
       }
-    );
+      return;
+    }
 
     return () => {
       isMounted = false;
-      unsubscribe();
+      if (unsubscribe) {
+        unsubscribe();
+      }
     };
   }, [memoizedDocRef]);
 

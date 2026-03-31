@@ -16,10 +16,11 @@ export function initializeFirebase() {
   if (typeof window === 'undefined') return { firebaseApp: null, auth: null, firestore: null };
 
   if (!globalForFirebase.app) {
-    if (!getApps().length) {
-      globalForFirebase.app = initializeApp(firebaseConfig);
+    const apps = getApps();
+    if (apps.length > 0) {
+      globalForFirebase.app = apps[0];
     } else {
-      globalForFirebase.app = getApp();
+      globalForFirebase.app = initializeApp(firebaseConfig);
     }
   }
 
