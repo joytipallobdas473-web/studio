@@ -1,4 +1,3 @@
-
 {
   "entities": {
     "UserProfile": {
@@ -61,6 +60,16 @@
         "status": { "type": "string", "enum": ["pending", "active", "rejected"] }
       },
       "required": ["id", "name", "status"]
+    },
+    "AdminRole": {
+      "title": "AdminRole",
+      "type": "object",
+      "description": "Administrative authority record.",
+      "properties": {
+        "uid": { "type": "string" },
+        "role": { "type": "string", "enum": ["master", "regional"] }
+      },
+      "required": ["uid", "role"]
     }
   },
   "auth": {
@@ -82,6 +91,10 @@
     "/stores/{storeId}": {
       "schema": "Store",
       "description": "Retailer registration records."
+    },
+    "/roles_admin/{uid}": {
+      "schema": "AdminRole",
+      "description": "Registry of authorized administrative identities."
     }
   }
 }

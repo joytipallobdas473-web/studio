@@ -10,8 +10,15 @@ service cloud.firestore {
     function isAdmin() {
       return isSignedIn() && (
         request.auth.uid == 'j96izCkggNcL002AHiJjzGb18Bf2' ||
+        exists(/databases/$(database)/documents/roles_admin/$(request.auth.uid)) ||
         (request.auth.token.email != null && request.auth.token.email.lower().contains('admin'))
       );
+    }
+
+    // Roles Admin: Only master admin can manage roles.
+    match /roles_admin/{uid} {
+      allow read: if isSignedIn();
+      allow write: if request.auth.uid == 'j96izCkggNcL002AHiJjzGb18Bf2';
     }
 
     // Products: Any authenticated node can read. Only admins can provision SKUs.
