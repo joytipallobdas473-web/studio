@@ -23,7 +23,9 @@ import {
   MapPin,
   PhoneCall,
   CreditCard,
-  Banknote
+  Banknote,
+  ChevronRight,
+  ShoppingCart
 } from "lucide-react";
 import { useFirestore, useCollection, useUser, useMemoFirebase, useDoc } from "@/firebase";
 import { collection, serverTimestamp, query, doc } from "firebase/firestore";
@@ -286,89 +288,95 @@ export default function NewOrderPage() {
       </div>
 
       <Dialog open={orderDialogOpen} onOpenChange={setOrderDialogOpen}>
-        <DialogContent className="rounded-[2.5rem] border-none p-0 overflow-hidden bg-white max-w-[550px] shadow-2xl animate-in zoom-in-95 duration-300">
-          <DialogHeader className="p-10 pb-0">
-            <DialogTitle className="text-2xl font-black text-primary uppercase italic tracking-tighter">Finalize Reorder</DialogTitle>
+        <DialogContent className="rounded-[2.5rem] border-none p-0 bg-white max-w-[550px] shadow-2xl animate-in zoom-in-95 duration-300 max-h-[95vh] overflow-hidden flex flex-col">
+          <DialogHeader className="p-6 md:p-10 pb-2">
+            <DialogTitle className="text-2xl font-black text-primary uppercase italic tracking-tighter flex items-center gap-3">
+               <ShoppingCart className="h-6 w-6" /> Finalize Reorder
+            </DialogTitle>
           </DialogHeader>
-          {selectedProduct && (
-            <div className="p-10 space-y-8">
-              <div className="flex gap-6 p-6 bg-slate-50 rounded-3xl border border-slate-100 items-center">
-                <div className="flex-1 space-y-1">
-                  <h4 className="font-black text-slate-900 text-lg uppercase italic tracking-tight">{selectedProduct.name}</h4>
-                  <p className="text-xl font-black text-primary font-mono">${(selectedProduct.price || 0).toFixed(2)} / Unit</p>
-                </div>
-              </div>
-              
-              <div className="space-y-6">
-                <div className="space-y-3">
-                  <Label className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 ml-1">Payment Protocol</Label>
-                  <Select value={paymentMethod} onValueChange={setPaymentMethod}>
-                    <SelectTrigger className="h-14 rounded-2xl bg-slate-50 border-none font-bold text-slate-900">
-                      <SelectValue placeholder="Select Payment Method" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="cash" className="font-black uppercase text-[10px]">
-                        <div className="flex items-center gap-2">
-                          <Banknote className="h-4 w-4" /> Cash
-                        </div>
-                      </SelectItem>
-                      <SelectItem value="after_delivery" className="font-black uppercase text-[10px]">
-                        <div className="flex items-center gap-2">
-                          <CreditCard className="h-4 w-4" /> After Delivery
-                        </div>
-                      </SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                <div className="space-y-3">
-                  <Label className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 ml-1">Contact Phone Node</Label>
-                  <div className="relative">
-                    <Phone className="absolute left-5 top-1/2 -translate-y-1/2 h-5 w-5 text-primary opacity-50" />
-                    <Input 
-                      placeholder="Enter mobile signature..." 
-                      className="h-14 pl-14 rounded-2xl bg-slate-50 border-none focus:ring-primary font-bold text-slate-900" 
-                      value={phoneNumber}
-                      onChange={(e) => setPhoneNumber(e.target.value)}
-                    />
+          
+          <div className="flex-1 overflow-y-auto px-6 md:px-10 py-4 space-y-8 scrollbar-thin scrollbar-thumb-primary/10">
+            {selectedProduct && (
+              <>
+                <div className="flex gap-6 p-6 bg-slate-50 rounded-3xl border border-slate-100 items-center">
+                  <div className="flex-1 space-y-1">
+                    <h4 className="font-black text-slate-900 text-lg uppercase italic tracking-tight">{selectedProduct.name}</h4>
+                    <p className="text-xl font-black text-primary font-mono">${(selectedProduct.price || 0).toFixed(2)} / Unit</p>
                   </div>
                 </div>
-
-                <div className="space-y-3">
-                  <Label className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 ml-1">Payload Destination</Label>
-                  <div className="relative">
-                    <MapPin className="absolute left-5 top-5 h-5 w-5 text-primary opacity-50" />
-                    <Textarea 
-                      placeholder="Enter complete delivery coordinates..." 
-                      className="min-h-[120px] pl-14 pt-4 rounded-2xl bg-slate-50 border-none focus:ring-primary font-bold text-slate-900 text-sm" 
-                      value={deliveryAddress}
-                      onChange={(e) => setDeliveryAddress(e.target.value)}
-                    />
+                
+                <div className="space-y-6">
+                  <div className="space-y-3">
+                    <Label className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 ml-1">Payment Protocol</Label>
+                    <Select value={paymentMethod} onValueChange={setPaymentMethod}>
+                      <SelectTrigger className="h-14 rounded-2xl bg-slate-50 border-none font-bold text-slate-900">
+                        <SelectValue placeholder="Select Payment Method" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="cash" className="font-black uppercase text-[10px]">
+                          <div className="flex items-center gap-2">
+                            <Banknote className="h-4 w-4" /> Cash
+                          </div>
+                        </SelectItem>
+                        <SelectItem value="after_delivery" className="font-black uppercase text-[10px]">
+                          <div className="flex items-center gap-2">
+                            <CreditCard className="h-4 w-4" /> After Delivery
+                          </div>
+                        </SelectItem>
+                      </SelectContent>
+                    </Select>
                   </div>
-                </div>
 
-                <div className="grid grid-cols-2 gap-6">
-                   <div className="space-y-3">
-                     <Label className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 ml-1">Node Density</Label>
-                     <Input 
-                       type="number" 
-                       min="1" 
-                       value={orderQuantity} 
-                       onChange={(e) => setOrderQuantity(e.target.value)} 
-                       className="h-16 text-center font-black rounded-2xl bg-slate-50 border-none text-xl" 
-                     />
-                   </div>
-                   <div className="space-y-3">
-                     <Label className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 ml-1">Net Value</Label>
-                     <div className="h-16 flex items-center justify-center bg-primary text-white font-black rounded-2xl text-xl font-mono">
-                        ${(parseFloat(orderQuantity || "0") * (selectedProduct.price || 0)).toFixed(2)}
+                  <div className="space-y-3">
+                    <Label className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 ml-1">Contact Phone Node</Label>
+                    <div className="relative">
+                      <Phone className="absolute left-5 top-1/2 -translate-y-1/2 h-5 w-5 text-primary opacity-50" />
+                      <Input 
+                        placeholder="Enter mobile signature..." 
+                        className="h-14 pl-14 rounded-2xl bg-slate-50 border-none focus:ring-primary font-bold text-slate-900" 
+                        value={phoneNumber}
+                        onChange={(e) => setPhoneNumber(e.target.value)}
+                      />
+                    </div>
+                  </div>
+
+                  <div className="space-y-3">
+                    <Label className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 ml-1">Payload Destination</Label>
+                    <div className="relative">
+                      <MapPin className="absolute left-5 top-5 h-5 w-5 text-primary opacity-50" />
+                      <Textarea 
+                        placeholder="Enter complete delivery coordinates..." 
+                        className="min-h-[100px] pl-14 pt-4 rounded-2xl bg-slate-50 border-none focus:ring-primary font-bold text-slate-900 text-sm" 
+                        value={deliveryAddress}
+                        onChange={(e) => setDeliveryAddress(e.target.value)}
+                      />
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-6">
+                     <div className="space-y-3">
+                       <Label className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 ml-1">Node Density</Label>
+                       <Input 
+                         type="number" 
+                         min="1" 
+                         value={orderQuantity} 
+                         onChange={(e) => setOrderQuantity(e.target.value)} 
+                         className="h-16 text-center font-black rounded-2xl bg-slate-50 border-none text-xl" 
+                       />
                      </div>
-                   </div>
+                     <div className="space-y-3">
+                       <Label className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 ml-1">Net Value</Label>
+                       <div className="h-16 flex items-center justify-center bg-primary text-white font-black rounded-2xl text-xl font-mono">
+                          ${(parseFloat(orderQuantity || "0") * (selectedProduct.price || 0)).toFixed(2)}
+                       </div>
+                     </div>
+                  </div>
                 </div>
-              </div>
-            </div>
-          )}
-          <DialogFooter className="p-10 pt-0 flex gap-4">
+              </>
+            )}
+          </div>
+
+          <DialogFooter className="p-6 md:p-10 pt-4 flex gap-4 border-t border-slate-50 bg-white sticky bottom-0">
             <Button variant="ghost" onClick={() => setOrderDialogOpen(false)} className="flex-1 h-14 rounded-2xl font-black uppercase tracking-widest text-[10px]">Abort</Button>
             <Button onClick={handleSubmitOrder} className="flex-[2] bg-accent text-primary hover:bg-primary hover:text-white h-14 rounded-2xl font-black uppercase tracking-widest text-[10px]" disabled={isSubmitting}>
               {isSubmitting ? <Loader2 className="h-5 w-5 animate-spin" /> : "Transmit Request"}
