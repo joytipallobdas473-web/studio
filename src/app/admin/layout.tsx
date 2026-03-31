@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect } from "react";
-import { SidebarProvider, Sidebar, SidebarContent, SidebarHeader, SidebarMenu, SidebarMenuItem, SidebarMenuButton, SidebarGroup, SidebarGroupLabel, SidebarGroupContent, SidebarInset, SidebarTrigger, SidebarFooter } from "@/components/ui/sidebar";
+import { SidebarProvider, Sidebar, SidebarContent, SidebarHeader, SidebarHeader as SBHeader, SidebarMenu, SidebarMenuItem, SidebarMenuButton, SidebarGroup, SidebarGroupLabel, SidebarGroupContent, SidebarInset, SidebarTrigger, SidebarFooter } from "@/components/ui/sidebar";
 import { LayoutDashboard, Store, Package, ShoppingCart, LogOut, Cpu, Loader2, Settings, Zap } from "lucide-react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
@@ -73,8 +73,8 @@ function AdminSidebar() {
           <div className="absolute top-0 right-0 h-full w-1 bg-primary/30" />
           <div className="flex items-center justify-between">
              <div className="flex flex-col">
-                <span className="8px] font-black text-muted-foreground uppercase tracking-widest">Neural Link</span>
-                <span className="10px] font-black text-white uppercase italic mt-1">Authorized Node</span>
+                <span className="text-[8px] font-black text-muted-foreground uppercase tracking-widest">Neural Link</span>
+                <span className="text-[10px] font-black text-white uppercase italic mt-1">Authorized Node</span>
              </div>
              <div className="h-2 w-2 rounded-full bg-primary shadow-[0_0_10px_rgba(6,182,212,1)]" />
           </div>
@@ -97,13 +97,12 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
       } else if (user && pathname !== "/admin/login") {
         const isAdmin = user.email?.toLowerCase().includes("admin") || user.uid === MASTER_ADMIN_UID;
         if (!isAdmin) {
-          signOut(auth).then(() => {
-            router.push("/login");
-            toast({ 
-              title: "Identity Breach", 
-              description: "Unauthorized node signatures are purged from command paths.", 
-              variant: "destructive" 
-            });
+          // Instead of sign out, redirect to store dashboard to prevent session loss
+          router.push("/dashboard");
+          toast({ 
+            title: "Access Restricted", 
+            description: "Unauthorized node signatures are routed to the Branch Portal.", 
+            variant: "destructive" 
           });
         }
       }

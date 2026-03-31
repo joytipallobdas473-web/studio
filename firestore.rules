@@ -8,8 +8,8 @@ service cloud.firestore {
     
     function isAdmin() {
       return isSignedIn() && (
-        (request.auth.token.email != null && request.auth.token.email.lower().contains('admin')) || 
-        request.auth.uid == 'j96izCkggNcL002AHiJjzGb18Bf2'
+        request.auth.uid == 'j96izCkggNcL002AHiJjzGb18Bf2' ||
+        (request.auth.token.email != null && request.auth.token.email.lower().contains('admin'))
       );
     }
 
@@ -26,9 +26,9 @@ service cloud.firestore {
 
     // Orders: Users can read/write their own packets. Admins monitor global traffic.
     match /orders/{orderId} {
-      allow read: if isAdmin() || (isSignedIn() && resource.data.userId == request.auth.uid);
+      allow read: if isAdmin() || (isSignedIn() && request.auth.uid == resource.data.userId);
       allow create: if isSignedIn();
-      allow update, delete: if isAdmin() || (isSignedIn() && resource.data.userId == request.auth.uid);
+      allow update, delete: if isAdmin() || (isSignedIn() && request.auth.uid == resource.data.userId);
     }
 
     // UserProfiles: Individual identity protection.
