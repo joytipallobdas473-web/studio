@@ -190,8 +190,9 @@ export default function AdminOverview() {
                       {chartData.map((entry, index) => (
                         <Cell key={`cell-${index}`} fill={index === chartData.length - 1 ? '#f59e0b' : '#334155'} />
                       ))}
-                    </BarChart>
-                  </ResponsiveContainer>
+                    </Bar>
+                  </BarChart>
+                </ResponsiveContainer>
                 </div>
             </CardContent>
           </Card>
