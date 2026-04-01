@@ -9,7 +9,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetFooter, SheetTrigger } from "@/components/ui/sheet";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { 
   Package, 
@@ -20,10 +20,14 @@ import {
   Filter, 
   Phone,
   MapPin,
-  PhoneCall,
   CreditCard,
   Banknote,
-  ShoppingCart
+  ShoppingCart,
+  Plus,
+  Minus,
+  Trash2,
+  ChevronRight,
+  ArrowRight
 } from "lucide-react";
 import { useFirestore, useCollection, useUser, useMemoFirebase, useDoc } from "@/firebase";
 import { collection, serverTimestamp, query, doc } from "firebase/firestore";
@@ -39,6 +43,14 @@ const CATEGORIES = [
   { id: "Office Supplies", name: "Office Supplies", icon: Package },
 ];
 
+interface CartItem {
+  id: string;
+  name: string;
+  price: number;
+  quantity: number;
+  sku: string;
+}
+
 export default function NewOrderPage() {
   const router = useRouter();
   const db = useFirestore();
@@ -50,9 +62,7 @@ export default function NewOrderPage() {
   const [submitted, setSubmitted] = useState(false);
   const [isClient, setIsClient] = useState(false);
   
-  const [orderDialogOpen, setOrderDialogOpen] = useState(false);
-  const [selectedProduct, setSelectedProduct] = useState<any>(null);
-  const [orderQuantity, setOrderQuantity] = useState("1");
+  const [cart, setCart] = useState<Record<string, CartItem>>({});
   const [phoneNumber, setPhoneNumber] = useState("");
   const [deliveryAddress, setDeliveryAddress] = useState("");
   const [paymentMethod, setPaymentMethod] = useState("cash");
@@ -98,16 +108,52 @@ export default function NewOrderPage() {
     });
   }, [products, searchQuery, selectedCategory]);
 
-  const handleOpenOrderDialog = (product: any) => {
-    setSelectedProduct(product);
-    setOrderQuantity("1");
-    setPaymentMethod("cash");
-    setOrderDialogOpen(true);
+  const addToCart = (product: any) => {
+    setCart(prev => {
+      const existing = prev[product.id];
+      if (existing) {
+        return {
+          ...prev,
+          [product.id]: { ...existing, quantity: existing.quantity + 1 }
+        };
+      }
+      return {
+        ...prev,
+        [product.id]: {
+          id: product.id,
+          name: product.name,
+          price: product.price,
+          sku: product.sku,
+          quantity: 1
+        }
+      };
+    });
+    toast({ title: "Item Added", description: `${product.name} is in your cart.` });
   };
 
+  const updateQuantity = (id: string, delta: number) => {
+    setCart(prev => {
+      const item = prev[id];
+      if (!item) return prev;
+      const newQty = Math.max(1, item.quantity + delta);
+      return { ...prev, [id]: { ...item, quantity: newQty } };
+    });
+  };
+
+  const removeFromCart = (id: string) => {
+    setCart(prev => {
+      const newCart = { ...prev };
+      delete newCart[id];
+      return newCart;
+    });
+  };
+
+  const cartTotal = Object.values(cart).reduce((sum, item) => sum + (item.price * item.quantity), 0);
+  const cartItemCount = Object.values(cart).reduce((sum, item) => sum + item.quantity, 0);
+
   const handleSubmitOrder = () => {
-    if (!db || !selectedProduct || !user) {
-      toast({ title: "Transmission Error", description: "Identity sync required.", variant: "destructive" });
+    if (!db || !user || cartItemCount === 0) {
+      toast({ title: "Transmission Error", description: "Cart is empty or identity sync failed.", variant: "destructive" });
       return;
     }
 
@@ -122,13 +168,16 @@ export default function NewOrderPage() {
     }
 
     setIsSubmitting(true);
-    const qty = parseInt(orderQuantity) || 1;
+    
+    const itemSummary = Object.values(cart)
+      .map(i => `${i.name} (x${i.quantity})`)
+      .join(", ");
+
     const orderData = {
-      items: selectedProduct.name,
-      productId: selectedProduct.id,
+      items: itemSummary,
       userId: user.uid,
-      quantity: qty,
-      total: (selectedProduct.price || 0) * qty,
+      quantity: cartItemCount,
+      total: cartTotal,
       phoneNumber: phoneNumber.trim(),
       deliveryAddress: deliveryAddress.trim(),
       paymentMethod: paymentMethod,
@@ -143,7 +192,8 @@ export default function NewOrderPage() {
       .then(() => {
         setIsSubmitting(false);
         setSubmitted(true);
-        toast({ title: "Order Transmitted", description: `Reorder request for ${selectedProduct.name} saved.` });
+        setCart({});
+        toast({ title: "Bulk Order Transmitted", description: "Logistics node has registered your reorder packet." });
         setTimeout(() => router.push("/dashboard"), 2000);
       })
       .catch(() => {
@@ -157,8 +207,8 @@ export default function NewOrderPage() {
       <div className="flex flex-col items-center justify-center min-h-[60vh] text-center space-y-6 animate-in zoom-in duration-300">
         <div className="bg-emerald-100 p-8 rounded-full shadow-lg"><CheckCircle className="h-20 w-20 text-emerald-500" /></div>
         <div className="space-y-2">
-          <h2 className="text-3xl font-black text-primary tracking-tighter uppercase italic">Order Logged</h2>
-          <p className="text-slate-500 font-medium">Logistics node has registered your regional reorder request.</p>
+          <h2 className="text-3xl font-black text-primary tracking-tighter uppercase italic">Packet Registered</h2>
+          <p className="text-slate-500 font-medium">Consolidated logistics request successfully transmitted.</p>
         </div>
         <Button variant="outline" onClick={() => router.push("/dashboard")} className="h-14 rounded-2xl px-10 border-slate-200 font-black uppercase tracking-widest text-[10px]">Return to Portal</Button>
       </div>
@@ -174,23 +224,134 @@ export default function NewOrderPage() {
   }
 
   return (
-    <div className="space-y-8 pb-12 animate-in fade-in duration-700">
+    <div className="space-y-8 pb-32 animate-in fade-in duration-700 relative">
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 bg-white p-8 rounded-[2rem] shadow-sm border border-slate-100">
         <div className="space-y-1">
           <h1 className="text-3xl font-black text-primary tracking-tight italic uppercase">Stock Catalog</h1>
           <p className="text-muted-foreground font-medium flex items-center gap-2">
             <span className="h-1.5 w-1.5 rounded-full bg-accent animate-pulse" />
-            Select inventory for {store?.name || 'your node'}.
+            Provision items for {store?.name || 'your node'}.
           </p>
         </div>
-        <div className="relative w-full md:w-96">
-          <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-slate-400" />
-          <Input 
-            placeholder="Search regional items..." 
-            className="pl-12 h-14 bg-slate-50 border-none rounded-2xl focus:ring-primary text-base font-medium" 
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-          />
+        <div className="flex items-center gap-4 w-full md:w-auto">
+          <div className="relative flex-1 md:w-80">
+            <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-slate-400" />
+            <Input 
+              placeholder="Search SKU..." 
+              className="pl-12 h-14 bg-slate-50 border-none rounded-2xl focus:ring-primary text-base font-medium" 
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+            />
+          </div>
+          <Sheet>
+            <SheetTrigger asChild>
+              <Button className="h-14 w-14 md:w-auto md:px-6 rounded-2xl bg-primary text-white shadow-lg relative">
+                <ShoppingCart className="h-6 w-6" />
+                {cartItemCount > 0 && (
+                  <span className="absolute -top-2 -right-2 bg-accent text-primary text-[10px] font-black h-6 w-6 rounded-full border-4 border-white flex items-center justify-center">
+                    {cartItemCount}
+                  </span>
+                )}
+                <span className="hidden md:inline ml-3 font-black uppercase tracking-widest text-[10px]">View Cart</span>
+              </Button>
+            </SheetTrigger>
+            <SheetContent className="rounded-l-[2.5rem] border-none p-0 bg-white max-w-[500px] shadow-2xl flex flex-col h-full overflow-hidden">
+              <SheetHeader className="p-8 pb-4">
+                <SheetTitle className="text-2xl font-black text-primary uppercase italic tracking-tighter flex items-center gap-3">
+                  <ShoppingCart className="h-6 w-6" /> Reorder Cart
+                </SheetTitle>
+              </SheetHeader>
+              
+              <div className="flex-1 overflow-y-auto px-8 py-4 space-y-6">
+                {cartItemCount === 0 ? (
+                  <div className="h-full flex flex-col items-center justify-center text-center space-y-4 opacity-40">
+                    <ShoppingBag className="h-16 w-16" />
+                    <p className="font-black uppercase tracking-widest text-xs italic">Cart is empty</p>
+                  </div>
+                ) : (
+                  <div className="space-y-4">
+                    {Object.values(cart).map((item) => (
+                      <div key={item.id} className="flex items-center justify-between p-4 bg-slate-50 rounded-2xl border border-slate-100 group">
+                        <div className="flex-1 min-w-0 pr-4">
+                          <h4 className="font-black text-slate-900 text-[11px] uppercase italic truncate">{item.name}</h4>
+                          <p className="text-[10px] font-mono font-bold text-primary">₹{(item.price * item.quantity).toFixed(2)}</p>
+                        </div>
+                        <div className="flex items-center gap-3">
+                          <div className="flex items-center bg-white rounded-xl border border-slate-200 overflow-hidden h-9">
+                            <button onClick={() => updateQuantity(item.id, -1)} className="px-2 hover:bg-slate-50 transition-colors">
+                              <Minus className="h-3 w-3" />
+                            </button>
+                            <span className="w-8 text-center font-black text-xs">{item.quantity}</span>
+                            <button onClick={() => updateQuantity(item.id, 1)} className="px-2 hover:bg-slate-50 transition-colors">
+                              <Plus className="h-3 w-3" />
+                            </button>
+                          </div>
+                          <Button variant="ghost" size="icon" className="h-9 w-9 text-rose-500 hover:bg-rose-50 rounded-xl" onClick={() => removeFromCart(item.id)}>
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        </div>
+                      </div>
+                    ))}
+                    
+                    <div className="pt-8 space-y-6 border-t border-slate-100">
+                      <div className="space-y-4">
+                        <Label className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">Payment Protocol</Label>
+                        <Select value={paymentMethod} onValueChange={setPaymentMethod}>
+                          <SelectTrigger className="h-14 rounded-2xl bg-slate-50 border-none font-bold">
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="cash" className="font-black uppercase text-[10px]"><Banknote className="h-3 w-3 mr-2" /> Cash</SelectItem>
+                            <SelectItem value="after_delivery" className="font-black uppercase text-[10px]"><CreditCard className="h-3 w-3 mr-2" /> After Delivery</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+
+                      <div className="space-y-4">
+                        <Label className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">Destination Coordinate</Label>
+                        <Textarea 
+                          value={deliveryAddress} 
+                          onChange={(e) => setDeliveryAddress(e.target.value)}
+                          className="min-h-[100px] rounded-2xl bg-slate-50 border-none font-bold text-sm"
+                          placeholder="Delivery Address"
+                        />
+                      </div>
+
+                      <div className="space-y-4">
+                        <Label className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">Contact Node</Label>
+                        <Input 
+                          value={phoneNumber} 
+                          onChange={(e) => setPhoneNumber(e.target.value)}
+                          className="h-14 rounded-2xl bg-slate-50 border-none font-bold"
+                          placeholder="Phone Number"
+                        />
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              <SheetFooter className="p-8 bg-slate-50/50 border-t border-slate-100">
+                <div className="w-full space-y-6">
+                  <div className="flex justify-between items-end">
+                    <span className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">Net Valuation</span>
+                    <span className="text-3xl font-black text-primary tracking-tighter font-mono">₹{cartTotal.toFixed(2)}</span>
+                  </div>
+                  <Button 
+                    className="w-full h-16 bg-primary text-white hover:bg-primary/90 font-black rounded-2xl shadow-xl uppercase tracking-widest text-[11px]" 
+                    disabled={cartItemCount === 0 || isSubmitting}
+                    onClick={handleSubmitOrder}
+                  >
+                    {isSubmitting ? <Loader2 className="h-6 w-6 animate-spin" /> : (
+                      <div className="flex items-center gap-3">
+                        Transmit Packet <ArrowRight className="h-4 w-4" />
+                      </div>
+                    )}
+                  </Button>
+                </div>
+              </SheetFooter>
+            </SheetContent>
+          </Sheet>
         </div>
       </div>
 
@@ -257,10 +418,10 @@ export default function NewOrderPage() {
                   <CardFooter className="p-6 pt-0">
                     <Button 
                       className="w-full h-14 bg-accent text-primary hover:bg-primary hover:text-white font-black rounded-2xl shadow-sm transition-all text-[10px] uppercase tracking-widest" 
-                      onClick={() => handleOpenOrderDialog(product)} 
+                      onClick={() => addToCart(product)} 
                       disabled={!product.stockQuantity || product.stockQuantity <= 0}
                     >
-                      {!product.stockQuantity || product.stockQuantity <= 0 ? "Node Depleted" : "Request Stock"}
+                      {!product.stockQuantity || product.stockQuantity <= 0 ? "Node Depleted" : "Add to Cart"}
                     </Button>
                   </CardFooter>
                 </Card>
@@ -269,110 +430,26 @@ export default function NewOrderPage() {
           ) : (
             <div className="text-center py-32 bg-white rounded-[2.5rem] border-2 border-dashed border-slate-100">
               <Package className="h-20 w-20 text-slate-100 mx-auto mb-6 opacity-20" />
-              <h3 className="font-black text-slate-900 uppercase italic tracking-tighter">No items detected in this sector</h3>
+              <h3 className="font-black text-slate-900 uppercase italic tracking-tighter">No items detected</h3>
               <p className="text-[10px] text-slate-400 mt-2 uppercase font-bold tracking-widest">Adjust filters to reveal inventory payload.</p>
             </div>
           )}
         </main>
       </div>
 
-      <Dialog open={orderDialogOpen} onOpenChange={setOrderDialogOpen}>
-        <DialogContent className="rounded-[2.5rem] border-none p-0 bg-white max-w-[550px] shadow-2xl animate-in zoom-in-95 duration-300 max-h-[95vh] overflow-hidden flex flex-col">
-          <DialogHeader className="p-6 md:p-10 pb-2">
-            <DialogTitle className="text-2xl font-black text-primary uppercase italic tracking-tighter flex items-center gap-3">
-               <ShoppingCart className="h-6 w-6" /> Finalize Reorder
-            </DialogTitle>
-          </DialogHeader>
-          
-          <div className="flex-1 overflow-y-auto px-6 md:px-10 py-4 space-y-8">
-            {selectedProduct && (
-              <>
-                <div className="flex gap-6 p-6 bg-slate-50 rounded-3xl border border-slate-100 items-center">
-                  <div className="flex-1 space-y-1">
-                    <h4 className="font-black text-slate-900 text-lg uppercase italic tracking-tight">{selectedProduct.name}</h4>
-                    <p className="text-xl font-black text-primary font-mono">₹{(selectedProduct.price || 0).toFixed(2)} / Unit</p>
-                  </div>
-                </div>
-                
-                <div className="space-y-6">
-                  <div className="space-y-3">
-                    <Label className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 ml-1">Payment Protocol</Label>
-                    <Select value={paymentMethod} onValueChange={setPaymentMethod}>
-                      <SelectTrigger className="h-14 rounded-2xl bg-slate-50 border-none font-bold text-slate-900">
-                        <SelectValue placeholder="Select Payment Method" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="cash" className="font-black uppercase text-[10px]">
-                          <div className="flex items-center gap-2">
-                            <Banknote className="h-4 w-4" /> Cash
-                          </div>
-                        </SelectItem>
-                        <SelectItem value="after_delivery" className="font-black uppercase text-[10px]">
-                          <div className="flex items-center gap-2">
-                            <CreditCard className="h-4 w-4" /> After Delivery
-                          </div>
-                        </SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-
-                  <div className="space-y-3">
-                    <Label className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 ml-1">Contact Phone Node</Label>
-                    <div className="relative">
-                      <Phone className="absolute left-5 top-1/2 -translate-y-1/2 h-5 w-5 text-primary opacity-50" />
-                      <Input 
-                        placeholder="Enter mobile signature..." 
-                        className="h-14 pl-14 rounded-2xl bg-slate-50 border-none focus:ring-primary font-bold text-slate-900" 
-                        value={phoneNumber}
-                        onChange={(e) => setPhoneNumber(e.target.value)}
-                      />
-                    </div>
-                  </div>
-
-                  <div className="space-y-3">
-                    <Label className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 ml-1">Payload Destination</Label>
-                    <div className="relative">
-                      <MapPin className="absolute left-5 top-5 h-5 w-5 text-primary opacity-50" />
-                      <Textarea 
-                        placeholder="Enter complete delivery coordinates..." 
-                        className="min-h-[100px] pl-14 pt-4 rounded-2xl bg-slate-50 border-none focus:ring-primary font-bold text-slate-900 text-sm" 
-                        value={deliveryAddress}
-                        onChange={(e) => setDeliveryAddress(e.target.value)}
-                      />
-                    </div>
-                  </div>
-
-                  <div className="grid grid-cols-2 gap-6 pb-4">
-                     <div className="space-y-3">
-                       <Label className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 ml-1">Node Density</Label>
-                       <Input 
-                         type="number" 
-                         min="1" 
-                         value={orderQuantity} 
-                         onChange={(e) => setOrderQuantity(e.target.value)} 
-                         className="h-16 text-center font-black rounded-2xl bg-slate-50 border-none text-xl" 
-                       />
-                     </div>
-                     <div className="space-y-3">
-                       <Label className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 ml-1">Net Value</Label>
-                       <div className="h-16 flex items-center justify-center bg-primary text-white font-black rounded-2xl text-xl font-mono">
-                          ₹{(parseFloat(orderQuantity || "0") * (selectedProduct.price || 0)).toFixed(2)}
-                       </div>
-                     </div>
-                  </div>
-                </div>
-              </>
-            )}
-          </div>
-
-          <DialogFooter className="p-6 md:p-10 pt-4 flex gap-4 border-t border-slate-50 bg-white sticky bottom-0">
-            <Button variant="ghost" onClick={() => setOrderDialogOpen(false)} className="flex-1 h-14 rounded-2xl font-black uppercase tracking-widest text-[10px]">Abort</Button>
-            <Button onClick={handleSubmitOrder} className="flex-[2] bg-accent text-primary hover:bg-primary hover:text-white h-14 rounded-2xl font-black uppercase tracking-widest text-[10px]" disabled={isSubmitting}>
-              {isSubmitting ? <Loader2 className="h-5 w-5 animate-spin" /> : "Transmit Request"}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+      {cartItemCount > 0 && (
+        <div className="fixed bottom-8 left-1/2 -translate-x-1/2 z-50 md:hidden animate-in slide-in-from-bottom-10 duration-500">
+          <Sheet>
+            <SheetTrigger asChild>
+              <Button className="h-16 px-8 rounded-full bg-primary text-white shadow-[0_20px_50px_rgba(0,0,0,0.3)] font-black uppercase tracking-widest text-[10px] flex items-center gap-4">
+                <ShoppingCart className="h-5 w-5" />
+                <span>Review Cart ({cartItemCount})</span>
+                <span className="bg-white/20 px-3 py-1 rounded-full">₹{cartTotal.toFixed(2)}</span>
+              </Button>
+            </SheetTrigger>
+          </Sheet>
+        </div>
+      )}
     </div>
   );
 }
