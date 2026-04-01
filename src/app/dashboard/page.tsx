@@ -18,7 +18,9 @@ import {
   CheckCircle2,
   AlertCircle,
   Undo2,
-  AlertTriangle
+  AlertTriangle,
+  Minus,
+  Plus
 } from "lucide-react";
 import Link from "next/link";
 import { Badge } from "@/components/ui/badge";
@@ -37,6 +39,7 @@ export default function DashboardPage() {
   const [isClient, setIsClient] = useState(false);
   const [isReturnDialogOpen, setIsReturnDialogOpen] = useState(false);
   const [isSubmittingReturn, setIsSubmittingReturn] = useState(false);
+  const [damageReportQuantities, setDamageReportQuantities] = useState<Record<string, number>>({});
 
   useEffect(() => {
     setIsClient(true);
@@ -89,7 +92,7 @@ export default function DashboardPage() {
           name: o.items,
           totalQuantity: o.quantity || 0,
           orders: [o.id],
-          productId: o.productId,
+          productId: o.productId || "",
           pricePerUnit: (o.total || 0) / (o.quantity || 1)
         });
       } else {
@@ -101,6 +104,24 @@ export default function DashboardPage() {
     
     return Array.from(uniqueItemsMap.values());
   }, [orders]);
+
+  // Initialize damage quantities when dialog opens
+  useEffect(() => {
+    if (isReturnDialogOpen && returnableProducts.length > 0) {
+      const initial: Record<string, number> = {};
+      returnableProducts.forEach(p => {
+        initial[p.name] = 1;
+      });
+      setDamageReportQuantities(initial);
+    }
+  }, [isReturnDialogOpen, returnableProducts]);
+
+  const updateDamageQty = (name: string, delta: number, max: number) => {
+    setDamageReportQuantities(prev => ({
+      ...prev,
+      [name]: Math.min(max, Math.max(1, (prev[name] || 1) + delta))
+    }));
+  };
 
   // In-memory sorting for products
   const productsList = useMemo(() => {
@@ -147,14 +168,15 @@ export default function DashboardPage() {
 
   const handleInitiateReturn = (item: any) => {
     if (!db || !user) return;
+    const qty = damageReportQuantities[item.name] || 1;
     setIsSubmittingReturn(true);
 
     const returnData = {
       items: `DAMAGE REPORT: ${item.name}`,
       productId: item.productId || "",
       userId: user.uid,
-      quantity: 1, 
-      total: item.pricePerUnit,
+      quantity: qty, 
+      total: item.pricePerUnit * qty,
       phoneNumber: store?.phoneNumber || "",
       deliveryAddress: store?.location || "",
       paymentMethod: "cash", 
@@ -168,7 +190,7 @@ export default function DashboardPage() {
       .then(() => {
         setIsSubmittingReturn(false);
         setIsReturnDialogOpen(false);
-        toast({ title: "Damage Report Filed", description: "Request sent to regional logistics hub for verification." });
+        toast({ title: "Damage Report Filed", description: `${qty} unit(s) reported to regional logistics hub.` });
       })
       .catch(() => {
         setIsSubmittingReturn(false);
@@ -323,19 +345,38 @@ export default function DashboardPage() {
             {returnableProducts.length > 0 ? (
               <div className="grid gap-4 max-h-[50vh] overflow-y-auto pr-4 custom-scrollbar">
                 {returnableProducts.map((item, idx) => (
-                  <div key={idx} className="flex items-center justify-between p-6 bg-slate-50 rounded-2xl border border-slate-100 group hover:border-primary/30 transition-all">
+                  <div key={idx} className="flex flex-col sm:flex-row sm:items-center justify-between p-6 bg-slate-50 rounded-2xl border border-slate-100 group hover:border-primary/30 transition-all gap-4">
                     <div className="space-y-1">
                       <h4 className="font-black text-slate-900 uppercase italic text-sm">{item.name}</h4>
                       <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Received Density: {item.totalQuantity} Units</p>
                     </div>
-                    <Button 
-                      size="sm" 
-                      onClick={() => handleInitiateReturn(item)}
-                      disabled={isSubmittingReturn}
-                      className="h-10 px-6 rounded-xl bg-primary text-white font-black uppercase text-[9px] tracking-widest"
-                    >
-                      {isSubmittingReturn ? <Loader2 className="h-4 w-4 animate-spin" /> : "Report Damage"}
-                    </Button>
+                    <div className="flex items-center gap-4">
+                      <div className="flex items-center bg-white rounded-xl border border-slate-200 overflow-hidden h-10 shadow-sm">
+                        <button 
+                          onClick={() => updateDamageQty(item.name, -1, item.totalQuantity)} 
+                          className="px-3 hover:bg-slate-50 transition-colors text-slate-400 hover:text-primary"
+                        >
+                          <Minus className="h-4 w-4" />
+                        </button>
+                        <span className="w-10 text-center font-black text-xs text-primary">
+                          {damageReportQuantities[item.name] || 1}
+                        </span>
+                        <button 
+                          onClick={() => updateDamageQty(item.name, 1, item.totalQuantity)} 
+                          className="px-3 hover:bg-slate-50 transition-colors text-slate-400 hover:text-primary"
+                        >
+                          <Plus className="h-4 w-4" />
+                        </button>
+                      </div>
+                      <Button 
+                        size="sm" 
+                        onClick={() => handleInitiateReturn(item)}
+                        disabled={isSubmittingReturn}
+                        className="h-10 px-6 rounded-xl bg-primary text-white font-black uppercase text-[9px] tracking-widest shadow-lg shadow-primary/20 hover:scale-105 transition-all"
+                      >
+                        {isSubmittingReturn ? <Loader2 className="h-4 w-4 animate-spin" /> : "Report Damage"}
+                      </Button>
+                    </div>
                   </div>
                 ))}
               </div>
