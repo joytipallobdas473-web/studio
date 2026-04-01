@@ -1,9 +1,9 @@
 'use server';
 /**
- * @fileOverview AI Inventory Analyst Flow
+ * @fileOverview AI Inventory Analyst Flow v2.0
  * 
- * Analyzes current stock levels and order patterns to provide 
- * strategic recommendations to the administrator.
+ * Analyzes stock levels, order patterns, and damage incidents to provide 
+ * strategic logistics recommendations.
  */
 
 import { ai } from '@/ai/genkit';
@@ -28,9 +28,10 @@ const InventoryAnalysisInputSchema = z.object({
 });
 
 const InventoryAnalysisOutputSchema = z.object({
-  summary: z.string().describe("A concise summary of the current inventory health."),
-  recommendations: z.array(z.string()).describe("List of actionable steps for the administrator."),
-  riskLevel: z.enum(["low", "medium", "high"]).describe("The overall stock risk level."),
+  summary: z.string().describe("A concise summary of current inventory and logistics health."),
+  recommendations: z.array(z.string()).describe("Actionable steps for the admin, focusing on reordering and risk mitigation."),
+  riskLevel: z.enum(["low", "medium", "high"]).describe("Overall network risk assessment."),
+  damageAlerts: z.array(z.string()).optional().describe("Specific SKUs or clusters flagged for high damage rates."),
 });
 
 export type InventoryAnalysisInput = z.infer<typeof InventoryAnalysisInputSchema>;
@@ -40,26 +41,26 @@ const prompt = ai.definePrompt({
   name: 'inventoryAnalystPrompt',
   input: { schema: InventoryAnalysisInputSchema },
   output: { schema: InventoryAnalysisOutputSchema },
-  prompt: `You are an expert supply chain analyst for a retail network.
+  prompt: `You are a Lead Supply Chain Strategist for a high-density retail network.
     
-    Review the following inventory and order data:
+    Review the following network telemetry:
     
-    PRODUCTS:
+    PRODUCTS (SKU Catalog):
     {{#each products}}
-    - {{{name}}} (Category: {{{category}}}, Stock: {{{currentStock}}}, Price: ₹{{{mrp}}})
+    - {{{name}}} | Cluster: {{{category}}} | Density: {{{currentStock}}} | Unit Val: ₹{{{mrp}}}
     {{/each}}
     
-    RECENT ORDERS:
+    TRAFFIC LOGS (Recent Orders & Damage Reports):
     {{#each recentOrders}}
-    - Items: {{{items}}}, Status: {{{status}}}, Value: ₹{{{total}}}
+    - Payload: {{{items}}} | Protocol Status: {{{status}}} | Val: ₹{{{total}}}
     {{/each}}
     
-    Based on this data, provide:
-    1. A summary of stock health.
-    2. Specific recommendations for reordering (prioritize items with low stock or high demand).
-    3. An overall risk level assessment.
+    Strategic Requirements:
+    1. Identify SKUs with critical density (stock < 10).
+    2. Flag "Damage Hotspots" - items frequently appearing in "return_pending" or "DAMAGE REPORT" logs.
+    3. Assess if high-value clusters (Electronics) are sufficiently stocked for current traffic.
     
-    Be professional, concise, and data-driven.`,
+    Provide professional, concise, data-driven intelligence.`,
 });
 
 export async function analyzeInventory(input: InventoryAnalysisInput): Promise<InventoryAnalysisOutput> {
@@ -75,7 +76,7 @@ const inventoryAnalystFlow = ai.defineFlow(
   },
   async (input) => {
     const { output } = await prompt(input);
-    if (!output) throw new Error("Analysis failed to generate output");
+    if (!output) throw new Error("Synthesis failed: Neural link timeout.");
     return output;
   }
 );

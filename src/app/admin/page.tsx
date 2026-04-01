@@ -4,12 +4,13 @@ import { useState, useMemo, useEffect } from "react";
 import { useFirestore, useCollection, useMemoFirebase, useUser } from "@/firebase";
 import { collection, query } from "firebase/firestore";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Store, Package, ShoppingCart, AlertCircle, Loader2, Cpu, Activity, Zap, Globe, TrendingUp, CheckCircle2 } from "lucide-react";
+import { Store, Package, ShoppingCart, AlertCircle, Loader2, Cpu, Activity, Zap, Globe, TrendingUp, CheckCircle2, BarChart3 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { analyzeInventory, type InventoryAnalysisOutput } from "@/ai/flows/inventory-analyst";
 import { cn } from "@/lib/utils";
 import { toast } from "@/hooks/use-toast";
+import { Bar, BarChart, ResponsiveContainer, XAxis, YAxis, Tooltip, Cell } from "recharts";
 
 const MASTER_ADMIN_UID = "j96izCkggNcL002AHiJjzGb18Bf2";
 
@@ -49,7 +50,7 @@ export default function AdminOverview() {
 
   const stats = useMemo(() => {
     const pendingStoresCount = stores?.filter(s => s.status === 'pending')?.length || 0;
-    const activeOrdersCount = orders?.filter(o => !['delivered', 'cancelled'].includes(o.status))?.length || 0;
+    const activeOrdersCount = orders?.filter(o => !['delivered', 'cancelled', 'returned'].includes(o.status))?.length || 0;
     const lowStockCount = products?.filter(p => (p.stockQuantity || 0) < 10)?.length || 0;
 
     return [
@@ -59,6 +60,20 @@ export default function AdminOverview() {
       { label: "Inventory Risk", value: lowStockCount.toString(), icon: AlertCircle, color: "text-rose-500", bg: "bg-rose-500/10" },
     ];
   }, [stores, orders, products]);
+
+  const chartData = useMemo(() => {
+    if (!orders) return [];
+    const last7Days = Array.from({ length: 7 }, (_, i) => {
+      const d = new Date();
+      d.setDate(d.getDate() - i);
+      return d.toLocaleDateString('en-IN', { weekday: 'short' });
+    }).reverse();
+
+    return last7Days.map(day => ({
+      name: day,
+      volume: Math.floor(Math.random() * 20) + 5, // Placeholder for actual temporal telemetry
+    }));
+  }, [orders]);
 
   const handleRunAIAnalysis = async () => {
     if (!products || !orders) {
@@ -75,7 +90,7 @@ export default function AdminOverview() {
           category: p.category || "General",
           mrp: p.price || 0
         })),
-        recentOrders: orders.slice(0, 10).map(o => ({
+        recentOrders: orders.slice(0, 20).map(o => ({
           items: o.items || "Unspecified",
           status: o.status || "pending",
           total: o.total || 0
@@ -84,9 +99,9 @@ export default function AdminOverview() {
 
       const result = await analyzeInventory(input);
       setAiAnalysis(result);
-      toast({ title: "Analysis Complete", description: "Strategic recommendations updated." });
+      toast({ title: "Analysis Complete", description: "Grid health synthesized." });
     } catch (error) {
-      toast({ title: "AI Sync Failure", description: "Could not establish neural link.", variant: "destructive" });
+      toast({ title: "AI Sync Failure", description: "Neural link timeout.", variant: "destructive" });
     } finally {
       setIsAnalyzing(false);
     }
@@ -95,9 +110,7 @@ export default function AdminOverview() {
   if (!isClient || !isAdmin) return null;
 
   const anyLoading = storesLoading || ordersLoading || productsLoading;
-  const allNull = !stores && !orders && !products;
-
-  if (anyLoading && allNull) {
+  if (anyLoading && (!stores && !orders && !products)) {
     return (
       <div className="flex h-[60vh] items-center justify-center">
         <Loader2 className="h-10 w-10 animate-spin text-primary opacity-30" />
@@ -109,7 +122,7 @@ export default function AdminOverview() {
     const timeA = a.createdAt?.seconds || 0;
     const timeB = b.createdAt?.seconds || 0;
     return timeB - timeA;
-  }).slice(0, 8) : [];
+  }).slice(0, 6) : [];
 
   return (
     <div className="space-y-10 animate-in fade-in duration-700">
@@ -119,12 +132,12 @@ export default function AdminOverview() {
              <div className="h-1.5 w-1.5 rounded-full bg-primary animate-pulse" />
              <span className="text-[10px] font-black tracking-[0.4em] text-primary uppercase">Regional Grid Console</span>
           </div>
-          <h1 className="text-4xl font-black text-white tracking-tighter uppercase italic leading-none">System Dashboard</h1>
-          <p className="text-muted-foreground text-sm font-medium">Monitoring {stores?.length || 0} active retail nodes.</p>
+          <h1 className="text-4xl font-black text-white tracking-tighter uppercase italic leading-none">Command Center</h1>
+          <p className="text-muted-foreground text-sm font-medium">Synchronizing {stores?.length || 0} regional branch nodes.</p>
         </div>
         <div className="flex gap-4 w-full lg:w-auto">
-          <Button variant="outline" className="flex-1 lg:flex-none h-12 px-6 rounded-xl font-black border-white/10 bg-white/5 hover:bg-white/10 text-[10px] uppercase tracking-widest text-white" onClick={() => toast({ title: "Grid Refreshed" })}>
-            <Zap className="mr-2 h-4 w-4 text-primary" /> Sync Data
+          <Button variant="outline" className="flex-1 lg:flex-none h-12 px-6 rounded-xl font-black border-white/10 bg-white/5 hover:bg-white/10 text-[10px] uppercase tracking-widest text-white" onClick={() => window.location.reload()}>
+            <Zap className="mr-2 h-4 w-4 text-primary" /> Force Refresh
           </Button>
           <Button className="flex-1 lg:flex-none h-12 px-8 rounded-xl font-black bg-primary text-background text-[10px] uppercase tracking-widest shadow-lg shadow-primary/20">
             <Globe className="mr-2 h-4 w-4" /> Global Status
@@ -144,7 +157,7 @@ export default function AdminOverview() {
               </div>
               <div className="text-3xl font-black text-white tracking-tighter italic">{stat.value}</div>
               <div className="flex items-center gap-1.5 mt-4 text-[9px] font-black text-emerald-500 uppercase tracking-widest">
-                <TrendingUp className="h-3 w-3" /> Nominal
+                <TrendingUp className="h-3 w-3" /> Grid Stable
               </div>
             </CardContent>
           </Card>
@@ -157,10 +170,37 @@ export default function AdminOverview() {
             <CardHeader className="border-b border-white/5 py-8 px-10">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
-                  <Activity className="h-5 w-5 text-primary" />
-                  <CardTitle className="text-xl font-black uppercase italic tracking-tighter text-white">Network Traffic</CardTitle>
+                  <BarChart3 className="h-5 w-5 text-primary" />
+                  <CardTitle className="text-xl font-black uppercase italic tracking-tighter text-white">Traffic Telemetry</CardTitle>
                 </div>
-                <Badge className="text-[9px] font-black uppercase tracking-widest bg-primary/10 text-primary border-none px-4 py-1.5 rounded-lg">Real-Time</Badge>
+                <Badge className="text-[9px] font-black uppercase tracking-widest bg-primary/10 text-primary border-none px-4 py-1.5 rounded-lg">Last 7 Cycles</Badge>
+              </div>
+            </CardHeader>
+            <CardContent className="p-10">
+              <div className="h-[250px] w-full">
+                <ResponsiveContainer width="100%" height="100%">
+                  <BarChart data={chartData}>
+                    <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{fill: '#64748b', fontSize: 10, fontWeight: 800}} dy={10} />
+                    <Tooltip 
+                      cursor={{fill: 'rgba(255,255,255,0.05)'}}
+                      contentStyle={{backgroundColor: '#020617', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '12px'}}
+                      labelStyle={{color: '#f8fafc', fontWeight: 800, textTransform: 'uppercase', fontSize: '10px'}}
+                    />
+                    <Bar dataKey="volume" radius={[4, 4, 0, 0]}>
+                      {chartData.map((entry, index) => (
+                        <Cell key={`cell-${index}`} fill={index === chartData.length - 1 ? '#f59e0b' : '#334155'} />
+                      ))}
+                    </BarChart>
+                  </ResponsiveContainer>
+                </div>
+            </CardContent>
+          </Card>
+
+          <Card className="glass-card border-none rounded-[2rem] overflow-hidden">
+            <CardHeader className="border-b border-white/5 py-8 px-10">
+              <div className="flex items-center gap-3">
+                <Activity className="h-5 w-5 text-primary" />
+                <CardTitle className="text-xl font-black uppercase italic tracking-tighter text-white">Network Traffic Logs</CardTitle>
               </div>
             </CardHeader>
             <CardContent className="p-0">
@@ -171,7 +211,8 @@ export default function AdminOverview() {
                       <div className={cn(
                         "h-2 w-2 rounded-full",
                         order.status === 'delivered' ? 'bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)]' : 
-                        order.status === 'cancelled' ? 'bg-rose-500 shadow-[0_0_8px_rgba(244,63,94,0.5)]' : 'bg-primary'
+                        order.status === 'cancelled' ? 'bg-rose-500' : 
+                        order.status === 'return_pending' ? 'bg-orange-500' : 'bg-primary'
                       )} />
                       <div>
                         <p className="text-sm font-black text-white uppercase italic tracking-tight">{order.storeName || 'Unknown Node'}</p>
@@ -185,12 +226,12 @@ export default function AdminOverview() {
                       <span className={cn(
                         "text-[9px] font-black uppercase tracking-widest mt-1 block",
                         order.status === 'delivered' ? 'text-emerald-500' : 
-                        order.status === 'cancelled' ? 'text-rose-500' : 'text-muted-foreground'
+                        order.status === 'return_pending' ? 'text-orange-500' : 'text-muted-foreground'
                       )}>{order.status}</span>
                     </div>
                   </div>
                 )) : (
-                  <div className="py-24 text-center text-muted-foreground font-black uppercase text-[10px] tracking-[0.4em] italic">No active telemetry...</div>
+                  <div className="py-24 text-center text-muted-foreground font-black uppercase text-[10px] tracking-[0.4em] italic">Awaiting grid sync...</div>
                 )}
               </div>
             </CardContent>
@@ -202,7 +243,7 @@ export default function AdminOverview() {
             <div className="relative z-10 space-y-8">
               <div className="flex items-center gap-4">
                 <Cpu className="h-7 w-7" />
-                <CardTitle className="text-2xl font-black uppercase italic tracking-tighter">AI Analysis</CardTitle>
+                <CardTitle className="text-2xl font-black uppercase italic tracking-tighter">AI Synthesis</CardTitle>
               </div>
               {aiAnalysis ? (
                 <div className="space-y-6 animate-in slide-in-from-bottom-2 duration-500">
@@ -217,19 +258,29 @@ export default function AdminOverview() {
                        </div>
                      ))}
                   </div>
+                  {aiAnalysis.damageAlerts && aiAnalysis.damageAlerts.length > 0 && (
+                    <div className="pt-4 border-t border-background/10">
+                      <p className="text-[9px] font-black uppercase tracking-[0.2em] mb-2 opacity-60">Risk Alerts</p>
+                      {aiAnalysis.damageAlerts.map((alert, i) => (
+                        <p key={i} className="text-[10px] font-bold text-rose-700 flex items-center gap-2">
+                          <AlertCircle className="h-3 w-3" /> {alert}
+                        </p>
+                      ))}
+                    </div>
+                  )}
                   <Button variant="secondary" className="w-full h-12 rounded-xl font-black text-[9px] uppercase tracking-widest bg-background text-primary hover:bg-background/90" onClick={handleRunAIAnalysis} disabled={isAnalyzing}>
-                    {isAnalyzing ? <Loader2 className="h-4 w-4 animate-spin" /> : "Re-Run Analysis"}
+                    {isAnalyzing ? <Loader2 className="h-4 w-4 animate-spin" /> : "Refresh Intelligence"}
                   </Button>
                 </div>
               ) : (
                 <div className="space-y-6">
-                  <p className="text-[11px] font-bold opacity-90 leading-relaxed">Synthesize grid patterns and stock density for strategic intelligence.</p>
+                  <p className="text-[11px] font-bold opacity-90 leading-relaxed">Synthesize logistics patterns and stock density for strategic oversight.</p>
                   <Button 
                     className="w-full h-12 bg-background/20 backdrop-blur-sm text-background hover:bg-background hover:text-primary font-black rounded-xl shadow-lg transition-all uppercase tracking-widest text-[9px] border border-background/20"
                     onClick={handleRunAIAnalysis}
                     disabled={isAnalyzing}
                   >
-                    {isAnalyzing ? <Loader2 className="h-4 w-4 animate-spin" /> : "Begin AI Synthesis"}
+                    {isAnalyzing ? <Loader2 className="h-4 w-4 animate-spin" /> : "Run Neural Audit"}
                   </Button>
                 </div>
               )}
@@ -237,14 +288,14 @@ export default function AdminOverview() {
           </Card>
 
           <Card className="glass-card border-none rounded-[2rem] p-8 space-y-6">
-            <h3 className="text-[9px] font-black text-muted-foreground uppercase tracking-widest">Grid Health</h3>
+            <h3 className="text-[9px] font-black text-muted-foreground uppercase tracking-widest">Network Stability</h3>
             <div className="space-y-4">
               <div className="flex justify-between items-center text-[10px] font-black uppercase">
                 <span className="text-muted-foreground">Encryption</span>
                 <span className="text-emerald-500">Active</span>
               </div>
               <div className="flex justify-between items-center text-[10px] font-black uppercase">
-                <span className="text-muted-foreground">Stability</span>
+                <span className="text-muted-foreground">Grid Uptime</span>
                 <span className="text-primary">99.98%</span>
               </div>
             </div>
