@@ -21,7 +21,13 @@ import {
   Undo2,
   AlertTriangle,
   Minus,
-  Plus
+  Plus,
+  History,
+  Smartphone,
+  Shirt,
+  Apple,
+  Briefcase,
+  LayoutGrid
 } from "lucide-react";
 import Link from "next/link";
 import { Badge } from "@/components/ui/badge";
@@ -227,9 +233,9 @@ export default function DashboardPage() {
           <Button 
             variant="outline" 
             onClick={() => setIsReturnDialogOpen(true)}
-            className="h-14 rounded-2xl px-6 border-slate-200 text-slate-600 font-black uppercase tracking-widest text-[11px]"
+            className="h-14 rounded-2xl px-6 border-orange-200 bg-orange-50/50 text-orange-700 font-black uppercase tracking-widest text-[11px] hover:bg-orange-100 transition-all"
           >
-            <AlertTriangle className="mr-3 h-5 w-5 text-orange-500" />
+            <Undo2 className="mr-3 h-5 w-5" />
             Damage Reporting
           </Button>
           <Link href="/dashboard/order">
@@ -313,16 +319,25 @@ export default function DashboardPage() {
                 ? product.imageUrl 
                 : `https://picsum.photos/seed/${product.id}/100/100`;
 
+              let CategoryIcon = Package;
+              if (product.category === 'Electronics') CategoryIcon = Smartphone;
+              else if (product.category === 'Apparel') CategoryIcon = Shirt;
+              else if (product.category === 'Grocery') CategoryIcon = Apple;
+              else if (product.category === 'Office Supplies') CategoryIcon = Briefcase;
+
               return (
                 <Link key={product.id} href="/dashboard/order">
                   <div className="w-full p-5 bg-white/5 hover:bg-white/10 border border-white/5 rounded-2xl transition-all group flex items-center justify-between cursor-pointer">
                     <div className="flex items-center gap-4 min-w-0 flex-1">
-                      <div className="h-12 w-12 rounded-xl overflow-hidden shrink-0 bg-white/10 flex items-center justify-center">
+                      <div className="h-12 w-12 rounded-xl overflow-hidden shrink-0 bg-white/10 flex items-center justify-center relative">
                         <img 
                           src={imageSrc}
                           alt={product.name}
                           className="h-full w-full object-cover"
                         />
+                        <div className="absolute -bottom-1 -right-1 bg-primary p-1 rounded-md border border-white/20">
+                          <CategoryIcon className="h-3 w-3 text-white" />
+                        </div>
                       </div>
                       <div className="flex flex-col items-start min-w-0">
                         <span className="font-black text-[11px] uppercase tracking-tight italic truncate w-full group-hover:text-accent transition-colors">{product.name}</span>
@@ -350,7 +365,7 @@ export default function DashboardPage() {
         <DialogContent className="rounded-[2.5rem] border-none p-10 bg-white max-w-2xl shadow-2xl">
           <DialogHeader>
             <DialogTitle className="text-2xl font-black text-primary uppercase italic tracking-tighter flex items-center gap-3">
-              <AlertTriangle className="h-6 w-6" /> Damage Reporting
+              <Undo2 className="h-6 w-6 text-orange-500" /> Damage Reporting
             </DialogTitle>
             <DialogDescription className="font-medium text-slate-500 pt-2">
               Report damaged items from your confirmed deliveries. The regional hub will review the claim for credit processing.

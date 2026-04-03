@@ -27,7 +27,12 @@ import {
   Minus,
   Trash2,
   ChevronRight,
-  ArrowRight
+  ArrowRight,
+  LayoutGrid,
+  Cpu,
+  Shirt,
+  Apple,
+  Briefcase
 } from "lucide-react";
 import { useFirestore, useCollection, useUser, useMemoFirebase, useDoc } from "@/firebase";
 import { collection, serverTimestamp, query, doc } from "firebase/firestore";
@@ -36,11 +41,11 @@ import { addDocumentNonBlocking } from "@/firebase";
 import { cn } from "@/lib/utils";
 
 const CATEGORIES = [
-  { id: "all", name: "All Categories", icon: ShoppingBag },
-  { id: "Electronics", name: "Electronics", icon: Package },
-  { id: "Apparel", name: "Apparel", icon: Package },
-  { id: "Grocery", name: "Grocery", icon: Package },
-  { id: "Office Supplies", name: "Office Supplies", icon: Package },
+  { id: "all", name: "All Categories", icon: LayoutGrid },
+  { id: "Electronics", name: "Electronics", icon: Cpu },
+  { id: "Apparel", name: "Apparel", icon: Shirt },
+  { id: "Grocery", name: "Grocery", icon: Apple },
+  { id: "Office Supplies", name: "Office Supplies", icon: Briefcase },
 ];
 
 interface CartItem {
@@ -374,7 +379,7 @@ export default function NewOrderPage() {
                       selectedCategory === cat.id ? "border-primary bg-primary/5 text-primary" : "border-transparent text-slate-500"
                     )}
                   >
-                    <span className="flex items-center gap-3"><cat.icon className="h-4 w-4 opacity-50" />{cat.name}</span>
+                    <span className="flex items-center gap-3"><cat.icon className={cn("h-4 w-4", selectedCategory === cat.id ? "text-primary" : "opacity-50")} />{cat.name}</span>
                   </button>
                 ))}
               </div>
