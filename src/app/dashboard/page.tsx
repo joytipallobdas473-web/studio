@@ -30,6 +30,7 @@ import { cn } from "@/lib/utils";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from "@/components/ui/dialog";
 import { addDocumentNonBlocking } from "@/firebase";
 import { toast } from "@/hooks/use-toast";
+import Image from "next/image";
 
 const MASTER_ADMIN_UID = "j96izCkggNcL002AHiJjzGb18Bf2";
 
@@ -310,11 +311,22 @@ export default function DashboardPage() {
             {productsList && productsList.length > 0 ? productsList.map((product) => (
               <Link key={product.id} href="/dashboard/order">
                 <div className="w-full p-5 bg-white/5 hover:bg-white/10 border border-white/5 rounded-2xl transition-all group flex items-center justify-between cursor-pointer">
-                  <div className="flex flex-col items-start min-w-0">
-                    <span className="font-black text-xs uppercase tracking-tight italic truncate w-full group-hover:text-accent transition-colors">{product.name}</span>
-                    <span className="text-[10px] font-mono font-bold opacity-60 mt-1">₹{(product.price || 0).toFixed(2)}</span>
+                  <div className="flex items-center gap-4 min-w-0 flex-1">
+                    <div className="relative h-12 w-12 rounded-xl overflow-hidden shrink-0 bg-white/10">
+                      <Image 
+                        src={product.imageUrl || `https://picsum.photos/seed/${product.id}/100/100`}
+                        alt={product.name}
+                        fill
+                        unoptimized
+                        className="object-cover"
+                      />
+                    </div>
+                    <div className="flex flex-col items-start min-w-0">
+                      <span className="font-black text-[11px] uppercase tracking-tight italic truncate w-full group-hover:text-accent transition-colors">{product.name}</span>
+                      <span className="text-[10px] font-mono font-bold opacity-60 mt-0.5">₹{(product.price || 0).toFixed(2)}</span>
+                    </div>
                   </div>
-                  <ChevronRight className="h-4 w-4 opacity-40 group-hover:opacity-100 group-hover:translate-x-1 transition-all" />
+                  <ChevronRight className="h-4 w-4 opacity-40 group-hover:opacity-100 group-hover:translate-x-1 transition-all ml-2" />
                 </div>
               </Link>
             )) : (

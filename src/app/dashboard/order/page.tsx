@@ -397,6 +397,7 @@ export default function NewOrderPage() {
                       src={product.imageUrl || `https://picsum.photos/seed/${product.id}/600/400`}
                       alt={product.name}
                       fill
+                      unoptimized
                       data-ai-hint="retail product"
                       className="object-cover group-hover:scale-110 transition-transform duration-700"
                     />
