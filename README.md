@@ -30,13 +30,30 @@ To push this project to a GitHub repository:
 ### ☁️ Firebase App Hosting
 This application is optimized for **Firebase App Hosting**. Once your code is on GitHub, you can connect the repository in the Firebase Console for automated CI/CD deployments.
 
+## 📸 Stock Photo Management
+
+### Provisioning Product Visuals
+When registering a new SKU in the **Inventory Hub**, you have two high-efficiency methods for visual ID capture:
+
+1. **Camera Lens (Direct Capture)**:
+   - Click "Start Lens" to activate your hardware camera.
+   - Position the product and click "Capture".
+   - The system synthesizes the frame into a local data URI immediately.
+
+2. **File Upload (Legacy/Studio Photos)**:
+   - Click "Upload File" in the Visual ID Capture area.
+   - Select a professional studio photo from your device storage.
+   - Supported formats: PNG, JPG, WebP.
+
+*All images are stored as Base64 strings within the Firestore registry, ensuring zero-latency loading across all nodes.*
+
 ## 🔐 Core Features
 
 ### 🛠️ Regional Administrators (Command Console)
 - **Neural Grid Stats**: Real-time traffic telemetry and node status monitoring.
 - **AI Synthesis**: Genkit-powered inventory analyst providing strategic logistics recommendations and damage risk assessments.
 - **Identity Whitelist**: Master Admin authority to provision or revoke access for regional controllers.
-- **Global SKU Registry**: Visual identity capture (camera integration) for provisioning new products.
+- **Global SKU Registry**: Visual identity capture (camera + file upload) for provisioning new products.
 - **Traffic Logs**: Full CSV export capabilities for Packet PO tracking.
 
 ### 🏪 Branch Managers (Retail Portal)

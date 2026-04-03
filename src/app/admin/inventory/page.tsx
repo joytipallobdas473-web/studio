@@ -8,7 +8,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Plus, Search, Edit2, Trash2, Loader2, Filter, CheckCircle2, ImageIcon, Camera, CameraOff, Sparkles, Globe, X, Box } from "lucide-react";
+import { Plus, Search, Edit2, Trash2, Loader2, Filter, CheckCircle2, ImageIcon, Camera, CameraOff, Sparkles, Globe, X, Box, Upload } from "lucide-react";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -24,6 +24,7 @@ export default function InventoryControl() {
   const db = useFirestore();
   const { user } = useUser();
   const videoRef = useRef<HTMLVideoElement>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const [hasCameraPermission, setHasCameraPermission] = useState<boolean | null>(null);
   const [isCameraActive, setIsCameraActive] = useState(false);
   
@@ -116,6 +117,22 @@ export default function InventoryControl() {
         toast({ title: "Visual ID Captured" });
       }
     }
+  };
+
+  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setFormData({ ...formData, imageUrl: reader.result as string });
+        toast({ title: "Stock Photo Loaded" });
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const triggerFileUpload = () => {
+    fileInputRef.current?.click();
   };
 
   useEffect(() => {
@@ -376,9 +393,21 @@ export default function InventoryControl() {
                    )}
                    <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-4">
                      {!isCameraActive ? (
-                       <Button size="sm" className="bg-primary text-background rounded-xl font-black uppercase text-[10px] px-6" onClick={startCamera}>
-                         <Camera className="h-4 w-4 mr-2" /> Start Lens
-                       </Button>
+                       <div className="flex flex-col gap-2">
+                         <Button size="sm" className="bg-primary text-background rounded-xl font-black uppercase text-[10px] px-6" onClick={startCamera}>
+                           <Camera className="h-4 w-4 mr-2" /> Start Lens
+                         </Button>
+                         <Button size="sm" variant="secondary" className="bg-white/10 text-white rounded-xl font-black uppercase text-[10px] px-6 backdrop-blur-md" onClick={triggerFileUpload}>
+                           <Upload className="h-4 w-4 mr-2" /> Upload File
+                         </Button>
+                         <input 
+                            type="file" 
+                            ref={fileInputRef} 
+                            className="hidden" 
+                            accept="image/*" 
+                            onChange={handleFileUpload}
+                         />
+                       </div>
                      ) : (
                        <>
                         <Button size="sm" className="bg-emerald-500 text-white rounded-xl font-black uppercase text-[10px] px-6" onClick={capturePhoto}>
