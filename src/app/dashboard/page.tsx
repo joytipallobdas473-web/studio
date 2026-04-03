@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useFirestore, useCollection, useUser, useMemoFirebase, useDoc } from "@/firebase";
@@ -30,7 +31,6 @@ import { cn } from "@/lib/utils";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from "@/components/ui/dialog";
 import { addDocumentNonBlocking } from "@/firebase";
 import { toast } from "@/hooks/use-toast";
-import Image from "next/image";
 
 const MASTER_ADMIN_UID = "j96izCkggNcL002AHiJjzGb18Bf2";
 
@@ -308,28 +308,32 @@ export default function DashboardPage() {
             </CardTitle>
           </CardHeader>
           <CardContent className="p-8 space-y-4">
-            {productsList && productsList.length > 0 ? productsList.map((product) => (
-              <Link key={product.id} href="/dashboard/order">
-                <div className="w-full p-5 bg-white/5 hover:bg-white/10 border border-white/5 rounded-2xl transition-all group flex items-center justify-between cursor-pointer">
-                  <div className="flex items-center gap-4 min-w-0 flex-1">
-                    <div className="relative h-12 w-12 rounded-xl overflow-hidden shrink-0 bg-white/10">
-                      <Image 
-                        src={product.imageUrl || `https://picsum.photos/seed/${product.id}/100/100`}
-                        alt={product.name}
-                        fill
-                        unoptimized
-                        className="object-cover"
-                      />
+            {productsList && productsList.length > 0 ? productsList.map((product) => {
+              const imageSrc = product.imageUrl && product.imageUrl.length > 0 
+                ? product.imageUrl 
+                : `https://picsum.photos/seed/${product.id}/100/100`;
+
+              return (
+                <Link key={product.id} href="/dashboard/order">
+                  <div className="w-full p-5 bg-white/5 hover:bg-white/10 border border-white/5 rounded-2xl transition-all group flex items-center justify-between cursor-pointer">
+                    <div className="flex items-center gap-4 min-w-0 flex-1">
+                      <div className="h-12 w-12 rounded-xl overflow-hidden shrink-0 bg-white/10 flex items-center justify-center">
+                        <img 
+                          src={imageSrc}
+                          alt={product.name}
+                          className="h-full w-full object-cover"
+                        />
+                      </div>
+                      <div className="flex flex-col items-start min-w-0">
+                        <span className="font-black text-[11px] uppercase tracking-tight italic truncate w-full group-hover:text-accent transition-colors">{product.name}</span>
+                        <span className="text-[10px] font-mono font-bold opacity-60 mt-0.5">₹{(product.price || 0).toFixed(2)}</span>
+                      </div>
                     </div>
-                    <div className="flex flex-col items-start min-w-0">
-                      <span className="font-black text-[11px] uppercase tracking-tight italic truncate w-full group-hover:text-accent transition-colors">{product.name}</span>
-                      <span className="text-[10px] font-mono font-bold opacity-60 mt-0.5">₹{(product.price || 0).toFixed(2)}</span>
-                    </div>
+                    <ChevronRight className="h-4 w-4 opacity-40 group-hover:opacity-100 group-hover:translate-x-1 transition-all ml-2" />
                   </div>
-                  <ChevronRight className="h-4 w-4 opacity-40 group-hover:opacity-100 group-hover:translate-x-1 transition-all ml-2" />
-                </div>
-              </Link>
-            )) : (
+                </Link>
+              );
+            }) : (
               <p className="text-xs text-center font-bold opacity-50 uppercase tracking-widest">No SKUs Provisioned</p>
             )}
             <Link href="/dashboard/order" className="block pt-4">

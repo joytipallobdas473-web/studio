@@ -1,8 +1,8 @@
+
 "use client";
 
 import { useState, useMemo, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import Image from "next/image";
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -390,43 +390,46 @@ export default function NewOrderPage() {
             </div>
           ) : filteredProducts.length > 0 ? (
             <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-6">
-              {filteredProducts.map((product) => (
-                <Card key={product.id} className="group overflow-hidden border-none shadow-sm hover:shadow-xl transition-all flex flex-col bg-white rounded-[2rem]">
-                  <div className="relative h-48 w-full bg-slate-100 overflow-hidden">
-                    <Image 
-                      src={product.imageUrl || `https://picsum.photos/seed/${product.id}/600/400`}
-                      alt={product.name}
-                      fill
-                      unoptimized
-                      data-ai-hint="retail product"
-                      className="object-cover group-hover:scale-110 transition-transform duration-700"
-                    />
-                    <div className="absolute top-4 left-4">
-                      <Badge className="bg-white/90 backdrop-blur-md text-primary border-none text-[9px] font-black uppercase tracking-widest px-3 py-1 rounded-xl">
-                        {product.category}
-                      </Badge>
+              {filteredProducts.map((product) => {
+                const imageSrc = product.imageUrl && product.imageUrl.length > 0 
+                  ? product.imageUrl 
+                  : `https://picsum.photos/seed/${product.id}/600/400`;
+
+                return (
+                  <Card key={product.id} className="group overflow-hidden border-none shadow-sm hover:shadow-xl transition-all flex flex-col bg-white rounded-[2rem]">
+                    <div className="relative h-48 w-full bg-slate-100 overflow-hidden flex items-center justify-center">
+                      <img 
+                        src={imageSrc}
+                        alt={product.name}
+                        className="h-full w-full object-cover group-hover:scale-110 transition-transform duration-700"
+                      />
+                      <div className="absolute top-4 left-4">
+                        <Badge className="bg-white/90 backdrop-blur-md text-primary border-none text-[9px] font-black uppercase tracking-widest px-3 py-1 rounded-xl">
+                          {product.category}
+                        </Badge>
+                      </div>
                     </div>
-                  </div>
-                  <CardContent className="p-6 flex-1 space-y-4">
-                    <div className="space-y-1">
-                      <h3 className="font-black text-base text-slate-900 leading-tight group-hover:text-primary transition-colors italic uppercase">{product.name}</h3>
-                      <p className="text-[9px] text-slate-400 font-mono font-bold tracking-widest uppercase">SKU: {product.sku}</p>
-                    </div>
-                    <div className="flex items-end justify-between">
-                      <p className="text-3xl font-black text-primary tracking-tighter font-mono">₹{(product.price || 0).toFixed(2)}</p>
-                    </div>
-                  </CardContent>
-                  <CardFooter className="p-6 pt-0">
-                    <Button 
-                      className="w-full h-14 bg-accent text-primary hover:bg-primary hover:text-white font-black rounded-2xl shadow-sm transition-all text-[10px] uppercase tracking-widest" 
-                      onClick={() => addToCart(product)} 
-                      disabled={!product.stockQuantity || product.stockQuantity <= 0}
-                    >
-                      {!product.stockQuantity || product.stockQuantity <= 0 ? "Node Depleted" : "Add to Cart"}
-                    </Button>
-                  </CardFooter>
-                </Card>
-              ))}
+                    <CardContent className="p-6 flex-1 space-y-4">
+                      <div className="space-y-1">
+                        <h3 className="font-black text-base text-slate-900 leading-tight group-hover:text-primary transition-colors italic uppercase">{product.name}</h3>
+                        <p className="text-[9px] text-slate-400 font-mono font-bold tracking-widest uppercase">SKU: {product.sku}</p>
+                      </div>
+                      <div className="flex items-end justify-between">
+                        <p className="text-3xl font-black text-primary tracking-tighter font-mono">₹{(product.price || 0).toFixed(2)}</p>
+                      </div>
+                    </CardContent>
+                    <CardFooter className="p-6 pt-0">
+                      <Button 
+                        className="w-full h-14 bg-accent text-primary hover:bg-primary hover:text-white font-black rounded-2xl shadow-sm transition-all text-[10px] uppercase tracking-widest" 
+                        onClick={() => addToCart(product)} 
+                        disabled={!product.stockQuantity || product.stockQuantity <= 0}
+                      >
+                        {!product.stockQuantity || product.stockQuantity <= 0 ? "Node Depleted" : "Add to Cart"}
+                      </Button>
+                    </CardFooter>
+                  </Card>
+                );
+              })}
             </div>
           ) : (
             <div className="text-center py-32 bg-white rounded-[2.5rem] border-2 border-dashed border-slate-100">
