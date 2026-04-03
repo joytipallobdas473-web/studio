@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, useMemo, useRef, useEffect } from "react";
@@ -79,9 +80,11 @@ export default function InventoryControl() {
       const stream = await navigator.mediaDevices.getUserMedia({ video: true });
       setHasCameraPermission(true);
       setIsCameraActive(true);
-      if (videoRef.current) {
-        videoRef.current.srcObject = stream;
-      }
+      setTimeout(() => {
+        if (videoRef.current) {
+          videoRef.current.srcObject = stream;
+        }
+      }, 100);
     } catch (error) {
       setHasCameraPermission(false);
       toast({
@@ -250,7 +253,6 @@ export default function InventoryControl() {
 
       {filteredProducts.length > 0 ? (
         <>
-          {/* Desktop View */}
           <Card className="hidden md:block border-none glass-card rounded-[2.5rem] overflow-hidden">
             <CardContent className="p-0">
               <Table>
@@ -314,7 +316,6 @@ export default function InventoryControl() {
             </CardContent>
           </Card>
 
-          {/* Mobile View */}
           <div className="md:hidden grid grid-cols-1 gap-4">
             {filteredProducts.map((product) => (
               <Card key={product.id} className="border-none glass-card rounded-3xl overflow-hidden p-6 relative group">
@@ -390,42 +391,46 @@ export default function InventoryControl() {
                </div>
                <div className="space-y-3">
                  <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground text-center block">Visual ID Capture</Label>
-                 <div className="aspect-video relative rounded-[1.5rem] bg-black overflow-hidden flex items-center justify-center group border border-white/10">
+                 <div className="aspect-video relative rounded-[1.5rem] bg-black overflow-hidden flex items-center justify-center border border-white/10">
                    {isCameraActive ? (
                      <video ref={videoRef} className="w-full h-full object-cover" autoPlay muted playsInline />
                    ) : formData.imageUrl ? (
                      <img src={formData.imageUrl} alt="Preview" className="w-full h-full object-cover" />
                    ) : (
-                     <ImageIcon className="h-10 w-10 text-white/10" />
+                     <div className="flex flex-col items-center gap-4">
+                        <ImageIcon className="h-10 w-10 text-white/10" />
+                        <p className="text-[10px] text-muted-foreground font-bold uppercase">Awaiting Visual Signature</p>
+                     </div>
                    )}
-                   <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-4">
-                     {!isCameraActive ? (
-                       <div className="flex flex-col gap-2">
-                         <Button size="sm" className="bg-primary text-background rounded-xl font-black uppercase text-[10px] px-6" onClick={startCamera}>
-                           <Camera className="h-4 w-4 mr-2" /> Start Lens
-                         </Button>
-                         <Button size="sm" variant="secondary" className="bg-white/10 text-white rounded-xl font-black uppercase text-[10px] px-6 backdrop-blur-md" onClick={triggerFileUpload}>
-                           <Upload className="h-4 w-4 mr-2" /> Upload File
-                         </Button>
-                         <input 
+                 </div>
+
+                 <div className="flex flex-col sm:flex-row gap-3 mt-4">
+                    {!isCameraActive ? (
+                      <>
+                        <Button variant="secondary" className="flex-1 h-12 bg-primary text-background rounded-xl font-black uppercase text-[10px]" onClick={startCamera}>
+                          <Camera className="h-4 w-4 mr-2" /> Start Lens
+                        </Button>
+                        <Button variant="outline" className="flex-1 h-12 bg-white/5 border-white/10 text-white rounded-xl font-black uppercase text-[10px]" onClick={triggerFileUpload}>
+                          <Upload className="h-4 w-4 mr-2" /> Upload Photo
+                        </Button>
+                        <input 
                             type="file" 
                             ref={fileInputRef} 
                             className="hidden" 
                             accept="image/*" 
                             onChange={handleFileUpload}
                          />
-                       </div>
-                     ) : (
-                       <>
-                        <Button size="sm" className="bg-emerald-500 text-white rounded-xl font-black uppercase text-[10px] px-6" onClick={capturePhoto}>
-                          <Sparkles className="h-4 w-4 mr-2" /> Capture
+                      </>
+                    ) : (
+                      <>
+                        <Button className="flex-1 h-12 bg-emerald-500 text-white rounded-xl font-black uppercase text-[10px]" onClick={capturePhoto}>
+                          <Sparkles className="h-4 w-4 mr-2" /> Capture Frame
                         </Button>
-                        <Button size="sm" variant="destructive" className="rounded-xl font-black uppercase text-[10px] px-6" onClick={stopCamera}>
-                          <CameraOff className="h-4 w-4 mr-2" /> Abort
+                        <Button variant="destructive" className="flex-1 h-12 rounded-xl font-black uppercase text-[10px]" onClick={stopCamera}>
+                          <CameraOff className="h-4 w-4 mr-2" /> Abort Lens
                         </Button>
-                       </>
-                     )}
-                   </div>
+                      </>
+                    )}
                  </div>
                </div>
             </div>
