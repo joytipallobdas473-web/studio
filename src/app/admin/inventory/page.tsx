@@ -77,7 +77,10 @@ export default function InventoryControl() {
 
   const startCamera = async () => {
     try {
-      const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+      // Specifically requesting the environment (back) camera for product capture
+      const stream = await navigator.mediaDevices.getUserMedia({ 
+        video: { facingMode: { exact: "environment" } } 
+      });
       setHasCameraPermission(true);
       setIsCameraActive(true);
       setTimeout(() => {
@@ -86,12 +89,24 @@ export default function InventoryControl() {
         }
       }, 100);
     } catch (error) {
-      setHasCameraPermission(false);
-      toast({
-        variant: 'destructive',
-        title: 'Camera Access Denied',
-        description: 'Please enable camera permissions in your browser settings.',
-      });
+      // Fallback to any available camera if the environment constraint fails
+      try {
+        const fallbackStream = await navigator.mediaDevices.getUserMedia({ video: true });
+        setHasCameraPermission(true);
+        setIsCameraActive(true);
+        setTimeout(() => {
+          if (videoRef.current) {
+            videoRef.current.srcObject = fallbackStream;
+          }
+        }, 100);
+      } catch (fallbackError) {
+        setHasCameraPermission(false);
+        toast({
+          variant: 'destructive',
+          title: 'Camera Access Denied',
+          description: 'Please enable camera permissions in your browser settings to capture product photos.',
+        });
+      }
     }
   };
 
