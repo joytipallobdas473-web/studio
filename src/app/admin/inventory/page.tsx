@@ -1,7 +1,6 @@
 "use client";
 
 import { useState, useMemo, useRef, useEffect } from "react";
-import Image from "next/image";
 import { useFirestore, useCollection, useMemoFirebase, useUser } from "@/firebase";
 import { collection, doc, serverTimestamp } from "firebase/firestore";
 import { Card, CardContent } from "@/components/ui/card";
@@ -270,7 +269,11 @@ export default function InventoryControl() {
                       <TableCell className="pl-10">
                         <div className="flex items-center gap-6">
                           <div className="relative h-14 w-14 rounded-2xl overflow-hidden bg-white/5 border border-white/10">
-                            <Image src={product.imageUrl || `https://picsum.photos/seed/${product.sku}/100/100`} alt={product.name} fill unoptimized className="object-cover" />
+                            <img 
+                              src={product.imageUrl || `https://picsum.photos/seed/${product.sku}/100/100`} 
+                              alt={product.name} 
+                              className="h-full w-full object-cover" 
+                            />
                           </div>
                           <div className="flex flex-col">
                             <span className="font-black text-white text-sm uppercase italic">{product.name}</span>
@@ -317,7 +320,11 @@ export default function InventoryControl() {
               <Card key={product.id} className="border-none glass-card rounded-3xl overflow-hidden p-6 relative group">
                 <div className="flex gap-6 items-start">
                   <div className="relative h-20 w-20 rounded-2xl overflow-hidden bg-white/5 border border-white/10 shrink-0">
-                    <Image src={product.imageUrl || `https://picsum.photos/seed/${product.sku}/100/100`} alt={product.name} fill unoptimized className="object-cover" />
+                    <img 
+                      src={product.imageUrl || `https://picsum.photos/seed/${product.sku}/100/100`} 
+                      alt={product.name} 
+                      className="h-full w-full object-cover" 
+                    />
                   </div>
                   <div className="flex-1 space-y-3 min-w-0">
                     <div className="flex justify-between items-start">
@@ -387,7 +394,7 @@ export default function InventoryControl() {
                    {isCameraActive ? (
                      <video ref={videoRef} className="w-full h-full object-cover" autoPlay muted playsInline />
                    ) : formData.imageUrl ? (
-                     <Image src={formData.imageUrl} alt="Preview" fill unoptimized className="object-cover" />
+                     <img src={formData.imageUrl} alt="Preview" className="w-full h-full object-cover" />
                    ) : (
                      <ImageIcon className="h-10 w-10 text-white/10" />
                    )}
