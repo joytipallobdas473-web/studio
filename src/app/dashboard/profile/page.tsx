@@ -227,8 +227,7 @@ export default function ProfilePage() {
                 </div>
               </div>
             </CardContent>
-            <CardFooter className="p-8 border-t border-slate-50 pt-6 flex justify-between items-center bg-slate-50/30">
-               <p className="text-[9px] text-slate-400 font-black uppercase tracking-widest">Registry Sync: {storeData?.createdAt?.seconds ? new Date(storeData.createdAt.seconds * 1000).toLocaleDateString() : 'N/A'}</p>
+            <CardFooter className="p-8 border-t border-slate-50 pt-6 flex justify-end items-center bg-slate-50/30">
                <Button className="bg-primary hover:bg-primary/90 rounded-2xl font-black h-12 px-8 uppercase tracking-widest text-[10px]">Commit Changes</Button>
             </CardFooter>
           </Card>
