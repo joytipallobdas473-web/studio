@@ -1,9 +1,10 @@
+
 'use server';
 /**
- * @fileOverview AI Inventory Analyst Flow v2.0
+ * @fileOverview AI Inventory Analyst Flow v2.1
  * 
  * Analyzes stock levels, order patterns, and damage incidents to provide 
- * strategic logistics recommendations.
+ * strategic logistics recommendations. Now factors in MRP vs Offer price valuation.
  */
 
 import { ai } from '@/ai/genkit';
@@ -13,7 +14,8 @@ const ProductSchema = z.object({
   name: z.string(),
   currentStock: z.number(),
   category: z.string(),
-  mrp: z.number(),
+  mrp: z.number().describe("The Maximum Retail Price."),
+  offerPrice: z.number().describe("The actual price retailers pay."),
 });
 
 const OrderSchema = z.object({
@@ -47,7 +49,7 @@ const prompt = ai.definePrompt({
     
     PRODUCTS (SKU Catalog):
     {{#each products}}
-    - {{{name}}} | Cluster: {{{category}}} | Density: {{{currentStock}}} | Unit Val: ₹{{{mrp}}}
+    - {{{name}}} | Cluster: {{{category}}} | Density: {{{currentStock}}} | MRP: ₹{{{mrp}}} | Offer: ₹{{{offerPrice}}}
     {{/each}}
     
     TRAFFIC LOGS (Recent Orders & Damage Reports):
@@ -58,7 +60,8 @@ const prompt = ai.definePrompt({
     Strategic Requirements:
     1. Identify SKUs with critical density (stock < 10).
     2. Flag "Damage Hotspots" - items frequently appearing in "return_pending" or "DAMAGE REPORT" logs.
-    3. Assess if high-value clusters (Electronics) are sufficiently stocked for current traffic.
+    3. Assess if high-value clusters (based on MRP) are sufficiently stocked for current traffic.
+    4. Note significant price gaps (MRP vs Offer) that might drive high demand for specific SKUs.
     
     Provide professional, concise, data-driven intelligence.`,
 });

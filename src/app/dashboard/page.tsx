@@ -27,7 +27,8 @@ import {
   Shirt,
   Apple,
   Briefcase,
-  LayoutGrid
+  LayoutGrid,
+  TrendingDown
 } from "lucide-react";
 import Link from "next/link";
 import { Badge } from "@/components/ui/badge";
@@ -75,7 +76,6 @@ export default function DashboardPage() {
   const { data: rawOrders, isLoading: ordersLoading } = useCollection(ordersQuery);
   const { data: rawProducts, isLoading: productsLoading } = useCollection(productsQuery);
 
-  // In-memory sorting for orders
   const orders = useMemo(() => {
     if (!rawOrders) return [];
     return [...rawOrders].sort((a, b) => {
@@ -85,10 +85,8 @@ export default function DashboardPage() {
     });
   }, [rawOrders]);
 
-  // Products that have been delivered and are eligible for damage reporting
   const returnableProducts = useMemo(() => {
     if (!orders) return [];
-    // Get unique delivered items
     const delivered = orders.filter(o => o.status === 'delivered');
     const uniqueItemsMap = new Map();
     
@@ -112,7 +110,6 @@ export default function DashboardPage() {
     return Array.from(uniqueItemsMap.values());
   }, [orders]);
 
-  // Initialize damage quantities when dialog opens
   useEffect(() => {
     if (isReturnDialogOpen && returnableProducts.length > 0) {
       const initial: Record<string, number> = {};
@@ -130,7 +127,6 @@ export default function DashboardPage() {
     }));
   };
 
-  // In-memory sorting for products - Showing more for the grid
   const productsList = useMemo(() => {
     if (!rawProducts) return [];
     return [...rawProducts].sort((a, b) => (a.name || "").localeCompare(b.name || "")).slice(0, 8);
@@ -326,6 +322,10 @@ export default function DashboardPage() {
                 else if (product.category === 'Grocery') CategoryIcon = Apple;
                 else if (product.category === 'Office Supplies') CategoryIcon = Briefcase;
 
+                const mrp = product.mrp || product.price || 0;
+                const price = product.price || 0;
+                const savings = mrp > price ? Math.round(((mrp - price) / mrp) * 100) : 0;
+
                 return (
                   <Link key={product.id} href="/dashboard/order" className="group">
                     <div className="flex flex-col items-center gap-3 p-4 bg-white/5 hover:bg-white/10 border border-white/5 rounded-[1.5rem] transition-all cursor-pointer relative overflow-hidden">
@@ -338,10 +338,18 @@ export default function DashboardPage() {
                         <div className="absolute -bottom-1 -right-1 bg-primary p-1 rounded-md border border-white/20">
                           <CategoryIcon className="h-2.5 w-2.5 text-white" />
                         </div>
+                        {savings > 0 && (
+                          <div className="absolute top-0 left-0 bg-emerald-500 text-white text-[6px] font-black px-1 py-0.5 rounded-br-md">
+                            -{savings}%
+                          </div>
+                        )}
                       </div>
                       <div className="text-center w-full">
                         <p className="font-black text-[9px] uppercase tracking-tighter italic truncate w-full leading-tight group-hover:text-accent transition-colors">{product.name}</p>
-                        <p className="text-[8px] font-mono font-bold opacity-60 mt-0.5">₹{(product.price || 0).toFixed(0)}</p>
+                        <div className="flex flex-col items-center">
+                           <span className="text-[7px] font-bold opacity-40 line-through">₹{mrp.toFixed(0)}</span>
+                           <span className="text-[9px] font-mono font-bold group-hover:text-accent transition-colors">₹{price.toFixed(0)}</span>
+                        </div>
                       </div>
                     </div>
                   </Link>
@@ -361,7 +369,6 @@ export default function DashboardPage() {
         </Card>
       </div>
 
-      {/* Damage Return Dialog */}
       <Dialog open={isReturnDialogOpen} onOpenChange={setIsReturnDialogOpen}>
         <DialogContent className="rounded-[2.5rem] border-none p-10 bg-white max-w-2xl shadow-2xl">
           <DialogHeader>

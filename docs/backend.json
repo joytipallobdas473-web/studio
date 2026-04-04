@@ -1,3 +1,4 @@
+
 {
   "entities": {
     "UserProfile": {
@@ -20,7 +21,8 @@
         "id": { "type": "string" },
         "name": { "type": "string" },
         "sku": { "type": "string" },
-        "price": { "type": "number" },
+        "price": { "type": "number", "description": "The actual offer price the retailer pays." },
+        "mrp": { "type": "number", "description": "The maximum retail price for comparison." },
         "stockQuantity": { "type": "number" },
         "category": { "type": "string" },
         "imageUrl": { "type": "string", "description": "Public URL for the product identity image." }

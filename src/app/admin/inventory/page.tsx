@@ -8,7 +8,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Plus, Search, Edit2, Trash2, Loader2, Filter, CheckCircle2, ImageIcon, Camera, CameraOff, Sparkles, Globe, X, Box, Upload } from "lucide-react";
+import { Plus, Search, Edit2, Trash2, Loader2, Filter, CheckCircle2, ImageIcon, Camera, CameraOff, Sparkles, Globe, X, Box, Upload, TrendingDown } from "lucide-react";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -48,6 +48,7 @@ export default function InventoryControl() {
     name: "",
     sku: "",
     price: "",
+    mrp: "",
     stockQuantity: "0",
     category: "Electronics",
     description: "",
@@ -63,6 +64,7 @@ export default function InventoryControl() {
         name: product.name || "",
         sku: product.sku || "",
         price: (product.price || 0).toString(),
+        mrp: (product.mrp || product.price || 0).toString(),
         stockQuantity: (product.stockQuantity || 0).toString(),
         category: product.category || "Electronics",
         description: product.description || "",
@@ -77,7 +79,6 @@ export default function InventoryControl() {
 
   const startCamera = async () => {
     try {
-      // Specifically requesting the environment (back) camera for product capture
       const stream = await navigator.mediaDevices.getUserMedia({ 
         video: { facingMode: { exact: "environment" } } 
       });
@@ -89,7 +90,6 @@ export default function InventoryControl() {
         }
       }, 100);
     } catch (error) {
-      // Fallback to any available camera if the environment constraint fails
       try {
         const fallbackStream = await navigator.mediaDevices.getUserMedia({ video: true });
         setHasCameraPermission(true);
@@ -160,6 +160,7 @@ export default function InventoryControl() {
     if (!db) return;
 
     const priceNum = parseFloat(formData.price);
+    const mrpNum = parseFloat(formData.mrp) || priceNum;
     const stockNum = parseInt(formData.stockQuantity);
 
     if (!formData.name.trim() || isNaN(priceNum) || isNaN(stockNum)) {
@@ -171,6 +172,7 @@ export default function InventoryControl() {
       name: formData.name.trim(),
       sku: formData.sku.trim().toUpperCase(),
       price: priceNum,
+      mrp: mrpNum,
       stockQuantity: stockNum,
       category: formData.category,
       description: formData.description.trim(),
@@ -275,7 +277,7 @@ export default function InventoryControl() {
                   <TableRow className="h-20 border-white/5">
                     <TableHead className="pl-10 uppercase text-[10px] font-black tracking-widest text-muted-foreground">Identity Package</TableHead>
                     <TableHead className="uppercase text-[10px] font-black tracking-widest text-muted-foreground">Cluster</TableHead>
-                    <TableHead className="uppercase text-[10px] font-black tracking-widest text-muted-foreground">Valuation</TableHead>
+                    <TableHead className="uppercase text-[10px] font-black tracking-widest text-muted-foreground">Valuation (MRP/Offer)</TableHead>
                     <TableHead className="uppercase text-[10px] font-black tracking-widest text-muted-foreground">Density</TableHead>
                     <TableHead className="text-right pr-10 uppercase text-[10px] font-black tracking-widest text-muted-foreground">Protocol</TableHead>
                   </TableRow>
@@ -303,7 +305,12 @@ export default function InventoryControl() {
                           {product.category}
                         </Badge>
                       </TableCell>
-                      <TableCell className="font-mono text-sm text-primary font-black">₹{(product.price || 0).toFixed(2)}</TableCell>
+                      <TableCell>
+                         <div className="flex flex-col">
+                            <span className="text-[10px] text-muted-foreground line-through decoration-rose-500/50">₹{(product.mrp || product.price || 0).toFixed(2)}</span>
+                            <span className="font-mono text-sm text-primary font-black">₹{(product.price || 0).toFixed(2)}</span>
+                         </div>
+                      </TableCell>
                       <TableCell>
                         <div className="flex items-center gap-4">
                           <div className={cn("h-1.5 w-24 rounded-full bg-white/5 overflow-hidden")}>
@@ -354,7 +361,10 @@ export default function InventoryControl() {
                     </div>
                     
                     <div className="flex items-center justify-between">
-                       <span className="font-mono text-sm text-primary font-black">₹{(product.price || 0).toFixed(2)}</span>
+                       <div className="flex flex-col">
+                          <span className="text-[9px] text-muted-foreground line-through decoration-rose-500/30">₹{(product.mrp || product.price || 0).toFixed(2)}</span>
+                          <span className="font-mono text-sm text-primary font-black">₹{(product.price || 0).toFixed(2)}</span>
+                       </div>
                        <div className="flex items-center gap-2">
                          <Box className={cn("h-3 w-3", (product.stockQuantity || 0) < 10 ? "text-rose-500" : "text-emerald-500")} />
                          <span className={cn("text-xs font-black font-mono", (product.stockQuantity || 0) < 10 ? "text-rose-500" : "text-emerald-500")}>
@@ -449,7 +459,7 @@ export default function InventoryControl() {
                  </div>
                </div>
             </div>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
               <div className="space-y-3">
                 <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Sector</Label>
                 <Select value={formData.category} onValueChange={(val) => setFormData({...formData, category: val})}>
@@ -458,7 +468,11 @@ export default function InventoryControl() {
                 </Select>
               </div>
               <div className="space-y-3">
-                <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Unit Val (₹)</Label>
+                <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground text-rose-400">MRP (₹)</Label>
+                <Input type="number" value={formData.mrp} onChange={(e) => setFormData({...formData, mrp: e.target.value})} className="h-14 rounded-2xl bg-white/5 border-none font-mono text-white" />
+              </div>
+              <div className="space-y-3">
+                <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground text-emerald-400">Offer (₹)</Label>
                 <Input type="number" value={formData.price} onChange={(e) => setFormData({...formData, price: e.target.value})} className="h-14 rounded-2xl bg-white/5 border-none font-mono text-white" />
               </div>
               <div className="space-y-3">

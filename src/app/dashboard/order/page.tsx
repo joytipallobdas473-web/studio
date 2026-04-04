@@ -32,7 +32,8 @@ import {
   Cpu,
   Shirt,
   Apple,
-  Briefcase
+  Briefcase,
+  TrendingDown
 } from "lucide-react";
 import { useFirestore, useCollection, useUser, useMemoFirebase, useDoc } from "@/firebase";
 import { collection, serverTimestamp, query, doc } from "firebase/firestore";
@@ -52,6 +53,7 @@ interface CartItem {
   id: string;
   name: string;
   price: number;
+  mrp: number;
   quantity: number;
   sku: string;
 }
@@ -128,6 +130,7 @@ export default function NewOrderPage() {
           id: product.id,
           name: product.name,
           price: product.price,
+          mrp: product.mrp || product.price,
           sku: product.sku,
           quantity: 1
         }
@@ -279,7 +282,10 @@ export default function NewOrderPage() {
                       <div key={item.id} className="flex items-center justify-between p-4 bg-slate-50 rounded-2xl border border-slate-100 group">
                         <div className="flex-1 min-w-0 pr-4">
                           <h4 className="font-black text-slate-900 text-[11px] uppercase italic truncate">{item.name}</h4>
-                          <p className="text-[10px] font-mono font-bold text-primary">₹{(item.price * item.quantity).toFixed(2)}</p>
+                          <div className="flex items-center gap-2">
+                             <span className="text-[9px] text-slate-400 line-through">₹{(item.mrp * item.quantity).toFixed(0)}</span>
+                             <span className="text-[10px] font-mono font-bold text-primary">₹{(item.price * item.quantity).toFixed(2)}</span>
+                          </div>
                         </div>
                         <div className="flex items-center gap-3">
                           <div className="flex items-center bg-white rounded-xl border border-slate-200 overflow-hidden h-9">
@@ -399,6 +405,10 @@ export default function NewOrderPage() {
                 const imageSrc = product.imageUrl && product.imageUrl.length > 0 
                   ? product.imageUrl 
                   : `https://picsum.photos/seed/${product.id}/600/400`;
+                
+                const mrp = product.mrp || product.price || 0;
+                const price = product.price || 0;
+                const savings = mrp > price ? Math.round(((mrp - price) / mrp) * 100) : 0;
 
                 return (
                   <Card key={product.id} className="group overflow-hidden border-none shadow-sm hover:shadow-xl transition-all flex flex-col bg-white rounded-[2rem]">
@@ -408,10 +418,15 @@ export default function NewOrderPage() {
                         alt={product.name}
                         className="h-full w-full object-cover group-hover:scale-110 transition-transform duration-700"
                       />
-                      <div className="absolute top-4 left-4">
+                      <div className="absolute top-4 left-4 flex flex-col gap-2">
                         <Badge className="bg-white/90 backdrop-blur-md text-primary border-none text-[9px] font-black uppercase tracking-widest px-3 py-1 rounded-xl">
                           {product.category}
                         </Badge>
+                        {savings > 0 && (
+                          <Badge className="bg-emerald-500 text-white border-none text-[9px] font-black uppercase tracking-widest px-3 py-1 rounded-xl flex items-center gap-1">
+                            <TrendingDown className="h-3 w-3" /> {savings}% OFF
+                          </Badge>
+                        )}
                       </div>
                     </div>
                     <CardContent className="p-6 flex-1 space-y-4">
@@ -419,8 +434,14 @@ export default function NewOrderPage() {
                         <h3 className="font-black text-base text-slate-900 leading-tight group-hover:text-primary transition-colors italic uppercase">{product.name}</h3>
                         <p className="text-[9px] text-slate-400 font-mono font-bold tracking-widest uppercase">SKU: {product.sku}</p>
                       </div>
-                      <div className="flex items-end justify-between">
-                        <p className="text-3xl font-black text-primary tracking-tighter font-mono">₹{(product.price || 0).toFixed(2)}</p>
+                      <div className="flex flex-col">
+                        <div className="flex items-center gap-2">
+                           <span className="text-xs text-slate-400 line-through decoration-rose-500/30">₹{mrp.toFixed(0)}</span>
+                           <span className="text-3xl font-black text-primary tracking-tighter font-mono">₹{price.toFixed(0)}</span>
+                        </div>
+                        <p className="text-[9px] text-emerald-600 font-black uppercase tracking-widest mt-1">
+                          {savings > 0 ? `You save ₹${(mrp - price).toFixed(0)} on this unit` : 'Network Base Pricing'}
+                        </p>
                       </div>
                     </CardContent>
                     <CardFooter className="p-6 pt-0">
