@@ -27,6 +27,7 @@ export default function InventoryControl() {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [hasCameraPermission, setHasCameraPermission] = useState<boolean | null>(null);
   const [isCameraActive, setIsCameraActive] = useState(false);
+  const [activeImageIndex, setActiveImageIndex] = useState(0);
   
   const isAdmin = useMemo(() => {
     return user?.email?.toLowerCase().includes("admin") || user?.uid === MASTER_ADMIN_UID;
@@ -52,14 +53,23 @@ export default function InventoryControl() {
     stockQuantity: "0",
     category: "Electronics",
     description: "",
-    imageUrl: ""
+    imageUrls: ["", "", ""]
   };
 
   const [formData, setFormData] = useState(initialFormState);
 
   const handleOpenDialog = (product?: any) => {
+    setActiveImageIndex(0);
     if (product) {
       setEditingProduct(product);
+      // Ensure we have an array of 3 images
+      let initialImages = product.imageUrls || [];
+      if (initialImages.length === 0 && product.imageUrl) {
+        initialImages = [product.imageUrl, "", ""];
+      } else {
+        while (initialImages.length < 3) initialImages.push("");
+      }
+
       setFormData({
         name: product.name || "",
         sku: product.sku || "",
@@ -68,7 +78,7 @@ export default function InventoryControl() {
         stockQuantity: (product.stockQuantity || 0).toString(),
         category: product.category || "Electronics",
         description: product.description || "",
-        imageUrl: product.imageUrl || ""
+        imageUrls: initialImages
       });
     } else {
       setEditingProduct(null);
@@ -80,7 +90,7 @@ export default function InventoryControl() {
   const startCamera = async () => {
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ 
-        video: { facingMode: { exact: "environment" } } 
+        video: { facingMode: "environment" } 
       });
       setHasCameraPermission(true);
       setIsCameraActive(true);
@@ -129,9 +139,11 @@ export default function InventoryControl() {
       if (ctx) {
         ctx.drawImage(videoRef.current, 0, 0, canvas.width, canvas.height);
         const dataUri = canvas.toDataURL('image/jpeg');
-        setFormData({ ...formData, imageUrl: dataUri });
+        const newImages = [...formData.imageUrls];
+        newImages[activeImageIndex] = dataUri;
+        setFormData({ ...formData, imageUrls: newImages });
         stopCamera();
-        toast({ title: "Visual ID Captured" });
+        toast({ title: `Visual ID ${activeImageIndex + 1} Captured` });
       }
     }
   };
@@ -141,8 +153,11 @@ export default function InventoryControl() {
     if (file) {
       const reader = new FileReader();
       reader.onloadend = () => {
-        setFormData({ ...formData, imageUrl: reader.result as string });
-        toast({ title: "Stock Photo Loaded" });
+        const dataUri = reader.result as string;
+        const newImages = [...formData.imageUrls];
+        newImages[activeImageIndex] = dataUri;
+        setFormData({ ...formData, imageUrls: newImages });
+        toast({ title: `Stock Photo ${activeImageIndex + 1} Loaded` });
       };
       reader.readAsDataURL(file);
     }
@@ -168,6 +183,10 @@ export default function InventoryControl() {
       return;
     }
 
+    // Filter out empty images and set primary imageUrl as the first available one
+    const validImages = formData.imageUrls.filter(url => !!url);
+    const primaryImage = validImages[0] || `https://picsum.photos/seed/${formData.sku || Date.now()}/600/400`;
+
     const productData = {
       name: formData.name.trim(),
       sku: formData.sku.trim().toUpperCase(),
@@ -176,7 +195,8 @@ export default function InventoryControl() {
       stockQuantity: stockNum,
       category: formData.category,
       description: formData.description.trim(),
-      imageUrl: formData.imageUrl.trim() || `https://picsum.photos/seed/${formData.sku || Date.now()}/600/400`,
+      imageUrl: primaryImage,
+      imageUrls: formData.imageUrls,
       updatedAt: serverTimestamp()
     };
 
@@ -232,7 +252,7 @@ export default function InventoryControl() {
              <span className="text-[10px] font-black tracking-[0.4em] text-primary uppercase">Logistics Engine</span>
           </div>
           <h1 className="text-4xl font-black tracking-tighter text-white uppercase italic leading-none">Inventory Hub</h1>
-          <p className="text-muted-foreground font-medium text-sm tracking-wide">Central product registry and stock orchestration.</p>
+          <p className="text-muted-foreground font-medium text-sm tracking-wide">Central product registry and multi-angle stock orchestration.</p>
         </div>
         <Button onClick={() => handleOpenDialog()} className="h-14 w-full md:w-auto px-10 rounded-2xl bg-primary text-background font-black shadow-lg hover:scale-105 transition-all uppercase tracking-widest text-xs">
           <Plus className="mr-3 h-6 w-6" /> Provision SKU
@@ -289,7 +309,7 @@ export default function InventoryControl() {
                         <div className="flex items-center gap-6">
                           <div className="relative h-14 w-14 rounded-2xl overflow-hidden bg-white/5 border border-white/10">
                             <img 
-                              src={product.imageUrl || `https://picsum.photos/seed/${product.sku}/100/100`} 
+                              src={product.imageUrl || (product.imageUrls && product.imageUrls[0]) || `https://picsum.photos/seed/${product.sku}/100/100`} 
                               alt={product.name} 
                               className="h-full w-full object-cover" 
                             />
@@ -344,7 +364,7 @@ export default function InventoryControl() {
                 <div className="flex gap-6 items-start">
                   <div className="relative h-20 w-20 rounded-2xl overflow-hidden bg-white/5 border border-white/10 shrink-0">
                     <img 
-                      src={product.imageUrl || `https://picsum.photos/seed/${product.sku}/100/100`} 
+                      src={product.imageUrl || (product.imageUrls && product.imageUrls[0]) || `https://picsum.photos/seed/${product.sku}/100/100`} 
                       alt={product.name} 
                       className="h-full w-full object-cover" 
                     />
@@ -396,14 +416,14 @@ export default function InventoryControl() {
       )}
 
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-        <DialogContent className="sm:max-w-[700px] rounded-[2.5rem] p-10 glass-card border-none shadow-2xl overflow-y-auto max-h-[90vh]">
+        <DialogContent className="sm:max-w-[800px] rounded-[2.5rem] p-10 glass-card border-none shadow-2xl overflow-y-auto max-h-[95vh]">
           <DialogHeader>
             <DialogTitle className="text-3xl font-black uppercase italic text-primary">
               {editingProduct ? "Modify SKU Node" : "Provision Cluster"}
             </DialogTitle>
           </DialogHeader>
-          <div className="grid gap-8 py-10">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-8 items-start">
+          <div className="grid gap-8 py-6">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-10 items-start">
                <div className="space-y-6">
                 <div className="space-y-3">
                   <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Identity Tag</Label>
@@ -413,18 +433,52 @@ export default function InventoryControl() {
                   <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Registry SKU</Label>
                   <Input value={formData.sku} onChange={(e) => setFormData({...formData, sku: e.target.value})} className="h-14 rounded-2xl font-mono uppercase font-bold bg-white/5 border-none text-white" />
                 </div>
+                <div className="space-y-3">
+                  <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Visual Identity Slots (Up to 3)</Label>
+                  <div className="grid grid-cols-3 gap-4">
+                    {formData.imageUrls.map((url, idx) => (
+                      <button 
+                        key={idx}
+                        onClick={() => setActiveImageIndex(idx)}
+                        className={cn(
+                          "relative aspect-square rounded-2xl overflow-hidden border-2 transition-all group",
+                          activeImageIndex === idx ? "border-primary scale-105 shadow-[0_0_15px_rgba(245,158,11,0.3)]" : "border-white/10 opacity-60 grayscale hover:opacity-100 hover:grayscale-0"
+                        )}
+                      >
+                        {url ? (
+                          <img src={url} alt={`Slot ${idx+1}`} className="w-full h-full object-cover" />
+                        ) : (
+                          <div className="w-full h-full flex items-center justify-center bg-white/5 text-[10px] font-black text-muted-foreground uppercase italic">
+                            Slot {idx + 1}
+                          </div>
+                        )}
+                        <div className={cn(
+                          "absolute inset-0 bg-primary/20 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity",
+                          activeImageIndex === idx && "opacity-100"
+                        )}>
+                          <div className="bg-primary text-background p-1.5 rounded-lg">
+                            <Plus className="h-3 w-3" />
+                          </div>
+                        </div>
+                      </button>
+                    ))}
+                  </div>
+                </div>
                </div>
+               
                <div className="space-y-3">
-                 <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground text-center block">Visual ID Capture</Label>
+                 <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground text-center block">
+                   Visual ID Capture: Slot {activeImageIndex + 1}
+                 </Label>
                  <div className="aspect-video relative rounded-[1.5rem] bg-black overflow-hidden flex items-center justify-center border border-white/10">
                    {isCameraActive ? (
                      <video ref={videoRef} className="w-full h-full object-cover" autoPlay muted playsInline />
-                   ) : formData.imageUrl ? (
-                     <img src={formData.imageUrl} alt="Preview" className="w-full h-full object-cover" />
+                   ) : formData.imageUrls[activeImageIndex] ? (
+                     <img src={formData.imageUrls[activeImageIndex]} alt="Preview" className="w-full h-full object-cover" />
                    ) : (
                      <div className="flex flex-col items-center gap-4">
                         <ImageIcon className="h-10 w-10 text-white/10" />
-                        <p className="text-[10px] text-muted-foreground font-bold uppercase">Awaiting Visual Signature</p>
+                        <p className="text-[10px] text-muted-foreground font-bold uppercase italic">Awaiting Visual Signature: Slot {activeImageIndex + 1}</p>
                      </div>
                    )}
                  </div>
@@ -432,10 +486,10 @@ export default function InventoryControl() {
                  <div className="flex flex-col sm:flex-row gap-3 mt-4">
                     {!isCameraActive ? (
                       <>
-                        <Button variant="secondary" className="flex-1 h-12 bg-primary text-background rounded-xl font-black uppercase text-[10px]" onClick={startCamera}>
+                        <Button variant="secondary" className="flex-1 h-12 bg-primary text-background rounded-xl font-black uppercase text-[10px] tracking-widest" onClick={startCamera}>
                           <Camera className="h-4 w-4 mr-2" /> Start Lens
                         </Button>
-                        <Button variant="outline" className="flex-1 h-12 bg-white/5 border-white/10 text-white rounded-xl font-black uppercase text-[10px]" onClick={triggerFileUpload}>
+                        <Button variant="outline" className="flex-1 h-12 bg-white/5 border-white/10 text-white rounded-xl font-black uppercase text-[10px] tracking-widest" onClick={triggerFileUpload}>
                           <Upload className="h-4 w-4 mr-2" /> Upload Photo
                         </Button>
                         <input 
@@ -448,10 +502,10 @@ export default function InventoryControl() {
                       </>
                     ) : (
                       <>
-                        <Button className="flex-1 h-12 bg-emerald-500 text-white rounded-xl font-black uppercase text-[10px]" onClick={capturePhoto}>
+                        <Button className="flex-1 h-12 bg-emerald-500 text-white rounded-xl font-black uppercase text-[10px] tracking-widest" onClick={capturePhoto}>
                           <Sparkles className="h-4 w-4 mr-2" /> Capture Frame
                         </Button>
-                        <Button variant="destructive" className="flex-1 h-12 rounded-xl font-black uppercase text-[10px]" onClick={stopCamera}>
+                        <Button variant="destructive" className="flex-1 h-12 rounded-xl font-black uppercase text-[10px] tracking-widest" onClick={stopCamera}>
                           <CameraOff className="h-4 w-4 mr-2" /> Abort Lens
                         </Button>
                       </>
@@ -459,11 +513,12 @@ export default function InventoryControl() {
                  </div>
                </div>
             </div>
+            
             <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
               <div className="space-y-3">
-                <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Sector</Label>
+                <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Sector Cluster</Label>
                 <Select value={formData.category} onValueChange={(val) => setFormData({...formData, category: val})}>
-                  <SelectTrigger className="h-14 rounded-2xl bg-white/5 border-none text-white"><SelectValue /></SelectTrigger>
+                  <SelectTrigger className="h-14 rounded-2xl bg-white/5 border-none text-white font-bold"><SelectValue /></SelectTrigger>
                   <SelectContent className="glass-card text-white">{CATEGORIES.map(c => <SelectItem key={c} value={c}>{c}</SelectItem>)}</SelectContent>
                 </Select>
               </div>
@@ -476,14 +531,14 @@ export default function InventoryControl() {
                 <Input type="number" value={formData.price} onChange={(e) => setFormData({...formData, price: e.target.value})} className="h-14 rounded-2xl bg-white/5 border-none font-mono text-white" />
               </div>
               <div className="space-y-3">
-                <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Density</Label>
+                <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Stock Density</Label>
                 <Input type="number" value={formData.stockQuantity} onChange={(e) => setFormData({...formData, stockQuantity: e.target.value})} className="h-14 rounded-2xl bg-white/5 border-none font-mono text-white" />
               </div>
             </div>
           </div>
           <DialogFooter className="gap-4">
             <Button variant="ghost" onClick={() => setIsDialogOpen(false)} className="h-14 px-8 rounded-2xl uppercase tracking-widest font-bold text-muted-foreground hover:text-white">Abort</Button>
-            <Button onClick={handleSave} className="bg-primary text-background h-14 px-10 rounded-2xl font-black uppercase tracking-widest">
+            <Button onClick={handleSave} className="bg-primary text-background h-14 px-10 rounded-2xl font-black uppercase tracking-widest shadow-lg">
               <CheckCircle2 className="mr-3 h-6 w-6" /> Commit SKU
             </Button>
           </DialogFooter>

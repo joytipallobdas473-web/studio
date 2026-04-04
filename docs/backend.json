@@ -25,7 +25,8 @@
         "mrp": { "type": "number", "description": "The maximum retail price for comparison." },
         "stockQuantity": { "type": "number" },
         "category": { "type": "string" },
-        "imageUrl": { "type": "string", "description": "Public URL for the product identity image." }
+        "imageUrl": { "type": "string", "description": "Primary public URL for the product identity image." },
+        "imageUrls": { "type": "array", "items": { "type": "string" }, "description": "Up to 3 product identity images for multi-angle view." }
       },
       "required": ["id", "name", "price", "stockQuantity"]
     },
