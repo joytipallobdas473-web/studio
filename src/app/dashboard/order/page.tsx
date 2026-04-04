@@ -250,7 +250,7 @@ export default function NewOrderPage() {
         <div className="space-y-2">
           <h1 className="text-4xl font-black text-slate-900 tracking-tighter italic uppercase leading-none">Silk Catalog</h1>
           <p className="text-slate-500 font-black flex items-center gap-3 text-[10px] uppercase tracking-[0.4em]">
-            <div className="h-2 w-2 rounded-full bg-primary animate-pulse shadow-[0_0_10px_rgba(15,50,45,0.4)]" />
+            <span className="h-2 w-2 rounded-full bg-primary animate-pulse shadow-[0_0_10px_rgba(15,50,45,0.4)]" />
             Stocking: {store?.name || 'Aether Node'}
           </p>
         </div>
@@ -378,7 +378,6 @@ export default function NewOrderPage() {
                 </div>
               </SheetFooter>
             </SheetContent>
-SheetContent>
           </Sheet>
         </div>
       </div>
