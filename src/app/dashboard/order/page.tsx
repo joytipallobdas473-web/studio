@@ -12,6 +12,13 @@ import { Badge } from "@/components/ui/badge";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetFooter, SheetTrigger } from "@/components/ui/sheet";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { 
+  Carousel, 
+  CarouselContent, 
+  CarouselItem, 
+  CarouselNext, 
+  CarouselPrevious 
+} from "@/components/ui/carousel";
+import { 
   Package, 
   ShoppingBag, 
   CheckCircle, 
@@ -33,7 +40,8 @@ import {
   Shirt,
   Apple,
   Briefcase,
-  TrendingDown
+  TrendingDown,
+  Layers
 } from "lucide-react";
 import { useFirestore, useCollection, useUser, useMemoFirebase, useDoc } from "@/firebase";
 import { collection, serverTimestamp, query, doc } from "firebase/firestore";
@@ -402,9 +410,8 @@ export default function NewOrderPage() {
           ) : filteredProducts.length > 0 ? (
             <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-6">
               {filteredProducts.map((product) => {
-                const imageSrc = product.imageUrl && product.imageUrl.length > 0 
-                  ? product.imageUrl 
-                  : `https://picsum.photos/seed/${product.id}/600/400`;
+                const validImages = (product.imageUrls || []).filter((u: string) => !!u);
+                const primaryImage = validImages[0] || product.imageUrl || `https://picsum.photos/seed/${product.id}/600/400`;
                 
                 const mrp = product.mrp || product.price || 0;
                 const price = product.price || 0;
@@ -413,18 +420,38 @@ export default function NewOrderPage() {
                 return (
                   <Card key={product.id} className="group overflow-hidden border-none shadow-sm hover:shadow-xl transition-all flex flex-col bg-white rounded-[2rem]">
                     <div className="relative h-48 w-full bg-slate-100 overflow-hidden flex items-center justify-center">
-                      <img 
-                        src={imageSrc}
-                        alt={product.name}
-                        className="h-full w-full object-cover group-hover:scale-110 transition-transform duration-700"
-                      />
-                      <div className="absolute top-4 left-4 flex flex-col gap-2">
+                      {validImages.length > 1 ? (
+                        <Carousel className="w-full h-full">
+                          <CarouselContent className="h-full">
+                            {validImages.map((url: string, idx: number) => (
+                              <CarouselItem key={idx} className="h-full">
+                                <img src={url} alt={`${product.name} view ${idx+1}`} className="w-full h-full object-cover" />
+                              </CarouselItem>
+                            ))}
+                          </CarouselContent>
+                          <CarouselPrevious className="left-2 h-7 w-7 bg-white/50 border-none hover:bg-white text-primary" />
+                          <CarouselNext className="right-2 h-7 w-7 bg-white/50 border-none hover:bg-white text-primary" />
+                        </Carousel>
+                      ) : (
+                        <img 
+                          src={primaryImage}
+                          alt={product.name}
+                          className="h-full w-full object-cover group-hover:scale-110 transition-transform duration-700"
+                        />
+                      )}
+                      
+                      <div className="absolute top-4 left-4 flex flex-col gap-2 z-10">
                         <Badge className="bg-white/90 backdrop-blur-md text-primary border-none text-[9px] font-black uppercase tracking-widest px-3 py-1 rounded-xl">
                           {product.category}
                         </Badge>
                         {savings > 0 && (
                           <Badge className="bg-emerald-500 text-white border-none text-[9px] font-black uppercase tracking-widest px-3 py-1 rounded-xl flex items-center gap-1">
                             <TrendingDown className="h-3 w-3" /> {savings}% OFF
+                          </Badge>
+                        )}
+                        {validImages.length > 1 && (
+                          <Badge className="bg-primary/20 backdrop-blur-md text-white border-none text-[8px] font-black uppercase tracking-widest px-2 py-0.5 rounded-lg flex items-center gap-1.5">
+                            <Layers className="h-2.5 w-2.5" /> {validImages.length} ANGLES
                           </Badge>
                         )}
                       </div>

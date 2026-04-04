@@ -6,6 +6,13 @@ import { collection, query, doc, where, serverTimestamp } from "firebase/firesto
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { 
+  Carousel, 
+  CarouselContent, 
+  CarouselItem, 
+  CarouselNext, 
+  CarouselPrevious 
+} from "@/components/ui/carousel";
+import { 
   Package, 
   ShoppingCart, 
   ArrowRight, 
@@ -28,7 +35,8 @@ import {
   Apple,
   Briefcase,
   LayoutGrid,
-  TrendingDown
+  TrendingDown,
+  Layers
 } from "lucide-react";
 import Link from "next/link";
 import { Badge } from "@/components/ui/badge";
@@ -282,9 +290,8 @@ export default function DashboardPage() {
           <CardContent className="p-8 flex-1">
             <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-2 gap-4">
               {productsList && productsList.length > 0 ? productsList.map((product) => {
-                const imageSrc = product.imageUrl && product.imageUrl.length > 0 
-                  ? product.imageUrl 
-                  : `https://picsum.photos/seed/${product.id}/100/100`;
+                const validImages = (product.imageUrls || []).filter((u: string) => !!u);
+                const primaryImage = validImages[0] || product.imageUrl || `https://picsum.photos/seed/${product.id}/100/100`;
 
                 let CategoryIcon = Package;
                 if (product.category === 'Electronics') CategoryIcon = Smartphone;
@@ -298,10 +305,10 @@ export default function DashboardPage() {
 
                 return (
                   <Link key={product.id} href="/dashboard/order" className="group">
-                    <div className="flex flex-col items-center gap-3 p-4 bg-white/5 hover:bg-white/10 border border-white/5 rounded-[1.5rem] transition-all cursor-pointer relative overflow-hidden">
+                    <div className="flex flex-col items-center gap-3 p-4 bg-white/5 hover:bg-white/10 border border-white/5 rounded-[1.5rem] transition-all cursor-pointer relative overflow-hidden h-full">
                       <div className="h-14 w-14 rounded-xl overflow-hidden shrink-0 bg-white/10 flex items-center justify-center relative shadow-lg group-hover:scale-110 transition-transform duration-300">
                         <img 
-                          src={imageSrc}
+                          src={primaryImage}
                           alt={product.name}
                           className="h-full w-full object-cover"
                         />
@@ -311,6 +318,11 @@ export default function DashboardPage() {
                         {savings > 0 && (
                           <div className="absolute top-0 left-0 bg-emerald-500 text-white text-[6px] font-black px-1 py-0.5 rounded-br-md">
                             -{savings}%
+                          </div>
+                        )}
+                        {validImages.length > 1 && (
+                          <div className="absolute top-0 right-0 p-1">
+                            <Layers className="h-2 w-2 text-white/50" />
                           </div>
                         )}
                       </div>
