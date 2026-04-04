@@ -101,7 +101,7 @@ export default function AdminOrdersPage() {
         o.email || 'N/A',
         o.phoneNumber || 'N/A',
         `"${o.deliveryAddress?.replace(/,/g, ' ') || 'N/A'}"`,
-        o.paymentMethod === 'cash' ? 'Cash' : 'Credit',
+        o.paymentMethod === 'cash' ? 'Cash' : o.paymentMethod === 'paid' ? 'Paid' : 'Credit',
         o.createdAt?.seconds ? format(o.createdAt.seconds * 1000, 'yyyy-MM-dd HH:mm') : 'PENDING',
         `"${o.items || 'Restock'}"`,
         o.quantity || 1,
@@ -246,12 +246,16 @@ export default function AdminOrdersPage() {
                             value={order.paymentMethod || 'cash'} 
                             onValueChange={(val) => handlePaymentUpdate(order.id, val)}
                           >
-                            <SelectTrigger className="h-7 w-[90px] text-[7px] font-black uppercase tracking-widest rounded-lg border-none bg-white/5 text-white shrink-0">
+                            <SelectTrigger className={cn(
+                              "h-7 w-[90px] text-[7px] font-black uppercase tracking-widest rounded-lg border-none bg-white/5 shrink-0",
+                              order.paymentMethod === 'paid' ? "text-emerald-500" : "text-white"
+                            )}>
                               <SelectValue />
                             </SelectTrigger>
                             <SelectContent className="glass-card border-white/10 text-white rounded-xl">
                               <SelectItem value="cash" className="text-[10px] font-black tracking-widest uppercase">CASH</SelectItem>
                               <SelectItem value="after_delivery" className="text-[10px] font-black tracking-widest uppercase">CREDIT</SelectItem>
+                              <SelectItem value="paid" className="text-[10px] font-black tracking-widest uppercase text-emerald-500">PAID</SelectItem>
                             </SelectContent>
                           </Select>
                         </div>
@@ -351,10 +355,22 @@ export default function AdminOrdersPage() {
                     <Phone className="h-3 w-3 text-primary opacity-50" />
                     {order.phoneNumber || 'N/A'}
                   </div>
-                  <div className="flex items-center gap-1.5 text-[8px] font-black text-muted-foreground uppercase">
-                    {order.paymentMethod === 'cash' ? <Banknote className="h-3 w-3" /> : <CreditCard className="h-3 w-3" />}
-                    {order.paymentMethod === 'after_delivery' ? 'CREDIT' : 'CASH'}
-                  </div>
+                  <Select 
+                    value={order.paymentMethod || 'cash'} 
+                    onValueChange={(val) => handlePaymentUpdate(order.id, val)}
+                  >
+                    <SelectTrigger className={cn(
+                      "h-8 w-[95px] text-[8px] font-black uppercase tracking-widest rounded-xl border-none bg-white/10 shrink-0",
+                      order.paymentMethod === 'paid' ? "text-emerald-500" : "text-white"
+                    )}>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent className="glass-card border-white/10 text-white rounded-2xl">
+                      <SelectItem value="cash" className="text-[10px] font-black tracking-widest uppercase">CASH</SelectItem>
+                      <SelectItem value="after_delivery" className="text-[10px] font-black tracking-widest uppercase">CREDIT</SelectItem>
+                      <SelectItem value="paid" className="text-[10px] font-black tracking-widest uppercase text-emerald-500">PAID</SelectItem>
+                    </SelectContent>
+                  </Select>
                </div>
                <div className="flex items-start gap-3 text-[10px] text-muted-foreground font-medium">
                   <MapPin className="h-3 w-3 text-accent shrink-0 mt-0.5" />
