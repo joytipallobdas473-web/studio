@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useFirestore, useCollection, useUser, useMemoFirebase, useDoc } from "@/firebase";
@@ -36,7 +35,8 @@ import {
   Briefcase,
   LayoutGrid,
   TrendingDown,
-  Layers
+  Layers,
+  BarChart3
 } from "lucide-react";
 import Link from "next/link";
 import { Badge } from "@/components/ui/badge";
@@ -47,6 +47,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogD
 import { addDocumentNonBlocking } from "@/firebase";
 import { toast } from "@/hooks/use-toast";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { Bar, BarChart, ResponsiveContainer, XAxis, YAxis, Tooltip as RechartsTooltip, Cell } from "recharts";
 
 const MASTER_ADMIN_UID = "j96izCkggNcL002AHiJjzGb18Bf2";
 
@@ -93,6 +94,22 @@ export default function DashboardPage() {
       return dateB - dateA;
     });
   }, [rawOrders]);
+
+  const chartData = useMemo(() => {
+    if (!orders) return [];
+    const days = Array.from({ length: 7 }, (_, i) => {
+      const d = new Date();
+      d.setDate(d.getDate() - i);
+      return d.toLocaleDateString('en-IN', { weekday: 'short' });
+    }).reverse();
+
+    return days.map(day => {
+      const dayTotal = orders
+        .filter(o => o.createdAt?.seconds && format(o.createdAt.seconds * 1000, 'EEE') === day)
+        .reduce((sum, o) => sum + (o.total || 0), 0);
+      return { name: day, spent: dayTotal };
+    });
+  }, [orders]);
 
   const returnableProducts = useMemo(() => {
     if (!orders) return [];
@@ -343,54 +360,86 @@ export default function DashboardPage() {
           </CardContent>
           <CardFooter className="p-8 pt-0">
             <Link href="/dashboard/order" className="w-full">
-              <Button className="w-full h-14 bg-white text-primary hover:bg-slate-100 font-black uppercase tracking-widest text-[10px] rounded-2xl shadow-lg">
-                Browse Full Catalog
+              <Button className="w-full h-14 bg-white text-primary rounded-2xl shadow-lg font-black uppercase tracking-widest text-[10px]">
+                Browse Catalog
               </Button>
             </Link>
           </CardFooter>
         </Card>
 
-        <Card className="lg:col-span-2 shadow-sm border-none bg-white rounded-[2.5rem] overflow-hidden">
-          <CardHeader className="border-b border-slate-50 bg-slate-50/50 p-8">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-3 text-primary">
-                <Activity className="h-5 w-5" />
-                <CardTitle className="text-xl font-black uppercase italic tracking-tighter">Telemetery Log</CardTitle>
-              </div>
-              <Badge className="text-[9px] font-black uppercase tracking-widest bg-emerald-50 text-emerald-600 border-none px-4 py-1.5 rounded-lg">LIVE</Badge>
-            </div>
-          </CardHeader>
-          <CardContent className="p-0">
-            <div className="divide-y divide-slate-50">
-              {orders && orders.length > 0 ? orders.slice(0, 10).map((order) => (
-                <div key={order.id} className="flex flex-col sm:flex-row sm:items-center justify-between p-8 hover:bg-slate-50/50 transition-colors gap-6">
-                  <div>
-                    <p className="font-black text-primary flex items-center gap-2 uppercase italic text-[10px] tracking-wide">
-                      PKT_{order.id.substring(0, 8)}
-                      <span className="text-[9px] font-bold text-slate-400">• {order.createdAt?.seconds ? format(order.createdAt.seconds * 1000, 'MMM dd, HH:mm') : 'SYNCING'}</span>
-                    </p>
-                    <p className="text-sm font-bold text-slate-700 mt-1 uppercase tracking-tight">{order.items || 'Standard Payload'}</p>
+        <div className="lg:col-span-2 space-y-8">
+           <Card className="border-none bg-white rounded-[2.5rem] overflow-hidden shadow-sm">
+             <CardHeader className="p-8 pb-4">
+               <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-3 text-primary">
+                    <BarChart3 className="h-5 w-5" />
+                    <CardTitle className="text-xl font-black uppercase italic tracking-tighter">Procurement Insights</CardTitle>
                   </div>
-                  <div className="flex items-center justify-between sm:justify-end gap-10">
-                    <p className="text-base font-black text-slate-900 font-mono">₹{(order.total || 0).toFixed(2)}</p>
-                    <Badge className={cn("capitalize h-9 px-5 font-black rounded-xl text-[9px] tracking-widest uppercase border", getStatusColor(order.status))}>
-                      {order.status === 'return_pending' ? 'Damage Reported' : order.status}
-                    </Badge>
-                  </div>
+                  <Badge variant="secondary" className="text-[8px] font-black uppercase tracking-widest px-3">Order Flow</Badge>
+               </div>
+             </CardHeader>
+             <CardContent className="p-8 pt-0">
+                <div className="h-[200px] w-full">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <BarChart data={chartData}>
+                      <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{fill: '#94a3b8', fontSize: 10, fontWeight: 700}} dy={10} />
+                      <RechartsTooltip 
+                        cursor={{fill: 'rgba(99, 102, 241, 0.05)'}}
+                        contentStyle={{borderRadius: '12px', border: 'none', boxShadow: '0 10px 15px -3px rgba(0,0,0,0.1)'}}
+                      />
+                      <Bar dataKey="spent" radius={[4, 4, 0, 0]}>
+                        {chartData.map((entry, index) => (
+                          <Cell key={`cell-${index}`} fill={index === chartData.length - 1 ? '#6366f1' : '#e2e8f0'} />
+                        ))}
+                      </Bar>
+                    </BarChart>
+                  </ResponsiveContainer>
                 </div>
-              )) : (
-                <div className="py-24 text-center text-slate-400 font-black uppercase text-[10px] tracking-widest italic">Awaiting telemetry sync...</div>
-              )}
-            </div>
-            <div className="p-8 border-t border-slate-50 bg-slate-50/30">
-              <Link href="/dashboard/history" className="block text-center">
-                <Button variant="ghost" className="text-primary font-black uppercase tracking-widest text-[10px] hover:bg-primary/5">
-                  Access Full Grid Logs <ArrowRight className="ml-3 h-4 w-4" />
-                </Button>
-              </Link>
-            </div>
-          </CardContent>
-        </Card>
+             </CardContent>
+           </Card>
+
+           <Card className="shadow-sm border-none bg-white rounded-[2.5rem] overflow-hidden">
+            <CardHeader className="border-b border-slate-50 bg-slate-50/50 p-8">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3 text-primary">
+                  <Activity className="h-5 w-5" />
+                  <CardTitle className="text-xl font-black uppercase italic tracking-tighter">Telemetery Log</CardTitle>
+                </div>
+                <Badge className="text-[9px] font-black uppercase tracking-widest bg-emerald-50 text-emerald-600 border-none px-4 py-1.5 rounded-lg">LIVE</Badge>
+              </div>
+            </CardHeader>
+            <CardContent className="p-0">
+              <div className="divide-y divide-slate-50">
+                {orders && orders.length > 0 ? orders.slice(0, 10).map((order) => (
+                  <div key={order.id} className="flex flex-col sm:flex-row sm:items-center justify-between p-8 hover:bg-slate-50/50 transition-colors gap-6">
+                    <div>
+                      <p className="font-black text-primary flex items-center gap-2 uppercase italic text-[10px] tracking-wide">
+                        PKT_{order.id.substring(0, 8)}
+                        <span className="text-[9px] font-bold text-slate-400">• {order.createdAt?.seconds ? format(order.createdAt.seconds * 1000, 'MMM dd, HH:mm') : 'SYNCING'}</span>
+                      </p>
+                      <p className="text-sm font-bold text-slate-700 mt-1 uppercase tracking-tight">{order.items || 'Standard Payload'}</p>
+                    </div>
+                    <div className="flex items-center justify-between sm:justify-end gap-10">
+                      <p className="text-base font-black text-slate-900 font-mono">₹{(order.total || 0).toFixed(2)}</p>
+                      <Badge className={cn("capitalize h-9 px-5 font-black rounded-xl text-[9px] tracking-widest uppercase border", getStatusColor(order.status))}>
+                        {order.status === 'return_pending' ? 'Damage Reported' : order.status}
+                      </Badge>
+                    </div>
+                  </div>
+                )) : (
+                  <div className="py-24 text-center text-slate-400 font-black uppercase text-[10px] tracking-widest italic">Awaiting telemetry sync...</div>
+                )}
+              </div>
+              <div className="p-8 border-t border-slate-50 bg-slate-50/30">
+                <Link href="/dashboard/history" className="block text-center">
+                  <Button variant="ghost" className="text-primary font-black uppercase tracking-widest text-[10px] hover:bg-primary/5">
+                    Access Full Grid Logs <ArrowRight className="ml-3 h-4 w-4" />
+                  </Button>
+                </Link>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
       </div>
 
       <Dialog open={isReturnDialogOpen} onOpenChange={setIsReturnDialogOpen}>

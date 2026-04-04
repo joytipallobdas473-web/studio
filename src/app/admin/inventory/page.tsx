@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState, useMemo, useRef, useEffect } from "react";
@@ -8,7 +7,8 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Plus, Search, Edit2, Trash2, Loader2, Filter, CheckCircle2, ImageIcon, Camera, CameraOff, Sparkles, Globe, X, Box, Upload, TrendingDown } from "lucide-react";
+import { Textarea } from "@/components/ui/textarea";
+import { Plus, Search, Edit2, Trash2, Loader2, Filter, CheckCircle2, ImageIcon, Camera, CameraOff, Sparkles, Globe, X, Box, Upload, Wand2 } from "lucide-react";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -16,6 +16,7 @@ import { toast } from "@/hooks/use-toast";
 import { addDocumentNonBlocking, updateDocumentNonBlocking, deleteDocumentNonBlocking } from "@/firebase";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
+import { describeProduct } from "@/ai/flows/product-describer";
 
 const CATEGORIES = ["Electronics", "Apparel", "Grocery", "Office Supplies"];
 const MASTER_ADMIN_UID = "j96izCkggNcL002AHiJjzGb18Bf2";
@@ -28,6 +29,7 @@ export default function InventoryControl() {
   const [hasCameraPermission, setHasCameraPermission] = useState<boolean | null>(null);
   const [isCameraActive, setIsCameraActive] = useState(false);
   const [activeImageIndex, setActiveImageIndex] = useState(0);
+  const [isDescribing, setIsDescribing] = useState(false);
   
   const isAdmin = useMemo(() => {
     return user?.email?.toLowerCase().includes("admin") || user?.uid === MASTER_ADMIN_UID;
@@ -62,7 +64,6 @@ export default function InventoryControl() {
     setActiveImageIndex(0);
     if (product) {
       setEditingProduct(product);
-      // Ensure we have an array of 3 images
       let initialImages = product.imageUrls || [];
       if (initialImages.length === 0 && product.imageUrl) {
         initialImages = [product.imageUrl, "", ""];
@@ -85,6 +86,23 @@ export default function InventoryControl() {
       setFormData(initialFormState);
     }
     setIsDialogOpen(true);
+  };
+
+  const handleAiDescribe = async () => {
+    if (!formData.name || !formData.category) {
+      toast({ title: "Insufficient Data", description: "Name and Category required for AI synthesis.", variant: "destructive" });
+      return;
+    }
+    setIsDescribing(true);
+    try {
+      const result = await describeProduct({ name: formData.name, category: formData.category });
+      setFormData(prev => ({ ...prev, description: result.description }));
+      toast({ title: "Synthesis Complete", description: "Product description generated." });
+    } catch (error) {
+      toast({ title: "AI Error", description: "Could not generate description.", variant: "destructive" });
+    } finally {
+      setIsDescribing(false);
+    }
   };
 
   const startCamera = async () => {
@@ -183,7 +201,6 @@ export default function InventoryControl() {
       return;
     }
 
-    // Filter out empty images and set primary imageUrl as the first available one
     const validImages = formData.imageUrls.filter(url => !!url);
     const primaryImage = validImages[0] || `https://picsum.photos/seed/${formData.sku || Date.now()}/600/400`;
 
@@ -432,6 +449,27 @@ export default function InventoryControl() {
                 <div className="space-y-3">
                   <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Registry SKU</Label>
                   <Input value={formData.sku} onChange={(e) => setFormData({...formData, sku: e.target.value})} className="h-14 rounded-2xl font-mono uppercase font-bold bg-white/5 border-none text-white" />
+                </div>
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between">
+                    <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Logistics Description</Label>
+                    <Button 
+                      variant="ghost" 
+                      size="sm" 
+                      onClick={handleAiDescribe}
+                      disabled={isDescribing || !formData.name}
+                      className="h-7 px-3 rounded-lg bg-primary/10 text-primary hover:bg-primary/20 text-[9px] font-black uppercase tracking-widest"
+                    >
+                      {isDescribing ? <Loader2 className="h-3 w-3 animate-spin mr-2" /> : <Wand2 className="h-3 w-3 mr-2" />}
+                      Smart Describe
+                    </Button>
+                  </div>
+                  <Textarea 
+                    value={formData.description} 
+                    onChange={(e) => setFormData({...formData, description: e.target.value})}
+                    placeholder="Technical specifications and retail value..."
+                    className="min-h-[100px] rounded-2xl bg-white/5 border-none text-white font-medium text-xs leading-relaxed"
+                  />
                 </div>
                 <div className="space-y-3">
                   <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Visual Identity Slots (Up to 3)</Label>
