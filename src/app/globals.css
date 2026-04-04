@@ -24,7 +24,7 @@
     --border: 214.3 31.8% 91.4%;
     --input: 214.3 31.8% 91.4%;
     --ring: 243 75% 59%;
-    --radius: 1.25rem;
+    --radius: 1.5rem;
   }
 
   .dark-admin {
@@ -71,8 +71,8 @@
 
 .admin-grid {
   background-image: 
-    radial-gradient(at 0% 0%, hsla(38, 92%, 50%, 0.05) 0, transparent 50%),
-    radial-gradient(at 100% 100%, hsla(142, 71%, 45%, 0.05) 0, transparent 50%),
+    radial-gradient(at 0% 0%, hsla(38, 92%, 50%, 0.1) 0, transparent 50%),
+    radial-gradient(at 100% 100%, hsla(142, 71%, 45%, 0.1) 0, transparent 50%),
     linear-gradient(to right, #ffffff02 1px, transparent 1px),
     linear-gradient(to bottom, #ffffff02 1px, transparent 1px);
   background-size: 100% 100%, 100% 100%, 40px 40px, 40px 40px;
@@ -80,12 +80,12 @@
 
 .portal-surface {
   background-image: 
-    radial-gradient(at 100% 0%, hsla(243, 75%, 59%, 0.03) 0, transparent 50%),
-    radial-gradient(at 0% 100%, hsla(222, 47%, 11%, 0.03) 0, transparent 50%);
+    radial-gradient(at 100% 0%, hsla(243, 75%, 59%, 0.05) 0, transparent 50%),
+    radial-gradient(at 0% 100%, hsla(222, 47%, 11%, 0.05) 0, transparent 50%);
 }
 
 .glass-card {
-  @apply bg-card/60 backdrop-blur-xl border border-white/5 shadow-xl;
+  @apply bg-card/70 backdrop-blur-2xl border border-white/10 shadow-2xl;
 }
 
 .command-gradient {
@@ -98,5 +98,5 @@
 }
 
 .animate-spin-slow {
-  animation: spin-slow 15s linear infinite;
+  animation: spin-slow 20s linear infinite;
 }
