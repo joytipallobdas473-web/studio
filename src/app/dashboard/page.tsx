@@ -130,10 +130,10 @@ export default function DashboardPage() {
     }));
   };
 
-  // In-memory sorting for products
+  // In-memory sorting for products - Showing more for the grid
   const productsList = useMemo(() => {
     if (!rawProducts) return [];
-    return [...rawProducts].sort((a, b) => (a.name || "").localeCompare(b.name || "")).slice(0, 5);
+    return [...rawProducts].sort((a, b) => (a.name || "").localeCompare(b.name || "")).slice(0, 8);
   }, [rawProducts]);
 
   const stats = useMemo(() => [
@@ -306,57 +306,58 @@ export default function DashboardPage() {
           </CardContent>
         </Card>
 
-        <Card className="bg-primary text-white shadow-xl border-none rounded-[2.5rem] overflow-hidden">
+        <Card className="bg-primary text-white shadow-xl border-none rounded-[2.5rem] overflow-hidden flex flex-col">
           <CardHeader className="bg-white/10 p-8">
             <CardTitle className="text-xl font-black flex items-center gap-3 uppercase italic tracking-tighter">
               <Package className="h-6 w-6" />
               Regional Catalog
             </CardTitle>
           </CardHeader>
-          <CardContent className="p-8 space-y-4">
-            {productsList && productsList.length > 0 ? productsList.map((product) => {
-              const imageSrc = product.imageUrl && product.imageUrl.length > 0 
-                ? product.imageUrl 
-                : `https://picsum.photos/seed/${product.id}/100/100`;
+          <CardContent className="p-8 flex-1">
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-2 gap-4">
+              {productsList && productsList.length > 0 ? productsList.map((product) => {
+                const imageSrc = product.imageUrl && product.imageUrl.length > 0 
+                  ? product.imageUrl 
+                  : `https://picsum.photos/seed/${product.id}/100/100`;
 
-              let CategoryIcon = Package;
-              if (product.category === 'Electronics') CategoryIcon = Smartphone;
-              else if (product.category === 'Apparel') CategoryIcon = Shirt;
-              else if (product.category === 'Grocery') CategoryIcon = Apple;
-              else if (product.category === 'Office Supplies') CategoryIcon = Briefcase;
+                let CategoryIcon = Package;
+                if (product.category === 'Electronics') CategoryIcon = Smartphone;
+                else if (product.category === 'Apparel') CategoryIcon = Shirt;
+                else if (product.category === 'Grocery') CategoryIcon = Apple;
+                else if (product.category === 'Office Supplies') CategoryIcon = Briefcase;
 
-              return (
-                <Link key={product.id} href="/dashboard/order">
-                  <div className="w-full p-5 bg-white/5 hover:bg-white/10 border border-white/5 rounded-2xl transition-all group flex items-center justify-between cursor-pointer">
-                    <div className="flex items-center gap-4 min-w-0 flex-1">
-                      <div className="h-12 w-12 rounded-xl overflow-hidden shrink-0 bg-white/10 flex items-center justify-center relative">
+                return (
+                  <Link key={product.id} href="/dashboard/order" className="group">
+                    <div className="flex flex-col items-center gap-3 p-4 bg-white/5 hover:bg-white/10 border border-white/5 rounded-[1.5rem] transition-all cursor-pointer relative overflow-hidden">
+                      <div className="h-14 w-14 rounded-xl overflow-hidden shrink-0 bg-white/10 flex items-center justify-center relative shadow-lg group-hover:scale-110 transition-transform duration-300">
                         <img 
                           src={imageSrc}
                           alt={product.name}
                           className="h-full w-full object-cover"
                         />
                         <div className="absolute -bottom-1 -right-1 bg-primary p-1 rounded-md border border-white/20">
-                          <CategoryIcon className="h-3 w-3 text-white" />
+                          <CategoryIcon className="h-2.5 w-2.5 text-white" />
                         </div>
                       </div>
-                      <div className="flex flex-col items-start min-w-0">
-                        <span className="font-black text-[11px] uppercase tracking-tight italic truncate w-full group-hover:text-accent transition-colors">{product.name}</span>
-                        <span className="text-[10px] font-mono font-bold opacity-60 mt-0.5">₹{(product.price || 0).toFixed(2)}</span>
+                      <div className="text-center w-full">
+                        <p className="font-black text-[9px] uppercase tracking-tighter italic truncate w-full leading-tight group-hover:text-accent transition-colors">{product.name}</p>
+                        <p className="text-[8px] font-mono font-bold opacity-60 mt-0.5">₹{(product.price || 0).toFixed(0)}</p>
                       </div>
                     </div>
-                    <ChevronRight className="h-4 w-4 opacity-40 group-hover:opacity-100 group-hover:translate-x-1 transition-all ml-2" />
-                  </div>
-                </Link>
-              );
-            }) : (
-              <p className="text-xs text-center font-bold opacity-50 uppercase tracking-widest">No SKUs Provisioned</p>
-            )}
-            <Link href="/dashboard/order" className="block pt-4">
-              <Button className="w-full h-14 bg-white text-primary hover:bg-slate-100 font-black uppercase tracking-widest text-[10px] rounded-2xl">
-                Browse Full Inventory
+                  </Link>
+                );
+              }) : (
+                <p className="text-xs text-center font-bold opacity-50 uppercase tracking-widest col-span-2">No SKUs Provisioned</p>
+              )}
+            </div>
+          </CardContent>
+          <CardFooter className="p-8 pt-0">
+            <Link href="/dashboard/order" className="w-full">
+              <Button className="w-full h-14 bg-white text-primary hover:bg-slate-100 font-black uppercase tracking-widest text-[10px] rounded-2xl shadow-lg">
+                Browse Full Catalog
               </Button>
             </Link>
-          </CardContent>
+          </CardFooter>
         </Card>
       </div>
 
