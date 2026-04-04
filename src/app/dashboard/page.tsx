@@ -115,7 +115,7 @@ export default function DashboardPage() {
     if (isReturnDialogOpen && returnableProducts.length > 0) {
       const initial: Record<string, number> = {};
       returnableProducts.forEach(p => {
-        initial[p.name] = 1;
+        initial[p.name] = 0;
       });
       setDamageReportQuantities(initial);
     }
@@ -124,7 +124,7 @@ export default function DashboardPage() {
   const updateDamageQty = (name: string, delta: number, max: number) => {
     setDamageReportQuantities(prev => ({
       ...prev,
-      [name]: Math.min(max, Math.max(1, (prev[name] || 1) + delta))
+      [name]: Math.min(max, Math.max(0, (prev[name] || 0) + delta))
     }));
   };
 
@@ -172,7 +172,9 @@ export default function DashboardPage() {
 
   const handleInitiateReturn = (item: any) => {
     if (!db || !user) return;
-    const qty = damageReportQuantities[item.name] || 1;
+    const qty = damageReportQuantities[item.name] || 0;
+    if (qty === 0) return;
+    
     setIsSubmittingReturn(true);
 
     const returnData = {
@@ -226,7 +228,7 @@ export default function DashboardPage() {
             Node: <span className="text-slate-900 font-black">{store?.name || "Initializing..."}</span>
           </p>
         </div>
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-4 w-full md:w-auto">
           <Link href="/dashboard/order">
             <Button className="bg-primary text-white font-black hover:scale-105 transition-all shadow-lg h-14 rounded-2xl px-8 uppercase tracking-widest text-[11px]">
               <PlusCircle className="mr-3 h-5 w-5" />
@@ -240,9 +242,9 @@ export default function DashboardPage() {
                   variant="outline" 
                   size="icon"
                   onClick={() => setIsReturnDialogOpen(true)}
-                  className="h-11 w-11 rounded-xl border-orange-200 bg-orange-50/50 text-orange-700 hover:bg-orange-100 transition-all shrink-0"
+                  className="h-8 w-8 rounded-lg border-orange-200 bg-orange-50/50 text-orange-700 hover:bg-orange-100 transition-all shrink-0"
                 >
-                  <Undo2 className="h-5 w-5" />
+                  <Undo2 className="h-4 w-4" />
                 </Button>
               </TooltipTrigger>
               <TooltipContent className="bg-white border-orange-100 text-orange-700 font-black text-[10px] uppercase tracking-widest">
@@ -255,7 +257,7 @@ export default function DashboardPage() {
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         {stats.map((stat, i) => (
-          <Card key={i} className="border-none shadow-sm overflow-hidden bg-white rounded-[1.5rem] hover:translate-y-[-2px] transition-all">
+          <Card className="border-none shadow-sm overflow-hidden bg-white rounded-[1.5rem] hover:translate-y-[-2px] transition-all" key={i}>
             <CardHeader className="flex flex-row items-center justify-between pb-4">
               <CardTitle className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">{stat.label}</CardTitle>
               <div className={cn(stat.bg, stat.color, "p-2.5 rounded-xl")}>
@@ -408,7 +410,7 @@ export default function DashboardPage() {
                           <Minus className="h-4 w-4" />
                         </button>
                         <span className="w-10 text-center font-black text-xs text-primary">
-                          {damageReportQuantities[item.name] || 1}
+                          {damageReportQuantities[item.name] || 0}
                         </span>
                         <button 
                           onClick={() => updateDamageQty(item.name, 1, item.totalQuantity)} 
@@ -420,7 +422,7 @@ export default function DashboardPage() {
                       <Button 
                         size="sm" 
                         onClick={() => handleInitiateReturn(item)}
-                        disabled={isSubmittingReturn}
+                        disabled={isSubmittingReturn || (damageReportQuantities[item.name] || 0) === 0}
                         className="h-10 px-6 rounded-xl bg-primary text-white font-black uppercase text-[9px] tracking-widest shadow-lg shadow-primary/20 hover:scale-105 transition-all"
                       >
                         {isSubmittingReturn ? <Loader2 className="h-4 w-4 animate-spin" /> : "Report Damage"}
