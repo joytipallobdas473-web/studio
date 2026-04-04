@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, useMemo, useEffect } from "react";
@@ -71,7 +72,7 @@ export default function AdminOverview() {
 
     return last7Days.map(day => ({
       name: day,
-      volume: Math.floor(Math.random() * 20) + 5, // Placeholder for actual temporal telemetry
+      volume: Math.floor(Math.random() * 20) + 5, 
     }));
   }, [orders]);
 
@@ -88,7 +89,8 @@ export default function AdminOverview() {
           name: p.name || "Unknown",
           currentStock: p.stockQuantity || 0,
           category: p.category || "General",
-          mrp: p.price || 0
+          mrp: p.mrp || p.price || 0,
+          offerPrice: p.price || 0
         })),
         recentOrders: orders.slice(0, 20).map(o => ({
           items: o.items || "Unspecified",
@@ -193,7 +195,7 @@ export default function AdminOverview() {
                     </Bar>
                   </BarChart>
                 </ResponsiveContainer>
-                </div>
+              </div>
             </CardContent>
           </Card>
 
@@ -213,7 +215,7 @@ export default function AdminOverview() {
                         "h-2 w-2 rounded-full",
                         order.status === 'delivered' ? 'bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)]' : 
                         order.status === 'cancelled' ? 'bg-rose-500' : 
-                        order.status === 'return_pending' ? 'bg-orange-500' : 'bg-primary'
+                        order.status === 'return_pending' ? 'bg-orange-500 shadow-[0_0_8px_rgba(249,115,22,0.5)]' : 'bg-primary'
                       )} />
                       <div>
                         <p className="text-sm font-black text-white uppercase italic tracking-tight">{order.storeName || 'Unknown Node'}</p>
@@ -228,7 +230,7 @@ export default function AdminOverview() {
                         "text-[9px] font-black uppercase tracking-widest mt-1 block",
                         order.status === 'delivered' ? 'text-emerald-500' : 
                         order.status === 'return_pending' ? 'text-orange-500' : 'text-muted-foreground'
-                      )}>{order.status}</span>
+                      )}>{order.status === 'return_pending' ? 'Damage Reported' : order.status}</span>
                     </div>
                   </div>
                 )) : (
