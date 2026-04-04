@@ -38,6 +38,7 @@ import { cn } from "@/lib/utils";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from "@/components/ui/dialog";
 import { addDocumentNonBlocking } from "@/firebase";
 import { toast } from "@/hooks/use-toast";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 
 const MASTER_ADMIN_UID = "j96izCkggNcL002AHiJjzGb18Bf2";
 
@@ -225,21 +226,30 @@ export default function DashboardPage() {
             Node: <span className="text-slate-900 font-black">{store?.name || "Initializing..."}</span>
           </p>
         </div>
-        <div className="flex flex-row-reverse gap-4">
+        <div className="flex items-center gap-3">
           <Link href="/dashboard/order">
             <Button className="bg-primary text-white font-black hover:scale-105 transition-all shadow-lg h-14 rounded-2xl px-8 uppercase tracking-widest text-[11px]">
               <PlusCircle className="mr-3 h-5 w-5" />
               New Reorder
             </Button>
           </Link>
-          <Button 
-            variant="outline" 
-            onClick={() => setIsReturnDialogOpen(true)}
-            className="h-14 rounded-2xl px-6 border-orange-200 bg-orange-50/50 text-orange-700 font-black uppercase tracking-widest text-[11px] hover:bg-orange-100 transition-all"
-          >
-            <Undo2 className="mr-2 h-4 w-4" />
-            Damage Reporting
-          </Button>
+          <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button 
+                  variant="outline" 
+                  size="icon"
+                  onClick={() => setIsReturnDialogOpen(true)}
+                  className="h-11 w-11 rounded-xl border-orange-200 bg-orange-50/50 text-orange-700 hover:bg-orange-100 transition-all shrink-0"
+                >
+                  <Undo2 className="h-5 w-5" />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent className="bg-white border-orange-100 text-orange-700 font-black text-[10px] uppercase tracking-widest">
+                Damage Reporting
+              </TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
         </div>
       </div>
 
