@@ -1,23 +1,30 @@
 
 "use client";
 
-import { useUser, useFirestore, useDoc, useMemoFirebase } from "@/firebase";
+import { useUser, useFirestore, useDoc, useMemoFirebase, updateDocumentNonBlocking } from "@/firebase";
 import { doc } from "firebase/firestore";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { User as UserIcon, Mail, MapPin, Building, Fingerprint, Loader2, BadgeCheck, Clock, Copy, Check } from "lucide-react";
+import { User as UserIcon, Mail, MapPin, Building, Fingerprint, Loader2, BadgeCheck, Clock, Copy, Check, Camera, Upload, X } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { toast } from "@/hooks/use-toast";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 
 export default function ProfilePage() {
   const { user, isUserLoading } = useUser();
   const db = useFirestore();
   const [copied, setCopied] = useState(false);
+  const [isPhotoDialogOpen, setIsPhotoDialogOpen] = useState(false);
+  const [isCameraActive, setIsCameraActive] = useState(false);
+  const [previewUrl, setPreviewUrl] = useState("");
+  
+  const videoRef = useRef<HTMLVideoElement>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const storeRef = useMemoFirebase(() => {
     if (!db || !user) return null;
@@ -25,6 +32,69 @@ export default function ProfilePage() {
   }, [db, user]);
 
   const { data: storeData, isLoading: storeLoading } = useDoc(storeRef);
+
+  const startCamera = async () => {
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ 
+        video: { facingMode: "user" } 
+      });
+      setIsCameraActive(true);
+      setTimeout(() => {
+        if (videoRef.current) {
+          videoRef.current.srcObject = stream;
+        }
+      }, 100);
+    } catch (error) {
+      toast({
+        variant: 'destructive',
+        title: 'Camera Access Denied',
+        description: 'Please enable camera permissions to update your profile photo.',
+      });
+    }
+  };
+
+  const stopCamera = () => {
+    if (videoRef.current && videoRef.current.srcObject) {
+      const stream = videoRef.current.srcObject as MediaStream;
+      stream.getTracks().forEach(track => track.stop());
+      videoRef.current.srcObject = null;
+    }
+    setIsCameraActive(false);
+  };
+
+  const capturePhoto = () => {
+    if (videoRef.current) {
+      const canvas = document.createElement('canvas');
+      canvas.width = videoRef.current.videoWidth;
+      canvas.height = videoRef.current.videoHeight;
+      const ctx = canvas.getContext('2d');
+      if (ctx) {
+        ctx.drawImage(videoRef.current, 0, 0, canvas.width, canvas.height);
+        setPreviewUrl(canvas.toDataURL('image/jpeg'));
+        stopCamera();
+      }
+    }
+  };
+
+  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setPreviewUrl(reader.result as string);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const savePhoto = () => {
+    if (!db || !user || !previewUrl) return;
+    const docRef = doc(db, "stores", user.uid);
+    updateDocumentNonBlocking(docRef, { imageUrl: previewUrl });
+    setIsPhotoDialogOpen(false);
+    setPreviewUrl("");
+    toast({ title: "Profile Synchronized", description: "Identity photo updated successfully." });
+  };
 
   const copyUid = () => {
     if (user?.uid) {
@@ -66,7 +136,7 @@ export default function ProfilePage() {
           <Card className="border-none shadow-sm overflow-hidden bg-white rounded-[2rem]">
             <CardContent className="pt-8 text-center space-y-4">
               <Avatar className="h-24 w-24 mx-auto border-4 border-slate-100">
-                <AvatarImage src={`https://picsum.photos/seed/${user?.uid}/200`} />
+                <AvatarImage src={storeData?.imageUrl || `https://picsum.photos/seed/${user?.uid}/200`} />
                 <AvatarFallback className="bg-primary text-white font-bold">
                   {storeData?.managerName?.substring(0, 2).toUpperCase() || "JD"}
                 </AvatarFallback>
@@ -77,7 +147,13 @@ export default function ProfilePage() {
                   {storeData?.name || "Unregistered Branch"}
                 </p>
               </div>
-              <Button variant="outline" className="w-full h-11 rounded-xl font-bold border-slate-200 text-slate-600">Update Photo</Button>
+              <Button 
+                variant="outline" 
+                className="w-full h-11 rounded-xl font-bold border-slate-200 text-slate-600"
+                onClick={() => setIsPhotoDialogOpen(true)}
+              >
+                Update Photo
+              </Button>
             </CardContent>
           </Card>
 
@@ -106,9 +182,6 @@ export default function ProfilePage() {
                   {copied ? <Check className="h-3 w-3 text-emerald-500" /> : <Copy className="h-3 w-3" />}
                 </Button>
               </div>
-              <p className="text-[9px] text-slate-400 font-medium italic px-1">
-                This is your unique node signature used for regional authentication.
-              </p>
             </CardContent>
           </Card>
         </div>
@@ -161,6 +234,50 @@ export default function ProfilePage() {
           </Card>
         </div>
       </div>
+
+      <Dialog open={isPhotoDialogOpen} onOpenChange={(open) => {
+        if (!open) stopCamera();
+        setIsPhotoDialogOpen(open);
+      }}>
+        <DialogContent className="rounded-[2.5rem] border-none p-10 bg-white max-w-md shadow-2xl">
+          <DialogHeader>
+            <DialogTitle className="text-2xl font-black text-primary uppercase italic tracking-tighter">Update Visual ID</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-6 py-6 flex flex-col items-center">
+            <div className="relative h-48 w-48 rounded-full overflow-hidden bg-slate-100 border-4 border-primary/10 shadow-inner group">
+              {isCameraActive ? (
+                <video ref={videoRef} className="h-full w-full object-cover" autoPlay muted playsInline />
+              ) : previewUrl ? (
+                <img src={previewUrl} alt="New Profile" className="h-full w-full object-cover" />
+              ) : (
+                <img src={storeData?.imageUrl || `https://picsum.photos/seed/${user?.uid}/200`} alt="Current Profile" className="h-full w-full object-cover" />
+              )}
+            </div>
+
+            <div className="flex flex-col w-full gap-3">
+              {!isCameraActive ? (
+                <>
+                  <Button variant="secondary" className="h-12 rounded-xl font-black uppercase text-[10px] tracking-widest bg-primary text-white" onClick={startCamera}>
+                    <Camera className="h-4 w-4 mr-2" /> Start Lens
+                  </Button>
+                  <Button variant="outline" className="h-12 rounded-xl font-black uppercase text-[10px] tracking-widest border-slate-200" onClick={() => fileInputRef.current?.click()}>
+                    <Upload className="h-4 w-4 mr-2" /> Upload Photo
+                  </Button>
+                  <input type="file" ref={fileInputRef} className="hidden" accept="image/*" onChange={handleFileUpload} />
+                </>
+              ) : (
+                <Button className="h-12 rounded-xl font-black uppercase text-[10px] tracking-widest bg-emerald-500 text-white" onClick={capturePhoto}>
+                  Capture Frame
+                </Button>
+              )}
+            </div>
+          </div>
+          <DialogFooter className="gap-3">
+            <Button variant="ghost" className="h-12 rounded-xl font-black uppercase text-[10px] tracking-widest text-slate-400" onClick={() => setIsPhotoDialogOpen(false)}>Abort</Button>
+            <Button className="h-12 rounded-xl font-black uppercase text-[10px] tracking-widest bg-primary text-white px-8" onClick={savePhoto} disabled={!previewUrl}>Commit Update</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

@@ -60,7 +60,8 @@
         "managerName": { "type": "string" },
         "location": { "type": "string" },
         "email": { "type": "string", "format": "email" },
-        "status": { "type": "string", "enum": ["pending", "active", "rejected"] }
+        "status": { "type": "string", "enum": ["pending", "active", "rejected"] },
+        "imageUrl": { "type": "string", "description": "Retailer profile or branch photo identity." }
       },
       "required": ["id", "name", "status"]
     },

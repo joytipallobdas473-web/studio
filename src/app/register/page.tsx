@@ -1,6 +1,7 @@
+
 "use client";
 
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
@@ -17,7 +18,11 @@ import {
   ChevronRight,
   CheckCircle2,
   Lock,
-  PhoneCall
+  PhoneCall,
+  Camera,
+  Upload,
+  X,
+  ImageIcon
 } from "lucide-react";
 import { useFirestore, useAuth, useUser, useDoc, useMemoFirebase, setDocumentNonBlocking } from "@/firebase";
 import { doc, serverTimestamp } from "firebase/firestore";
@@ -25,6 +30,7 @@ import { createUserWithEmailAndPassword } from "firebase/auth";
 import { toast } from "@/hooks/use-toast";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { cn } from "@/lib/utils";
 
 const MASTER_ADMIN_UID = "j96izCkggNcL002AHiJjzGb18Bf2";
 
@@ -33,9 +39,13 @@ export default function RegisterPage() {
   const db = useFirestore();
   const auth = useAuth();
   const { user, isUserLoading } = useUser();
+  const videoRef = useRef<HTMLVideoElement>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  
   const [isLoading, setIsLoading] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
   const [isClient, setIsClient] = useState(false);
+  const [isCameraActive, setIsCameraActive] = useState(false);
   
   const [formData, setFormData] = useState({
     managerName: "",
@@ -43,7 +53,8 @@ export default function RegisterPage() {
     password: "",
     storeName: "",
     location: "",
-    phoneNumber: ""
+    phoneNumber: "",
+    imageUrl: ""
   });
 
   useEffect(() => {
@@ -67,12 +78,68 @@ export default function RegisterPage() {
         return;
       }
       
-      // If store is found and we are not in the middle of a success transition, go to dashboard
       if (!storeLoading && store && !isSuccess) {
         router.push("/dashboard");
       }
     }
   }, [user, isUserLoading, store, storeLoading, router, isClient, isSuccess]);
+
+  const startCamera = async () => {
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ 
+        video: { facingMode: "user" } 
+      });
+      setIsCameraActive(true);
+      setTimeout(() => {
+        if (videoRef.current) {
+          videoRef.current.srcObject = stream;
+        }
+      }, 100);
+    } catch (error) {
+      toast({
+        variant: 'destructive',
+        title: 'Camera Access Denied',
+        description: 'Please enable camera permissions to capture your profile photo.',
+      });
+    }
+  };
+
+  const stopCamera = () => {
+    if (videoRef.current && videoRef.current.srcObject) {
+      const stream = videoRef.current.srcObject as MediaStream;
+      stream.getTracks().forEach(track => track.stop());
+      videoRef.current.srcObject = null;
+    }
+    setIsCameraActive(false);
+  };
+
+  const capturePhoto = () => {
+    if (videoRef.current) {
+      const canvas = document.createElement('canvas');
+      canvas.width = videoRef.current.videoWidth;
+      canvas.height = videoRef.current.videoHeight;
+      const ctx = canvas.getContext('2d');
+      if (ctx) {
+        ctx.drawImage(videoRef.current, 0, 0, canvas.width, canvas.height);
+        const dataUri = canvas.toDataURL('image/jpeg');
+        setFormData({ ...formData, imageUrl: dataUri });
+        stopCamera();
+        toast({ title: "Identity Photo Captured" });
+      }
+    }
+  };
+
+  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setFormData({ ...formData, imageUrl: reader.result as string });
+        toast({ title: "Photo Identity Loaded" });
+      };
+      reader.readAsDataURL(file);
+    }
+  };
 
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -96,6 +163,7 @@ export default function RegisterPage() {
         email: formData.email.trim().toLowerCase(),
         location: formData.location.trim(),
         phoneNumber: formData.phoneNumber.trim(),
+        imageUrl: formData.imageUrl || `https://picsum.photos/seed/${currentUser.uid}/200`,
         status: "pending",
         createdAt: serverTimestamp()
       };
@@ -162,7 +230,7 @@ export default function RegisterPage() {
     <div className="min-h-screen flex flex-col items-center justify-center p-6 bg-[#ECF0F5]">
       <div className="w-full max-w-2xl space-y-8 pb-12 animate-in fade-in duration-700">
         <div className="flex justify-between items-center">
-          <Link href="/admin" className="flex items-center gap-2 text-slate-400 hover:text-primary transition-colors font-black text-[10px] uppercase tracking-widest group">
+          <Link href="/admin/login" className="flex items-center gap-2 text-slate-400 hover:text-primary transition-colors font-black text-[10px] uppercase tracking-widest group">
             <ArrowLeft className="h-3 w-3 group-hover:-translate-x-1 transition-transform" />
             Switch to Admin Console
           </Link>
@@ -181,20 +249,6 @@ export default function RegisterPage() {
           </p>
         </div>
 
-        <Alert className="bg-white border-primary/20 rounded-[2.5rem] shadow-sm p-8">
-          <div className="flex items-center gap-4">
-            <div className="bg-primary/5 p-4 rounded-2xl">
-              <PhoneCall className="h-6 w-6 text-primary" />
-            </div>
-            <div>
-              <AlertTitle className="text-xs font-black uppercase tracking-widest text-primary mb-1">Support Protocol Active</AlertTitle>
-              <AlertDescription className="text-sm font-medium text-slate-600">
-                Contact regional support for onboarding at <span className="font-black text-primary text-lg ml-2">9085067897</span>.
-              </AlertDescription>
-            </div>
-          </div>
-        </Alert>
-
         <Card className="border-none shadow-sm rounded-[2.5rem] bg-white overflow-hidden">
           <CardHeader className="p-10 pb-0 bg-slate-50/50">
             <CardTitle className="text-2xl font-black text-primary uppercase italic tracking-tighter">
@@ -203,7 +257,56 @@ export default function RegisterPage() {
             <CardDescription className="font-medium">Provide official regional retail credentials for node authorization.</CardDescription>
           </CardHeader>
           <CardContent className="p-10">
-            <form onSubmit={handleRegister} className="space-y-8">
+            <form onSubmit={handleRegister} className="space-y-10">
+              
+              <div className="flex flex-col items-center gap-6 py-6 bg-slate-50 rounded-3xl border border-dashed border-slate-200">
+                <Label className="text-[10px] font-black uppercase tracking-widest text-slate-400">Identity Visual Signature</Label>
+                <div className="relative h-32 w-32 rounded-full overflow-hidden bg-white border-2 border-primary/20 shadow-inner group">
+                  {isCameraActive ? (
+                    <video ref={videoRef} className="h-full w-full object-cover" autoPlay muted playsInline />
+                  ) : formData.imageUrl ? (
+                    <img src={formData.imageUrl} alt="Profile Preview" className="h-full w-full object-cover" />
+                  ) : (
+                    <div className="h-full w-full flex items-center justify-center text-slate-200">
+                      <ImageIcon className="h-10 w-10" />
+                    </div>
+                  )}
+                  {formData.imageUrl && !isCameraActive && (
+                    <button 
+                      type="button"
+                      onClick={() => setFormData({...formData, imageUrl: ""})}
+                      className="absolute top-1 right-1 bg-rose-500 text-white p-1 rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
+                    >
+                      <X className="h-3 w-3" />
+                    </button>
+                  )}
+                </div>
+
+                <div className="flex gap-4">
+                  {!isCameraActive ? (
+                    <>
+                      <Button type="button" variant="outline" size="sm" className="h-10 rounded-xl px-6 border-slate-200 font-black uppercase text-[9px] tracking-widest" onClick={startCamera}>
+                        <Camera className="h-3.5 w-3.5 mr-2" /> Start Lens
+                      </Button>
+                      <Button type="button" variant="outline" size="sm" className="h-10 rounded-xl px-6 border-slate-200 font-black uppercase text-[9px] tracking-widest" onClick={() => fileInputRef.current?.click()}>
+                        <Upload className="h-3.5 w-3.5 mr-2" /> Upload File
+                      </Button>
+                      <input 
+                        type="file" 
+                        ref={fileInputRef} 
+                        className="hidden" 
+                        accept="image/*" 
+                        onChange={handleFileUpload}
+                      />
+                    </>
+                  ) : (
+                    <Button type="button" size="sm" className="h-10 rounded-xl px-8 bg-emerald-500 hover:bg-emerald-600 text-white font-black uppercase text-[9px] tracking-widest" onClick={capturePhoto}>
+                      Capture Frame
+                    </Button>
+                  )}
+                </div>
+              </div>
+
               <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                 <div className="space-y-3">
                   <Label className="text-[10px] font-black uppercase tracking-[0.3em] text-slate-400 ml-1">Manager Identity</Label>
