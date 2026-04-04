@@ -4,27 +4,27 @@
 
 @layer base {
   :root {
-    /* Branch Portal: Steel & Indigo (Light) */
-    --background: 210 40% 98%;
-    --foreground: 222 47% 11%;
+    /* Branch Portal: Silk & Rose Gold (Premium Boutique) */
+    --background: 20 15% 99%; /* Warm Silk White */
+    --foreground: 220 20% 15%; /* Deep Obsidian */
     --card: 0 0% 100%;
-    --card-foreground: 222 47% 11%;
+    --card-foreground: 220 20% 15%;
     --popover: 0 0% 100%;
-    --popover-foreground: 222 47% 11%;
-    --primary: 243 75% 59%; /* Indigo 600 */
-    --primary-foreground: 210 40% 98%;
-    --secondary: 210 40% 96.1%;
-    --secondary-foreground: 222 47% 11.2%;
-    --muted: 210 40% 96.1%;
-    --muted-foreground: 215.4 16.3% 46.9%;
-    --accent: 222 47% 11%; /* Slate 900 */
-    --accent-foreground: 210 40% 98%;
+    --popover-foreground: 220 20% 15%;
+    --primary: 15 50% 45%; /* Rose Gold / Terracotta */
+    --primary-foreground: 20 15% 99%;
+    --secondary: 15 30% 96%;
+    --secondary-foreground: 220 20% 15%;
+    --muted: 15 10% 95%;
+    --muted-foreground: 220 10% 45%;
+    --accent: 220 20% 15%; /* Deep Obsidian */
+    --accent-foreground: 20 15% 99%;
     --destructive: 0 84.2% 60.2%;
-    --destructive-foreground: 210 40% 98%;
-    --border: 214.3 31.8% 91.4%;
-    --input: 214.3 31.8% 91.4%;
-    --ring: 243 75% 59%;
-    --radius: 1.5rem;
+    --destructive-foreground: 20 15% 99%;
+    --border: 20 15% 92%;
+    --input: 20 15% 92%;
+    --ring: 15 50% 45%;
+    --radius: 2rem;
   }
 
   .dark-admin {
@@ -80,8 +80,8 @@
 
 .portal-surface {
   background-image: 
-    radial-gradient(at 100% 0%, hsla(243, 75%, 59%, 0.05) 0, transparent 50%),
-    radial-gradient(at 0% 100%, hsla(222, 47%, 11%, 0.05) 0, transparent 50%);
+    radial-gradient(at 100% 0%, hsla(15, 50%, 45%, 0.08) 0, transparent 50%),
+    radial-gradient(at 0% 100%, hsla(220, 20%, 15%, 0.05) 0, transparent 50%);
 }
 
 .glass-card {
@@ -99,4 +99,8 @@
 
 .animate-spin-slow {
   animation: spin-slow 20s linear infinite;
+}
+
+.boutique-shadow {
+  @apply shadow-[0_20px_60px_-15px_rgba(15,50,45,0.15)];
 }

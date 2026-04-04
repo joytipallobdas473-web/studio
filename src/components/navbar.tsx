@@ -1,12 +1,13 @@
 "use client";
 
 import Link from "next/link";
-import { Package, User, LogOut, History, PlusCircle, LayoutGrid } from "lucide-react";
+import { Package, User, LogOut, History, PlusCircle, LayoutGrid, Star } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { usePathname, useRouter } from "next/navigation";
 import { useAuth, useUser } from "@/firebase";
 import { signOut } from "firebase/auth";
 import { toast } from "@/hooks/use-toast";
+import { cn } from "@/lib/utils";
 
 const MASTER_ADMIN_UID = "j96izCkggNcL002AHiJjzGb18Bf2";
 
@@ -18,11 +19,12 @@ export function Navbar() {
   const isAdmin = user?.email?.toLowerCase().includes("admin") || user?.uid === MASTER_ADMIN_UID;
 
   const handleLogout = async () => {
+    if (!auth) return;
     try {
       await signOut(auth);
       toast({
-        title: "Node Session Terminated",
-        description: "Secure terminal closed.",
+        title: "Node Offline",
+        description: "Boutique link terminated.",
       });
       router.push("/");
     } catch (error) {
@@ -31,58 +33,58 @@ export function Navbar() {
   };
 
   return (
-    <nav className="sticky top-0 z-50 w-full border-b bg-white/80 backdrop-blur-md border-slate-200">
-      <div className="container flex h-20 items-center justify-between px-6 mx-auto">
-        <Link href="/dashboard" className="flex items-center gap-3 group">
-          <div className="bg-primary p-2.5 rounded-xl text-white shadow-lg group-hover:scale-110 transition-transform">
-            <LayoutGrid className="h-5 w-5" />
+    <nav className="sticky top-0 z-50 w-full border-b bg-white/70 backdrop-blur-2xl border-primary/10 shadow-sm">
+      <div className="container flex h-24 items-center justify-between px-10 mx-auto max-w-7xl">
+        <Link href="/dashboard" className="flex items-center gap-4 group">
+          <div className="bg-primary p-3 rounded-[1.25rem] text-white shadow-[0_10px_25px_-5px_rgba(15,50,45,0.4)] group-hover:scale-110 group-hover:rotate-6 transition-all duration-500">
+            <Star className="h-6 w-6 fill-white" />
           </div>
           <div className="flex flex-col">
-            <span className="font-black text-lg text-slate-900 uppercase italic tracking-tighter leading-none">Branch Portal</span>
-            <span className="text-[8px] font-black text-primary uppercase tracking-[0.3em] mt-1">Regional Retail Node</span>
+            <span className="font-black text-xl text-slate-900 uppercase italic tracking-tighter leading-none">Boutique Node</span>
+            <span className="text-[9px] font-black text-primary uppercase tracking-[0.5em] mt-1.5 opacity-60">Silk Logistics Grid</span>
           </div>
         </Link>
-        <div className="flex items-center gap-6">
-          <div className="hidden md:flex items-center gap-2">
+        <div className="flex items-center gap-8">
+          <div className="hidden md:flex items-center gap-4">
             <Link href="/dashboard/order">
               <Button variant="ghost" size="sm" className={cn(
-                "h-10 px-4 rounded-xl gap-2 font-bold uppercase tracking-widest text-[10px]",
-                pathname === "/dashboard/order" ? "text-primary bg-primary/5" : "text-slate-500"
+                "h-12 px-6 rounded-2xl gap-3 font-black uppercase tracking-[0.3em] text-[10px] transition-all",
+                pathname === "/dashboard/order" ? "text-primary bg-primary/5 shadow-inner" : "text-slate-400 hover:text-primary hover:bg-primary/5"
               )}>
-                <PlusCircle className="h-4 w-4" />
-                New Reorder
+                <PlusCircle className="h-4.5 w-4.5" />
+                Reorder
               </Button>
             </Link>
             <Link href="/dashboard/history">
               <Button variant="ghost" size="sm" className={cn(
-                "h-10 px-4 rounded-xl gap-2 font-bold uppercase tracking-widest text-[10px]",
-                pathname === "/dashboard/history" ? "text-primary bg-primary/5" : "text-slate-500"
+                "h-12 px-6 rounded-2xl gap-3 font-black uppercase tracking-[0.3em] text-[10px] transition-all",
+                pathname === "/dashboard/history" ? "text-primary bg-primary/5 shadow-inner" : "text-slate-400 hover:text-primary hover:bg-primary/5"
               )}>
-                <History className="h-4 w-4" />
-                Log Registry
+                <History className="h-4.5 w-4.5" />
+                Telemetry
               </Button>
             </Link>
           </div>
           
-          <div className="h-8 w-px bg-slate-200" />
+          <div className="h-10 w-px bg-primary/10" />
           
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-4">
             {isAdmin && (
               <Link href="/admin">
-                <Button variant="outline" size="sm" className="h-10 rounded-xl border-primary/20 text-primary font-black uppercase text-[9px] tracking-widest">
-                  Command Deck
+                <Button variant="outline" size="sm" className="h-12 px-6 rounded-2xl border-primary/20 text-primary font-black uppercase text-[10px] tracking-[0.3em] hover:bg-primary hover:text-white transition-all">
+                  Command
                 </Button>
               </Link>
             )}
             <Link href="/dashboard/profile">
-              <Button variant="secondary" size="icon" className="h-10 w-10 rounded-xl bg-slate-100 text-slate-600 hover:text-primary transition-colors">
+              <Button variant="secondary" size="icon" className="h-12 w-12 rounded-[1.25rem] bg-secondary text-slate-600 hover:text-primary hover:shadow-lg transition-all border border-primary/5">
                 <User className="h-5 w-5" />
               </Button>
             </Link>
             <Button 
               variant="ghost" 
               size="icon" 
-              className="h-10 w-10 rounded-xl text-slate-400 hover:text-rose-500 hover:bg-rose-50 transition-all"
+              className="h-12 w-12 rounded-[1.25rem] text-slate-400 hover:text-rose-500 hover:bg-rose-50 transition-all"
               onClick={handleLogout}
             >
               <LogOut className="h-5 w-5" />
@@ -93,5 +95,3 @@ export function Navbar() {
     </nav>
   );
 }
-
-import { cn } from "@/lib/utils";

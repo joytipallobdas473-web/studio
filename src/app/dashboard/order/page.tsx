@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState, useMemo, useEffect } from "react";
@@ -41,7 +40,8 @@ import {
   Apple,
   Briefcase,
   TrendingDown,
-  Layers
+  Layers,
+  Sparkles
 } from "lucide-react";
 import { useFirestore, useCollection, useUser, useMemoFirebase, useDoc } from "@/firebase";
 import { collection, serverTimestamp, query, doc } from "firebase/firestore";
@@ -50,11 +50,11 @@ import { addDocumentNonBlocking } from "@/firebase";
 import { cn } from "@/lib/utils";
 
 const CATEGORIES = [
-  { id: "all", name: "All Categories", icon: LayoutGrid },
-  { id: "Electronics", name: "Electronics", icon: Cpu },
-  { id: "Apparel", name: "Apparel", icon: Shirt },
-  { id: "Grocery", name: "Grocery", icon: Apple },
-  { id: "Office Supplies", name: "Office Supplies", icon: Briefcase },
+  { id: "all", name: "Master Collection", icon: LayoutGrid },
+  { id: "Electronics", name: "High-Tech Nodes", icon: Cpu },
+  { id: "Apparel", name: "Silk & Apparel", icon: Shirt },
+  { id: "Grocery", name: "Boutique Pantry", icon: Apple },
+  { id: "Office Supplies", name: "Executive Suite", icon: Briefcase },
 ];
 
 interface CartItem {
@@ -144,7 +144,7 @@ export default function NewOrderPage() {
         }
       };
     });
-    toast({ title: "Item Added", description: `${product.name} is in your cart.` });
+    toast({ title: "Item Curated", description: `${product.name} added to reorder.` });
   };
 
   const updateQuantity = (id: string, delta: number) => {
@@ -169,17 +169,17 @@ export default function NewOrderPage() {
 
   const handleSubmitOrder = () => {
     if (!db || !user || cartItemCount === 0) {
-      toast({ title: "Transmission Error", description: "Cart is empty or identity sync failed.", variant: "destructive" });
+      toast({ title: "Sync Required", description: "Identity node or cart empty.", variant: "destructive" });
       return;
     }
 
     if (!phoneNumber || phoneNumber.trim().length < 8) {
-      toast({ title: "Validation Error", description: "Valid contact phone is required.", variant: "destructive" });
+      toast({ title: "Validation Error", description: "Contact number required.", variant: "destructive" });
       return;
     }
 
     if (!deliveryAddress || deliveryAddress.trim().length < 5) {
-      toast({ title: "Validation Error", description: "Full delivery address is required.", variant: "destructive" });
+      toast({ title: "Validation Error", description: "Destination required.", variant: "destructive" });
       return;
     }
 
@@ -199,7 +199,7 @@ export default function NewOrderPage() {
       paymentMethod: paymentMethod,
       email: store?.email || user.email || "N/A",
       status: "pending",
-      storeName: store?.name || "Retailer Node", 
+      storeName: store?.name || "Boutique Node", 
       location: store?.location || "North East",
       createdAt: serverTimestamp()
     };
@@ -209,140 +209,145 @@ export default function NewOrderPage() {
         setIsSubmitting(false);
         setSubmitted(true);
         setCart({});
-        toast({ title: "Bulk Order Transmitted", description: "Logistics node has registered your reorder packet." });
+        toast({ title: "Payload Transmitted", description: "Regional logistics node has accepted the packet." });
         setTimeout(() => router.push("/dashboard"), 2000);
       })
       .catch(() => {
         setIsSubmitting(false);
-        toast({ title: "Protocol Refused", description: "Could not sync order telemetry.", variant: "destructive" });
+        toast({ title: "Protocol Denied", description: "Network sync timeout.", variant: "destructive" });
       });
   };
 
   if (submitted) {
     return (
-      <div className="flex flex-col items-center justify-center min-h-[60vh] text-center space-y-6 animate-in zoom-in duration-300">
-        <div className="bg-emerald-100 p-8 rounded-full shadow-lg"><CheckCircle className="h-20 w-20 text-emerald-500" /></div>
-        <div className="space-y-2">
-          <h2 className="text-3xl font-black text-primary tracking-tighter uppercase italic">Packet Registered</h2>
-          <p className="text-slate-500 font-medium">Consolidated logistics request successfully transmitted.</p>
+      <div className="flex flex-col items-center justify-center min-h-[65vh] text-center space-y-10 animate-in zoom-in duration-500">
+        <div className="bg-primary/10 p-12 rounded-[3.5rem] shadow-2xl relative">
+          <CheckCircle className="h-24 w-24 text-primary" />
+          <div className="absolute top-0 right-0 p-4 bg-white rounded-full shadow-lg -translate-y-1/2 translate-x-1/2">
+            <Sparkles className="h-6 w-6 text-primary animate-pulse" />
+          </div>
         </div>
-        <Button variant="outline" onClick={() => router.push("/dashboard")} className="h-14 rounded-2xl px-10 border-slate-200 font-black uppercase tracking-widest text-[10px]">Return to Portal</Button>
+        <div className="space-y-4">
+          <h2 className="text-4xl font-black text-slate-900 tracking-tighter uppercase italic leading-none">Transmission Success</h2>
+          <p className="text-slate-500 font-bold tracking-widest uppercase text-[10px]">Your reorder packet is live on the regional grid.</p>
+        </div>
+        <Button variant="outline" onClick={() => router.push("/dashboard")} className="h-16 rounded-[2rem] px-12 border-primary/20 text-primary font-black uppercase tracking-[0.4em] text-[10px] hover:bg-primary/5 transition-all">Return to Dashboard</Button>
       </div>
     );
   }
 
   if (!isClient) {
     return (
-      <div className="flex h-[400px] items-center justify-center">
-        <Loader2 className="h-10 w-10 animate-spin text-primary opacity-50" />
+      <div className="flex h-[500px] items-center justify-center">
+        <Loader2 className="h-12 w-12 animate-spin text-primary opacity-30" />
       </div>
     );
   }
 
   return (
-    <div className="space-y-8 pb-32 animate-in fade-in duration-700 relative">
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 bg-white p-8 rounded-[2rem] shadow-sm border border-slate-100">
-        <div className="space-y-1">
-          <h1 className="text-3xl font-black text-primary tracking-tight italic uppercase">Stock Catalog</h1>
-          <p className="text-muted-foreground font-medium flex items-center gap-2">
-            <span className="h-1.5 w-1.5 rounded-full bg-accent animate-pulse" />
-            Provision items for {store?.name || 'your node'}.
+    <div className="space-y-12 pb-40 animate-in fade-in duration-700 relative">
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-10 bg-white p-10 rounded-[3.5rem] shadow-[0_30px_60px_-15px_rgba(15,50,45,0.1)] border border-primary/5">
+        <div className="space-y-2">
+          <h1 className="text-4xl font-black text-slate-900 tracking-tighter italic uppercase leading-none">Silk Catalog</h1>
+          <p className="text-slate-500 font-black flex items-center gap-3 text-[10px] uppercase tracking-[0.4em]">
+            <div className="h-2 w-2 rounded-full bg-primary animate-pulse shadow-[0_0_10px_rgba(15,50,45,0.4)]" />
+            Stocking: {store?.name || 'Aether Node'}
           </p>
         </div>
-        <div className="flex items-center gap-4 w-full md:w-auto">
-          <div className="relative flex-1 md:w-80">
-            <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-slate-400" />
+        <div className="flex items-center gap-5 w-full md:w-auto">
+          <div className="relative flex-1 md:w-96">
+            <Search className="absolute left-6 top-1/2 -translate-y-1/2 h-5 w-5 text-slate-400" />
             <Input 
-              placeholder="Search SKU..." 
-              className="pl-12 h-14 bg-slate-50 border-none rounded-2xl focus:ring-primary text-base font-medium" 
+              placeholder="Query SKU Signature..." 
+              className="pl-16 h-16 bg-secondary/30 border-none rounded-[2rem] focus:ring-primary text-base font-bold text-slate-900 placeholder:text-slate-400" 
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
             />
           </div>
           <Sheet>
             <SheetTrigger asChild>
-              <Button className="h-14 w-14 md:w-auto md:px-6 rounded-2xl bg-primary text-white shadow-lg relative">
+              <Button className="h-16 w-16 md:w-auto md:px-10 rounded-[2rem] bg-accent text-white shadow-2xl relative border-none hover:scale-[1.02] transition-all">
                 <ShoppingCart className="h-6 w-6" />
                 {cartItemCount > 0 && (
-                  <span className="absolute -top-2 -right-2 bg-accent text-primary text-[10px] font-black h-6 w-6 rounded-full border-4 border-white flex items-center justify-center">
+                  <span className="absolute -top-3 -right-3 bg-primary text-white text-[11px] font-black h-8 w-8 rounded-full border-4 border-white flex items-center justify-center shadow-lg">
                     {cartItemCount}
                   </span>
                 )}
-                <span className="hidden md:inline ml-3 font-black uppercase tracking-widest text-[10px]">View Cart</span>
+                <span className="hidden md:inline ml-4 font-black uppercase tracking-[0.3em] text-[10px]">Registry</span>
               </Button>
             </SheetTrigger>
-            <SheetContent className="rounded-l-[2.5rem] border-none p-0 bg-white max-w-[500px] shadow-2xl flex flex-col h-full overflow-hidden">
-              <SheetHeader className="p-8 pb-4">
-                <SheetTitle className="text-2xl font-black text-primary uppercase italic tracking-tighter flex items-center gap-3">
-                  <ShoppingCart className="h-6 w-6" /> Reorder Cart
+            <SheetContent className="rounded-l-[3.5rem] border-none p-0 bg-white max-w-[550px] shadow-2xl flex flex-col h-full overflow-hidden">
+              <SheetHeader className="p-12 pb-6">
+                <SheetTitle className="text-3xl font-black text-slate-900 uppercase italic tracking-tighter flex items-center gap-5">
+                  <ShoppingBag className="h-8 w-8 text-primary" /> Curated Packet
                 </SheetTitle>
               </SheetHeader>
               
-              <div className="flex-1 overflow-y-auto px-8 py-4 space-y-6">
+              <div className="flex-1 overflow-y-auto px-12 py-6 space-y-10 custom-scrollbar">
                 {cartItemCount === 0 ? (
-                  <div className="h-full flex flex-col items-center justify-center text-center space-y-4 opacity-40">
-                    <ShoppingBag className="h-16 w-16" />
-                    <p className="font-black uppercase tracking-widest text-xs italic">Cart is empty</p>
+                  <div className="h-full flex flex-col items-center justify-center text-center space-y-6 opacity-30 italic">
+                    <Sparkles className="h-20 w-20 text-slate-300" />
+                    <p className="font-black uppercase tracking-[0.5em] text-[11px]">Identity Registry Empty</p>
                   </div>
                 ) : (
-                  <div className="space-y-4">
+                  <div className="space-y-6">
                     {Object.values(cart).map((item) => (
-                      <div key={item.id} className="flex items-center justify-between p-4 bg-slate-50 rounded-2xl border border-slate-100 group">
-                        <div className="flex-1 min-w-0 pr-4">
-                          <h4 className="font-black text-slate-900 text-[11px] uppercase italic truncate">{item.name}</h4>
-                          <div className="flex items-center gap-2">
-                             <span className="text-[9px] text-slate-400 line-through">₹{(item.mrp * item.quantity).toFixed(0)}</span>
-                             <span className="text-[10px] font-mono font-bold text-primary">₹{(item.price * item.quantity).toFixed(2)}</span>
+                      <div key={item.id} className="flex items-center justify-between p-6 bg-secondary/20 rounded-[2.5rem] border border-secondary group hover:border-primary/30 transition-all">
+                        <div className="flex-1 min-w-0 pr-6">
+                          <h4 className="font-black text-slate-900 text-[12px] uppercase italic truncate leading-none">{item.name}</h4>
+                          <div className="flex items-center gap-3 mt-2">
+                             <span className="text-[10px] text-slate-300 font-bold line-through">₹{(item.mrp * item.quantity).toFixed(0)}</span>
+                             <span className="text-[12px] font-mono font-black text-primary">₹{(item.price * item.quantity).toFixed(0)}</span>
                           </div>
                         </div>
-                        <div className="flex items-center gap-3">
-                          <div className="flex items-center bg-white rounded-xl border border-slate-200 overflow-hidden h-9">
-                            <button onClick={() => updateQuantity(item.id, -1)} className="px-2 hover:bg-slate-50 transition-colors">
-                              <Minus className="h-3 w-3" />
+                        <div className="flex items-center gap-4">
+                          <div className="flex items-center bg-white rounded-2xl border border-secondary overflow-hidden h-11 shadow-sm">
+                            <button onClick={() => updateQuantity(item.id, -1)} className="px-3 hover:bg-secondary transition-colors text-slate-400">
+                              <Minus className="h-3.5 w-3.5" />
                             </button>
-                            <span className="w-8 text-center font-black text-xs">{item.quantity}</span>
-                            <button onClick={() => updateQuantity(item.id, 1)} className="px-2 hover:bg-slate-50 transition-colors">
-                              <Plus className="h-3 w-3" />
+                            <span className="w-10 text-center font-black text-sm text-primary">{item.quantity}</span>
+                            <button onClick={() => updateQuantity(item.id, 1)} className="px-3 hover:bg-secondary transition-colors text-slate-400">
+                              <Plus className="h-3.5 w-3.5" />
                             </button>
                           </div>
-                          <Button variant="ghost" size="icon" className="h-9 w-9 text-rose-500 hover:bg-rose-50 rounded-xl" onClick={() => removeFromCart(item.id)}>
-                            <Trash2 className="h-4 w-4" />
+                          <Button variant="ghost" size="icon" className="h-11 w-11 text-rose-500 hover:bg-rose-50 rounded-2xl" onClick={() => removeFromCart(item.id)}>
+                            <Trash2 className="h-4.5 w-4.5" />
                           </Button>
                         </div>
                       </div>
                     ))}
                     
-                    <div className="pt-8 space-y-6 border-t border-slate-100">
+                    <div className="pt-12 space-y-10 border-t border-secondary">
                       <div className="space-y-4">
-                        <Label className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">Payment Protocol</Label>
+                        <Label className="text-[11px] font-black uppercase tracking-[0.4em] text-slate-400 ml-2">Payment Handshake</Label>
                         <Select value={paymentMethod} onValueChange={setPaymentMethod}>
-                          <SelectTrigger className="h-14 rounded-2xl bg-slate-50 border-none font-bold">
+                          <SelectTrigger className="h-16 rounded-[1.5rem] bg-secondary/30 border-none font-black text-[11px] uppercase tracking-widest">
                             <SelectValue />
                           </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="cash" className="font-black uppercase text-[10px]"><Banknote className="h-3 w-3 mr-2" /> Cash</SelectItem>
-                            <SelectItem value="after_delivery" className="font-black uppercase text-[10px]"><CreditCard className="h-3 w-3 mr-2" /> After Delivery</SelectItem>
+                          <SelectContent className="rounded-2xl border-none shadow-2xl">
+                            <SelectItem value="cash" className="font-black uppercase text-[10px] tracking-widest"><Banknote className="h-4 w-4 mr-3" /> Settlement On Delivery</SelectItem>
+                            <SelectItem value="after_delivery" className="font-black uppercase text-[10px] tracking-widest"><CreditCard className="h-4 w-4 mr-3" /> Boutique Credit</SelectItem>
                           </SelectContent>
                         </Select>
                       </div>
 
                       <div className="space-y-4">
-                        <Label className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">Destination Coordinate</Label>
+                        <Label className="text-[11px] font-black uppercase tracking-[0.4em] text-slate-400 ml-2">Destination Node</Label>
                         <Textarea 
                           value={deliveryAddress} 
                           onChange={(e) => setDeliveryAddress(e.target.value)}
-                          className="min-h-[100px] rounded-2xl bg-slate-50 border-none font-bold text-sm"
-                          placeholder="Delivery Address"
+                          className="min-h-[120px] rounded-[1.5rem] bg-secondary/30 border-none font-bold text-sm p-6"
+                          placeholder="Delivery Coordinate"
                         />
                       </div>
 
                       <div className="space-y-4">
-                        <Label className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">Contact Node</Label>
+                        <Label className="text-[11px] font-black uppercase tracking-[0.4em] text-slate-400 ml-2">Contact Signal</Label>
                         <Input 
                           value={phoneNumber} 
                           onChange={(e) => setPhoneNumber(e.target.value)}
-                          className="h-14 rounded-2xl bg-slate-50 border-none font-bold"
-                          placeholder="Phone Number"
+                          className="h-16 rounded-[1.5rem] bg-secondary/30 border-none font-black text-sm p-6"
+                          placeholder="Identity Phone"
                         />
                       </div>
                     </div>
@@ -350,36 +355,40 @@ export default function NewOrderPage() {
                 )}
               </div>
 
-              <SheetFooter className="p-8 bg-slate-50/50 border-t border-slate-100">
-                <div className="w-full space-y-6">
+              <SheetFooter className="p-12 bg-secondary/20 border-t border-secondary">
+                <div className="w-full space-y-8">
                   <div className="flex justify-between items-end">
-                    <span className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">Net Valuation</span>
-                    <span className="text-3xl font-black text-primary tracking-tighter font-mono">₹{cartTotal.toFixed(2)}</span>
+                    <div className="space-y-1">
+                      <span className="text-[11px] font-black uppercase tracking-[0.5em] text-slate-400">Total Valuation</span>
+                      <p className="text-[10px] font-bold text-emerald-600 uppercase tracking-widest">Savings Applied</p>
+                    </div>
+                    <span className="text-4xl font-black text-slate-900 tracking-tighter font-mono italic">₹{cartTotal.toFixed(0)}</span>
                   </div>
                   <Button 
-                    className="w-full h-16 bg-primary text-white hover:bg-primary/90 font-black rounded-2xl shadow-xl uppercase tracking-widest text-[11px]" 
+                    className="w-full h-18 bg-primary text-white hover:bg-primary/90 font-black rounded-[2rem] shadow-[0_20px_50px_-10px_rgba(15,50,45,0.4)] uppercase tracking-[0.4em] text-[12px] border-none" 
                     disabled={cartItemCount === 0 || isSubmitting}
                     onClick={handleSubmitOrder}
                   >
-                    {isSubmitting ? <Loader2 className="h-6 w-6 animate-spin" /> : (
-                      <div className="flex items-center gap-3">
-                        Transmit Packet <ArrowRight className="h-4 w-4" />
+                    {isSubmitting ? <Loader2 className="h-7 w-7 animate-spin" /> : (
+                      <div className="flex items-center gap-4">
+                        Commit Packet <ArrowRight className="h-5 w-5" />
                       </div>
                     )}
                   </Button>
                 </div>
               </SheetFooter>
             </SheetContent>
+SheetContent>
           </Sheet>
         </div>
       </div>
 
-      <div className="flex flex-col lg:flex-row gap-8">
-        <aside className="w-full lg:w-72 shrink-0 space-y-6">
-          <Card className="border-none shadow-sm overflow-hidden bg-white rounded-3xl">
-            <CardHeader className="bg-slate-50/50 py-5">
-              <CardTitle className="text-[10px] font-black flex items-center gap-2 uppercase tracking-[0.3em] text-primary/60">
-                <Filter className="h-3.5 w-3.5" /> Sector Grid
+      <div className="flex flex-col lg:flex-row gap-12">
+        <aside className="w-full lg:w-80 shrink-0 space-y-8">
+          <Card className="border-none shadow-[0_20px_50px_-15px_rgba(15,50,45,0.06)] overflow-hidden bg-white rounded-[3rem]">
+            <CardHeader className="bg-secondary/30 py-6 px-8">
+              <CardTitle className="text-[11px] font-black flex items-center gap-3 uppercase tracking-[0.5em] text-primary">
+                <Filter className="h-4 w-4" /> Collection
               </CardTitle>
             </CardHeader>
             <CardContent className="p-0">
@@ -389,26 +398,31 @@ export default function NewOrderPage() {
                     key={cat.id}
                     onClick={() => setSelectedCategory(cat.id)}
                     className={cn(
-                      "flex items-center justify-between px-6 py-4 text-sm transition-all hover:bg-slate-50 text-left border-l-4 font-black uppercase tracking-widest text-[10px]",
-                      selectedCategory === cat.id ? "border-primary bg-primary/5 text-primary" : "border-transparent text-slate-500"
+                      "flex items-center justify-between px-8 py-5 text-[11px] transition-all hover:bg-secondary/20 text-left border-l-[6px] font-black uppercase tracking-[0.2em]",
+                      selectedCategory === cat.id ? "border-primary bg-primary/5 text-primary" : "border-transparent text-slate-400"
                     )}
                   >
-                    <span className="flex items-center gap-3"><cat.icon className={cn("h-4 w-4", selectedCategory === cat.id ? "text-primary" : "opacity-50")} />{cat.name}</span>
+                    <span className="flex items-center gap-4"><cat.icon className={cn("h-4.5 w-4.5", selectedCategory === cat.id ? "text-primary" : "opacity-30")} />{cat.name}</span>
                   </button>
                 ))}
               </div>
             </CardContent>
           </Card>
+          
+          <div className="bg-primary/5 p-8 rounded-[2.5rem] border border-primary/10 space-y-4">
+            <h4 className="text-[10px] font-black uppercase tracking-[0.3em] text-primary">Regional Tip</h4>
+            <p className="text-[11px] font-medium text-slate-500 leading-relaxed italic">"Multi-angle visual slots allow you to verify stock identity before commitment."</p>
+          </div>
         </aside>
 
         <main className="flex-1">
           {loading ? (
-            <div className="flex flex-col items-center justify-center py-32 gap-4">
-              <Loader2 className="h-12 w-12 animate-spin text-primary opacity-50" />
-              <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">Syncing Catalog...</p>
+            <div className="flex flex-col items-center justify-center py-40 gap-6">
+              <Loader2 className="h-14 w-14 animate-spin text-primary opacity-20" />
+              <p className="text-[11px] font-black uppercase tracking-[0.6em] text-slate-300">Syncing Boutique Grid...</p>
             </div>
           ) : filteredProducts.length > 0 ? (
-            <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-8">
               {filteredProducts.map((product) => {
                 const validImages = (product.imageUrls || []).filter((u: string) => !!u);
                 const primaryImage = validImages[0] || product.imageUrl || `https://picsum.photos/seed/${product.id}/600/400`;
@@ -418,66 +432,67 @@ export default function NewOrderPage() {
                 const savings = mrp > price ? Math.round(((mrp - price) / mrp) * 100) : 0;
 
                 return (
-                  <Card key={product.id} className="group overflow-hidden border-none shadow-sm hover:shadow-xl transition-all flex flex-col bg-white rounded-[2rem]">
-                    <div className="relative h-48 w-full bg-slate-100 overflow-hidden flex items-center justify-center">
+                  <Card key={product.id} className="group overflow-hidden border-none shadow-[0_20px_50px_-20px_rgba(15,50,45,0.08)] hover:shadow-primary/20 hover:scale-[1.02] transition-all duration-700 flex flex-col bg-white rounded-[3.5rem] relative">
+                    <div className="relative h-56 w-full bg-secondary/10 overflow-hidden flex items-center justify-center">
                       {validImages.length > 1 ? (
                         <Carousel className="w-full h-full">
                           <CarouselContent className="h-full">
                             {validImages.map((url: string, idx: number) => (
                               <CarouselItem key={idx} className="h-full">
-                                <img src={url} alt={`${product.name} view ${idx+1}`} className="w-full h-full object-cover" />
+                                <img src={url} alt={`${product.name} angle ${idx+1}`} className="w-full h-full object-cover" />
                               </CarouselItem>
                             ))}
                           </CarouselContent>
-                          <CarouselPrevious className="left-2 h-7 w-7 bg-white/50 border-none hover:bg-white text-primary" />
-                          <CarouselNext className="right-2 h-7 w-7 bg-white/50 border-none hover:bg-white text-primary" />
+                          <CarouselPrevious className="left-4 h-9 w-9 bg-white/40 border-none hover:bg-white text-primary backdrop-blur-sm" />
+                          <CarouselNext className="right-4 h-9 w-9 bg-white/40 border-none hover:bg-white text-primary backdrop-blur-sm" />
                         </Carousel>
                       ) : (
                         <img 
                           src={primaryImage}
                           alt={product.name}
-                          className="h-full w-full object-cover group-hover:scale-110 transition-transform duration-700"
+                          className="h-full w-full object-cover group-hover:scale-110 transition-transform duration-1000"
                         />
                       )}
                       
-                      <div className="absolute top-4 left-4 flex flex-col gap-2 z-10">
-                        <Badge className="bg-white/90 backdrop-blur-md text-primary border-none text-[9px] font-black uppercase tracking-widest px-3 py-1 rounded-xl">
+                      <div className="absolute top-6 left-6 flex flex-col gap-3 z-10">
+                        <Badge className="bg-white/95 backdrop-blur-md text-primary border-none text-[9px] font-black uppercase tracking-[0.4em] px-4 py-1.5 rounded-2xl shadow-lg">
                           {product.category}
                         </Badge>
                         {savings > 0 && (
-                          <Badge className="bg-emerald-500 text-white border-none text-[9px] font-black uppercase tracking-widest px-3 py-1 rounded-xl flex items-center gap-1">
+                          <Badge className="bg-primary text-white border-none text-[9px] font-black uppercase tracking-[0.3em] px-4 py-1.5 rounded-2xl flex items-center gap-2 shadow-xl">
                             <TrendingDown className="h-3 w-3" /> {savings}% OFF
                           </Badge>
                         )}
-                        {validImages.length > 1 && (
-                          <Badge className="bg-primary/20 backdrop-blur-md text-white border-none text-[8px] font-black uppercase tracking-widest px-2 py-0.5 rounded-lg flex items-center gap-1.5">
-                            <Layers className="h-2.5 w-2.5" /> {validImages.length} ANGLES
-                          </Badge>
-                        )}
                       </div>
+                      
+                      {validImages.length > 1 && (
+                        <div className="absolute bottom-6 right-6 bg-accent/20 backdrop-blur-md p-2 rounded-xl z-10 border border-white/10">
+                          <Layers className="h-4 w-4 text-white" />
+                        </div>
+                      )}
                     </div>
-                    <CardContent className="p-6 flex-1 space-y-4">
-                      <div className="space-y-1">
-                        <h3 className="font-black text-base text-slate-900 leading-tight group-hover:text-primary transition-colors italic uppercase">{product.name}</h3>
-                        <p className="text-[9px] text-slate-400 font-mono font-bold tracking-widest uppercase">SKU: {product.sku}</p>
+                    <CardContent className="p-8 flex-1 space-y-5">
+                      <div className="space-y-2">
+                        <h3 className="font-black text-lg text-slate-900 leading-tight group-hover:text-primary transition-colors italic uppercase tracking-tighter">{product.name}</h3>
+                        <p className="text-[10px] text-slate-400 font-mono font-bold tracking-[0.3em] uppercase">PKT_SIG: {product.sku}</p>
                       </div>
                       <div className="flex flex-col">
-                        <div className="flex items-center gap-2">
-                           <span className="text-xs text-slate-400 line-through decoration-rose-500/30">₹{mrp.toFixed(0)}</span>
-                           <span className="text-3xl font-black text-primary tracking-tighter font-mono">₹{price.toFixed(0)}</span>
+                        <div className="flex items-center gap-3">
+                           <span className="text-sm text-slate-300 font-bold line-through decoration-primary/20">₹{mrp.toFixed(0)}</span>
+                           <span className="text-4xl font-black text-slate-900 tracking-tighter font-mono italic">₹{price.toFixed(0)}</span>
                         </div>
-                        <p className="text-[9px] text-emerald-600 font-black uppercase tracking-widest mt-1">
-                          {savings > 0 ? `You save ₹${(mrp - price).toFixed(0)} on this unit` : 'Network Base Pricing'}
+                        <p className="text-[10px] text-primary font-black uppercase tracking-[0.2em] mt-2 italic">
+                          Regional Pricing Applied
                         </p>
                       </div>
                     </CardContent>
-                    <CardFooter className="p-6 pt-0">
+                    <CardFooter className="p-8 pt-0">
                       <Button 
-                        className="w-full h-14 bg-accent text-primary hover:bg-primary hover:text-white font-black rounded-2xl shadow-sm transition-all text-[10px] uppercase tracking-widest" 
+                        className="w-full h-16 bg-secondary text-slate-900 hover:bg-primary hover:text-white font-black rounded-[1.5rem] shadow-sm transition-all text-[11px] uppercase tracking-[0.4em] border-none" 
                         onClick={() => addToCart(product)} 
                         disabled={!product.stockQuantity || product.stockQuantity <= 0}
                       >
-                        {!product.stockQuantity || product.stockQuantity <= 0 ? "Node Depleted" : "Add to Cart"}
+                        {!product.stockQuantity || product.stockQuantity <= 0 ? "Node Depleted" : "Curation Entry"}
                       </Button>
                     </CardFooter>
                   </Card>
@@ -485,23 +500,22 @@ export default function NewOrderPage() {
               })}
             </div>
           ) : (
-            <div className="text-center py-32 bg-white rounded-[2.5rem] border-2 border-dashed border-slate-100">
-              <Package className="h-20 w-20 text-slate-100 mx-auto mb-6 opacity-20" />
-              <h3 className="font-black text-slate-900 uppercase italic tracking-tighter">No items detected</h3>
-              <p className="text-[10px] text-slate-400 mt-2 uppercase font-bold tracking-widest">Adjust filters to reveal inventory payload.</p>
+            <div className="text-center py-40 bg-white rounded-[4rem] border-2 border-dashed border-secondary shadow-inner">
+              <Package className="h-24 w-24 text-secondary mx-auto mb-8 animate-pulse" />
+              <h3 className="font-black text-slate-900 uppercase italic tracking-tighter text-xl">Identity Mismatch</h3>
+              <p className="text-[11px] text-slate-400 mt-3 uppercase font-bold tracking-[0.5em]">No SKUs matching your query protocol.</p>
             </div>
           )}
         </main>
       </div>
 
       {cartItemCount > 0 && (
-        <div className="fixed bottom-8 left-1/2 -translate-x-1/2 z-50 md:hidden animate-in slide-in-from-bottom-10 duration-500">
+        <div className="fixed bottom-12 left-1/2 -translate-x-1/2 z-50 md:hidden animate-in slide-in-from-bottom-20 duration-700">
           <Sheet>
             <SheetTrigger asChild>
-              <Button className="h-16 px-8 rounded-full bg-primary text-white shadow-[0_20px_50px_rgba(0,0,0,0.3)] font-black uppercase tracking-widest text-[10px] flex items-center gap-4">
-                <ShoppingCart className="h-5 w-5" />
-                <span>Review Cart ({cartItemCount})</span>
-                <span className="bg-white/20 px-3 py-1 rounded-full">₹{cartTotal.toFixed(2)}</span>
+              <Button className="h-20 px-10 rounded-full bg-accent text-white shadow-[0_30px_80px_rgba(15,50,45,0.4)] font-black uppercase tracking-[0.4em] text-[11px] flex items-center gap-6 border-none">
+                <ShoppingCart className="h-6 w-6" />
+                <span className="bg-white/10 px-4 py-2 rounded-full">₹{cartTotal.toFixed(0)}</span>
               </Button>
             </SheetTrigger>
           </Sheet>
