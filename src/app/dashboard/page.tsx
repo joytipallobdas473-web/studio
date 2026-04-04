@@ -225,21 +225,21 @@ export default function DashboardPage() {
             Node: <span className="text-slate-900 font-black">{store?.name || "Initializing..."}</span>
           </p>
         </div>
-        <div className="flex gap-4">
-          <Button 
-            variant="outline" 
-            onClick={() => setIsReturnDialogOpen(true)}
-            className="h-14 rounded-2xl px-6 border-orange-200 bg-orange-50/50 text-orange-700 font-black uppercase tracking-widest text-[11px] hover:bg-orange-100 transition-all"
-          >
-            <Undo2 className="mr-3 h-5 w-5" />
-            Damage Reporting
-          </Button>
+        <div className="flex flex-row-reverse gap-4">
           <Link href="/dashboard/order">
             <Button className="bg-primary text-white font-black hover:scale-105 transition-all shadow-lg h-14 rounded-2xl px-8 uppercase tracking-widest text-[11px]">
               <PlusCircle className="mr-3 h-5 w-5" />
               New Reorder
             </Button>
           </Link>
+          <Button 
+            variant="outline" 
+            onClick={() => setIsReturnDialogOpen(true)}
+            className="h-14 rounded-2xl px-6 border-orange-200 bg-orange-50/50 text-orange-700 font-black uppercase tracking-widest text-[11px] hover:bg-orange-100 transition-all"
+          >
+            <Undo2 className="mr-2 h-4 w-4" />
+            Damage Reporting
+          </Button>
         </div>
       </div>
 
@@ -260,7 +260,6 @@ export default function DashboardPage() {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        {/* Catalog Card Moved to Top Position in Grid */}
         <Card className="bg-primary text-white shadow-xl border-none rounded-[2.5rem] overflow-hidden flex flex-col order-first">
           <CardHeader className="bg-white/10 p-8">
             <CardTitle className="text-xl font-black flex items-center gap-3 uppercase italic tracking-tighter">
@@ -327,7 +326,6 @@ export default function DashboardPage() {
           </CardFooter>
         </Card>
 
-        {/* Telemetry Log Moved to Follow Catalog */}
         <Card className="lg:col-span-2 shadow-sm border-none bg-white rounded-[2.5rem] overflow-hidden">
           <CardHeader className="border-b border-slate-50 bg-slate-50/50 p-8">
             <div className="flex items-center justify-between">
