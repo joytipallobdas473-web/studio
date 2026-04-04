@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState, useEffect } from "react";
@@ -183,7 +182,7 @@ export default function RetailerLoginPage() {
              </div>
              <Link href="/register" className="w-full">
                <Button variant="outline" className="w-full h-14 rounded-2xl border-slate-200 text-slate-600 font-bold hover:bg-slate-50 uppercase tracking-widest text-[10px]">
-                 Initialize Onboarding
+                 NEW STORE REGISTION
                </Button>
              </Link>
           </CardFooter>
