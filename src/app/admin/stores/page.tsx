@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useFirestore, useCollection, useMemoFirebase, useUser } from "@/firebase";
@@ -23,7 +24,6 @@ export default function StoreManagement() {
   }, [user]);
   
   const storesQuery = useMemoFirebase(() => {
-    // CRITICAL: Guard the query with isAdmin to prevent Permission Denied errors for managers
     if (!db || !user || !isAdmin) return null;
     return query(collection(db, "stores"), orderBy("createdAt", "desc"));
   }, [db, user, isAdmin]);
@@ -107,9 +107,18 @@ export default function StoreManagement() {
                 stores.map((store) => (
                   <TableRow key={store.id} className="hover:bg-white/5 group h-24 border-white/5">
                     <TableCell className="pl-10">
-                      <div className="flex flex-col">
-                        <span className="font-black text-white text-sm uppercase italic">{store.name}</span>
-                        <span className="text-[10px] text-muted-foreground font-mono">ID: {store.id.substring(0, 8)}</span>
+                      <div className="flex items-center gap-6">
+                        <div className="relative h-14 w-14 rounded-2xl overflow-hidden bg-white/5 border border-white/10 shrink-0">
+                          <img 
+                            src={store.imageUrl || `https://picsum.photos/seed/${store.id}/100/100`} 
+                            alt={store.name} 
+                            className="h-full w-full object-cover" 
+                          />
+                        </div>
+                        <div className="flex flex-col">
+                          <span className="font-black text-white text-sm uppercase italic">{store.name}</span>
+                          <span className="text-[10px] text-muted-foreground font-mono">ID: {store.id.substring(0, 8)}</span>
+                        </div>
                       </div>
                     </TableCell>
                     <TableCell>
@@ -159,7 +168,7 @@ export default function StoreManagement() {
                           </Button>
                         )}
                         
-                        <Button size="icon" variant="ghost" className="h-10 w-10 rounded-xl text-muted-foreground hover:text-rose-500 hover:bg-rose-500/10"
+                        <Button size="icon" variant="ghost" className="h-10 w-10 rounded-xl text-muted-foreground hover:text-rose-500 hover:bg-rose-50/10"
                                 onClick={() => handleDelete(store.id)}>
                           <Trash2 className="h-4 w-4" />
                         </Button>
