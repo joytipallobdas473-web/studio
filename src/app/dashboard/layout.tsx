@@ -5,7 +5,7 @@ import { useRouter, usePathname } from "next/navigation";
 import { useUser, useFirestore, useDoc, useMemoFirebase } from "@/firebase";
 import { doc } from "firebase/firestore";
 import { Navbar } from "@/components/navbar";
-import { Cpu } from "lucide-react";
+import { Cpu, Loader2 } from "lucide-react";
 
 const MASTER_ADMIN_UID = "j96izCkggNcL002AHiJjzGb18Bf2";
 
@@ -52,12 +52,12 @@ export default function DashboardLayout({
       <div className="min-h-screen flex items-center justify-center bg-slate-50">
         <div className="flex flex-col items-center gap-6">
           <div className="relative">
-            <div className="absolute inset-0 bg-primary/20 blur-2xl rounded-full animate-pulse" />
-            <div className="relative p-8 rounded-3xl bg-white border border-primary/10 shadow-2xl">
-               <Cpu className="h-12 w-12 animate-spin text-primary" style={{ animationDuration: '3s' }} />
+            <div className="absolute inset-0 bg-indigo-100 blur-2xl rounded-full animate-pulse" />
+            <div className="relative p-8 rounded-[2.5rem] bg-white border border-slate-100 shadow-xl">
+               <Loader2 className="h-12 w-12 animate-spin text-indigo-600" />
             </div>
           </div>
-          <p className="text-[10px] font-black uppercase tracking-[0.6em] text-primary/60">Node Sync Active</p>
+          <p className="text-[10px] font-black uppercase tracking-[0.6em] text-slate-400">Node Sync Active</p>
         </div>
       </div>
     );

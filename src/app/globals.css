@@ -4,26 +4,26 @@
 
 @layer base {
   :root {
-    /* Branch Portal: Cyber-Luxury (Electric Violet & Pearl) */
-    --background: 240 10% 98%; /* Pearl White */
-    --foreground: 240 10% 10%;
+    /* Branch Portal: Aether Indigo Modernist */
+    --background: 210 40% 98%; /* Ultra-clean Slate Blue */
+    --foreground: 222 47% 11%;
     --card: 0 0% 100%;
-    --card-foreground: 240 10% 10%;
+    --card-foreground: 222 47% 11%;
     --popover: 0 0% 100%;
-    --popover-foreground: 240 10% 10%;
-    --primary: 270 100% 60%; /* Electric Violet */
+    --popover-foreground: 222 47% 11%;
+    --primary: 243 75% 59%; /* Vibrant Indigo */
     --primary-foreground: 0 0% 100%;
-    --secondary: 270 30% 96%;
-    --secondary-foreground: 270 100% 40%;
-    --muted: 240 5% 90%;
-    --muted-foreground: 240 5% 45%;
-    --accent: 270 100% 60%; 
+    --secondary: 210 40% 96%;
+    --secondary-foreground: 243 75% 45%;
+    --muted: 210 40% 90%;
+    --muted-foreground: 215 16% 47%;
+    --accent: 243 75% 59%; 
     --accent-foreground: 0 0% 100%;
     --destructive: 0 84.2% 60.2%;
     --destructive-foreground: 0 0% 100%;
-    --border: 240 5% 90%;
-    --input: 240 5% 90%;
-    --ring: 270 100% 60%;
+    --border: 214 32% 91%;
+    --input: 214 32% 91%;
+    --ring: 243 75% 59%;
     --radius: 1.5rem;
   }
 
@@ -43,8 +43,6 @@
     --muted-foreground: 180 20% 60%;
     --accent: 142 71% 45%; /* Emerald Success */
     --accent-foreground: 222 47% 2%;
-    --destructive: 0 100% 50%;
-    --destructive-foreground: 222 47% 2%;
     --border: 180 100% 20%;
     --input: 180 100% 10%;
     --ring: 180 100% 50%;
@@ -70,7 +68,7 @@
 }
 
 .glass-card {
-  @apply bg-white/60 backdrop-blur-xl border border-white/20 shadow-[0_8px_32px_0_rgba(31,38,135,0.07)];
+  @apply bg-white/80 backdrop-blur-xl border border-slate-200/50 shadow-[0_20px_50px_-12px_rgba(0,0,0,0.05)];
 }
 
 .dark-admin .glass-card {
@@ -89,8 +87,8 @@
 .portal-surface {
   background-color: #f8fafc;
   background-image: 
-    radial-gradient(at 100% 0%, hsla(270, 100%, 60%, 0.05) 0, transparent 50%),
-    radial-gradient(at 0% 100%, hsla(270, 100%, 60%, 0.03) 0, transparent 50%);
+    radial-gradient(at 100% 0%, hsla(243, 75%, 59%, 0.03) 0, transparent 50%),
+    radial-gradient(at 0% 100%, hsla(243, 75%, 59%, 0.02) 0, transparent 50%);
 }
 
 .command-gradient {
