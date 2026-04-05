@@ -242,9 +242,9 @@ export default function DashboardPage() {
           <h1 className="text-3xl font-black text-slate-900 tracking-tighter uppercase italic leading-none">
             {store?.name || "Aether Branch"}
           </h1>
-          <p className="text-slate-500 font-medium text-sm flex items-center gap-2">
+          <div className="text-slate-500 font-medium text-sm flex items-center gap-2">
             Regional Designation: <Badge variant="outline" className="rounded-lg text-[9px] font-bold uppercase tracking-widest text-emerald-600 border-emerald-100 px-2 py-0.5">{store?.id.substring(0, 8)}</Badge>
-          </p>
+          </div>
         </div>
 
         <div className="flex items-center gap-3 w-full md:w-auto relative z-10">
