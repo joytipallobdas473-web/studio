@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useFirestore, useCollection, useUser, useMemoFirebase, useDoc } from "@/firebase";
@@ -251,7 +252,7 @@ export default function DashboardPage() {
           <Link href="/dashboard/order" className="flex-1 md:flex-none">
             <Button className="w-full h-14 bg-emerald-600 hover:bg-emerald-700 text-white font-black rounded-xl px-8 uppercase tracking-widest text-[10px] shadow-lg shadow-emerald-100 border-none transition-all hover:scale-[1.02]">
               <PlusCircle className="mr-2 h-4 w-4" />
-              New Provision
+              New order
             </Button>
           </Link>
           <TooltipProvider>
