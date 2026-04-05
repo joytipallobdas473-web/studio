@@ -280,7 +280,7 @@ export default function NewOrderPage() {
             <SheetContent className="rounded-l-[2.5rem] border-none p-0 bg-white max-w-[500px] shadow-2xl flex flex-col h-full overflow-hidden">
               <SheetHeader className="p-10 pb-4">
                 <SheetTitle className="text-2xl font-black text-slate-900 uppercase italic tracking-tighter flex items-center gap-4">
-                  <ShoppingBasket className="h-6 w-6 text-emerald-600" /> Current Curation
+                  <ShoppingBasket className="h-6 w-6 text-emerald-600" /> Current orders
                 </SheetTitle>
               </SheetHeader>
               
