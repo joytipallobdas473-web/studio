@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useMemo } from "react";
 import { SidebarProvider, Sidebar, SidebarContent, SidebarHeader, SidebarMenu, SidebarMenuItem, SidebarMenuButton, SidebarGroup, SidebarGroupLabel, SidebarGroupContent, SidebarInset, SidebarTrigger, SidebarFooter } from "@/components/ui/sidebar";
-import { LayoutDashboard, Store, Package, ShoppingCart, LogOut, Terminal, Loader2, Settings, Shield } from "lucide-react";
+import { LayoutDashboard, Store, Package, ShoppingCart, LogOut, Terminal, Loader2, Settings, Shield, Cpu, Activity } from "lucide-react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { cn } from "@/lib/utils";
@@ -26,39 +26,39 @@ function AdminSidebar() {
   ];
 
   return (
-    <Sidebar className="bg-[#020617] border-r border-white/5">
-      <SidebarHeader className="h-32 flex items-center px-10">
-        <Link href="/admin" className="flex items-center gap-5 group">
-          <div className="bg-primary p-4 rounded-2xl shadow-[0_0_20px_rgba(245,158,11,0.3)] group-hover:scale-110 transition-transform duration-500">
-            <Terminal className="h-7 w-7 text-background" />
+    <Sidebar className="bg-black border-r border-primary/10">
+      <SidebarHeader className="h-28 flex items-center px-8">
+        <Link href="/admin" className="flex items-center gap-4 group">
+          <div className="bg-primary/10 p-3 rounded-xl border border-primary/20 group-hover:scale-110 transition-all shadow-[0_0_20px_rgba(0,255,255,0.1)]">
+            <Cpu className="h-6 w-6 text-primary" />
           </div>
           <div className="flex flex-col">
-            <span className="font-black text-2xl leading-none uppercase tracking-tighter text-white italic">AETHER</span>
-            <span className="text-[9px] font-black text-primary uppercase tracking-[0.5em] mt-2">CORE CONSOLE</span>
+            <span className="font-black text-xl leading-none uppercase tracking-tighter text-white italic">AETHER</span>
+            <span className="text-[8px] font-black text-primary uppercase tracking-[0.4em] mt-1.5 animate-pulse">COMMAND_V4</span>
           </div>
         </Link>
       </SidebarHeader>
       
-      <SidebarContent className="px-8 py-10">
+      <SidebarContent className="px-6 py-8">
         <SidebarGroup>
-          <SidebarGroupLabel className="px-4 text-[9px] uppercase font-black tracking-[0.6em] text-muted-foreground mb-8">Operations Hub</SidebarGroupLabel>
+          <SidebarGroupLabel className="px-4 text-[8px] uppercase font-black tracking-[0.5em] text-muted-foreground mb-6 opacity-50">Operations Console</SidebarGroupLabel>
           <SidebarGroupContent>
-            <SidebarMenu className="gap-3">
+            <SidebarMenu className="gap-2">
               {menuItems.map((item) => (
                 <SidebarMenuItem key={item.title}>
                   <SidebarMenuButton 
                     asChild 
                     isActive={pathname === item.href}
                     className={cn(
-                      "h-14 rounded-2xl transition-all duration-300",
+                      "h-12 rounded-xl transition-all",
                       pathname === item.href 
-                        ? "bg-primary text-background font-black shadow-[0_10px_30px_rgba(245,158,11,0.2)]" 
+                        ? "bg-primary text-black font-black shadow-[0_0_20px_rgba(0,255,255,0.3)]" 
                         : "text-muted-foreground hover:bg-white/5 hover:text-white"
                     )}
                   >
                     <Link href={item.href}>
-                      <item.icon className={cn("h-5 w-5", pathname === item.href ? "text-background" : "text-primary/60")} />
-                      <span className="ml-4 uppercase tracking-wider font-black text-[12px]">{item.title}</span>
+                      <item.icon className={cn("h-4 w-4", pathname === item.href ? "text-black" : "text-primary/40")} />
+                      <span className="ml-3 uppercase tracking-widest font-black text-[10px]">{item.title}</span>
                     </Link>
                   </SidebarMenuButton>
                 </SidebarMenuItem>
@@ -68,15 +68,15 @@ function AdminSidebar() {
         </SidebarGroup>
       </SidebarContent>
 
-      <SidebarFooter className="p-10">
-        <div className="p-8 bg-white/5 rounded-[2rem] border border-white/5 relative overflow-hidden group">
-          <div className="absolute top-0 right-0 h-full w-1.5 bg-primary/60 shadow-[0_0_15px_rgba(245,158,11,0.5)]" />
+      <SidebarFooter className="p-8">
+        <div className="p-6 bg-primary/5 rounded-2xl border border-primary/10 relative overflow-hidden group">
+          <div className="absolute top-0 right-0 h-full w-1 bg-primary/40 shadow-[0_0_15px_rgba(0,255,255,0.5)] animate-pulse" />
           <div className="flex items-center justify-between">
              <div className="flex flex-col">
-                <span className="text-[9px] font-black text-muted-foreground uppercase tracking-widest">Protocol Status</span>
-                <span className="text-[11px] font-black text-white uppercase mt-1.5">Verified Link</span>
+                <span className="text-[8px] font-black text-muted-foreground uppercase tracking-widest">Protocol</span>
+                <span className="text-[10px] font-black text-white uppercase mt-1 italic">Verified Link</span>
              </div>
-             <Shield className="h-5 w-5 text-primary" />
+             <Shield className="h-4 w-4 text-primary animate-pulse" />
           </div>
         </div>
       </SidebarFooter>
@@ -118,12 +118,10 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 
   if (isUserLoading || (user && authorized === null)) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-[#020617]">
-        <div className="flex flex-col items-center gap-8 text-primary">
-          <div className="p-10 rounded-full bg-primary/5 animate-pulse border border-primary/20">
-            <Loader2 className="h-12 w-12 animate-spin" />
-          </div>
-          <span className="text-[10px] font-black uppercase tracking-[0.8em]">Identity Handshake...</span>
+      <div className="min-h-screen flex items-center justify-center bg-black">
+        <div className="flex flex-col items-center gap-6">
+          <div className="p-1 w-20 h-20 rounded-full border-2 border-primary/20 border-t-primary animate-spin" />
+          <span className="text-[9px] font-black uppercase tracking-[0.8em] text-primary/60">Decrypting Node</span>
         </div>
       </div>
     );
@@ -143,32 +141,32 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         <div className="flex min-h-screen w-full bg-background text-foreground">
           <AdminSidebar />
           <SidebarInset className="flex flex-col min-w-0 bg-transparent">
-            <header className="sticky top-0 z-30 flex h-28 shrink-0 items-center gap-10 glass-card border-none border-b border-white/5 px-16 bg-[#020617]/80">
-              <SidebarTrigger className="text-muted-foreground hover:text-primary h-12 w-12 rounded-2xl hover:bg-white/5 transition-all" />
-              <Separator orientation="vertical" className="h-10 bg-white/10" />
+            <header className="sticky top-0 z-30 flex h-24 shrink-0 items-center gap-8 border-b border-primary/10 px-12 bg-black/60 backdrop-blur-xl">
+              <SidebarTrigger className="text-muted-foreground hover:text-primary h-10 w-10 rounded-xl hover:bg-white/5 transition-all" />
+              <Separator orientation="vertical" className="h-8 bg-white/10" />
               <div className="flex flex-col">
-                <span className="text-2xl font-black text-white uppercase italic tracking-tighter leading-none">Command Terminal</span>
-                <div className="flex items-center gap-4 text-[10px] text-muted-foreground font-black uppercase tracking-[0.4em] mt-2.5">
-                  <div className="h-2 w-2 rounded-full bg-primary animate-pulse shadow-[0_0_10px_rgba(245,158,11,0.5)]" />
-                  Regional Grid: Online
+                <span className="text-xl font-black text-white uppercase italic tracking-tighter leading-none">Command Terminal</span>
+                <div className="flex items-center gap-3 text-[9px] text-muted-foreground font-black uppercase tracking-[0.3em] mt-2">
+                  <div className="h-1.5 w-1.5 rounded-full bg-primary animate-pulse-cyan" />
+                  Grid Status: Optimal
                 </div>
               </div>
-              <div className="ml-auto flex items-center gap-12">
-                <div className="hidden md:flex flex-col items-end">
-                  <span className="text-[10px] font-black text-primary uppercase tracking-[0.4em]">Regional Controller</span>
-                  <span className="text-[11px] font-bold text-muted-foreground tracking-tight mt-1.5">{user?.email || "Master Authority"}</span>
+              <div className="ml-auto flex items-center gap-10">
+                <div className="hidden md:flex flex-col items-end opacity-60">
+                  <span className="text-[8px] font-black text-primary uppercase tracking-widest">Regional Controller</span>
+                  <span className="text-[10px] font-bold text-white tracking-tight mt-1 font-mono">{user?.email?.split('@')[0] || "AUTHORITY"}</span>
                 </div>
-                <Button variant="ghost" size="icon" className="h-14 w-14 rounded-2xl text-muted-foreground hover:text-rose-500 hover:bg-rose-500/10 transition-all" onClick={async () => {
+                <Button variant="ghost" size="icon" className="h-12 w-12 rounded-xl text-muted-foreground hover:text-rose-500 hover:bg-rose-500/10" onClick={async () => {
                   await signOut(auth);
                   router.push("/admin/login");
-                  toast({ title: "Terminal Closed" });
+                  toast({ title: "Terminal Terminated" });
                 }}>
-                  <LogOut className="h-7 w-7" />
+                  <LogOut className="h-6 w-6" />
                 </Button>
               </div>
             </header>
             
-            <main className="flex-1 p-16 overflow-y-auto">
+            <main className="flex-1 p-12 overflow-y-auto">
               <div className="max-w-7xl mx-auto">
                 {children}
               </div>

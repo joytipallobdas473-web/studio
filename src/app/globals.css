@@ -4,59 +4,59 @@
 
 @layer base {
   :root {
-    /* Branch Portal: Silk & Rose Gold (Premium Boutique) */
-    --background: 20 15% 99%; /* Warm Silk White */
-    --foreground: 220 20% 15%; /* Deep Obsidian */
+    /* Branch Portal: Cyber-Luxury (Electric Violet & Pearl) */
+    --background: 240 10% 98%; /* Pearl White */
+    --foreground: 240 10% 10%;
     --card: 0 0% 100%;
-    --card-foreground: 220 20% 15%;
+    --card-foreground: 240 10% 10%;
     --popover: 0 0% 100%;
-    --popover-foreground: 220 20% 15%;
-    --primary: 15 50% 45%; /* Rose Gold / Terracotta */
-    --primary-foreground: 20 15% 99%;
-    --secondary: 15 30% 96%;
-    --secondary-foreground: 220 20% 15%;
-    --muted: 15 10% 95%;
-    --muted-foreground: 220 10% 45%;
-    --accent: 220 20% 15%; /* Deep Obsidian */
-    --accent-foreground: 20 15% 99%;
+    --popover-foreground: 240 10% 10%;
+    --primary: 270 100% 60%; /* Electric Violet */
+    --primary-foreground: 0 0% 100%;
+    --secondary: 270 30% 96%;
+    --secondary-foreground: 270 100% 40%;
+    --muted: 240 5% 90%;
+    --muted-foreground: 240 5% 45%;
+    --accent: 270 100% 60%; 
+    --accent-foreground: 0 0% 100%;
     --destructive: 0 84.2% 60.2%;
-    --destructive-foreground: 20 15% 99%;
-    --border: 20 15% 92%;
-    --input: 20 15% 92%;
-    --ring: 15 50% 45%;
-    --radius: 2rem;
+    --destructive-foreground: 0 0% 100%;
+    --border: 240 5% 90%;
+    --input: 240 5% 90%;
+    --ring: 270 100% 60%;
+    --radius: 1.5rem;
   }
 
   .dark-admin {
-    /* Admin Command: Deep Slate & Amber (Dark) */
-    --background: 222 47% 4%; /* Slate 950 */
-    --foreground: 210 40% 98%;
-    --card: 222 47% 6%;
-    --card-foreground: 210 40% 98%;
-    --popover: 222 47% 6%;
-    --popover-foreground: 210 40% 98%;
-    --primary: 38 92% 50%; /* Amber 500 */
-    --primary-foreground: 222 47% 4%;
-    --secondary: 222 47% 10%;
-    --secondary-foreground: 210 40% 98%;
+    /* Admin Command: Neon Cyan & Obsidian */
+    --background: 222 47% 2%; /* Deep Obsidian */
+    --foreground: 180 100% 95%;
+    --card: 222 47% 4%;
+    --card-foreground: 180 100% 95%;
+    --popover: 222 47% 4%;
+    --popover-foreground: 180 100% 95%;
+    --primary: 180 100% 50%; /* Neon Cyan */
+    --primary-foreground: 222 47% 2%;
+    --secondary: 222 47% 8%;
+    --secondary-foreground: 180 100% 50%;
     --muted: 222 47% 10%;
-    --muted-foreground: 215 20% 65%;
-    --accent: 142 71% 45%; /* Emerald 500 */
-    --accent-foreground: 210 40% 98%;
-    --destructive: 0 84.2% 60.2%;
-    --destructive-foreground: 210 40% 98%;
-    --border: 222 47% 12%;
-    --input: 222 47% 12%;
-    --ring: 38 92% 50%;
+    --muted-foreground: 180 20% 60%;
+    --accent: 142 71% 45%; /* Keep Emerald for Success */
+    --accent-foreground: 222 47% 2%;
+    --destructive: 0 100% 50%;
+    --destructive-foreground: 222 47% 2%;
+    --border: 180 100% 20%;
+    --input: 180 100% 10%;
+    --ring: 180 100% 50%;
     
-    --sidebar-background: 222 47% 3%;
-    --sidebar-foreground: 210 40% 98%;
-    --sidebar-primary: 38 92% 50%;
-    --sidebar-primary-foreground: 222 47% 4%;
-    --sidebar-accent: 222 47% 8%;
-    --sidebar-accent-foreground: 38 92% 50%;
-    --sidebar-border: 222 47% 8%;
-    --sidebar-ring: 38 92% 50%;
+    --sidebar-background: 222 47% 1%;
+    --sidebar-foreground: 180 100% 95%;
+    --sidebar-primary: 180 100% 50%;
+    --sidebar-primary-foreground: 222 47% 1%;
+    --sidebar-accent: 180 100% 10%;
+    --sidebar-accent-foreground: 180 100% 50%;
+    --sidebar-border: 180 100% 15%;
+    --sidebar-ring: 180 100% 50%;
   }
 }
 
@@ -65,42 +65,62 @@
     @apply border-border;
   }
   body {
-    @apply bg-background text-foreground antialiased selection:bg-primary/20 selection:text-primary;
+    @apply bg-background text-foreground antialiased selection:bg-primary/30 selection:text-primary;
   }
+}
+
+.neo-glass {
+  @apply bg-white/10 backdrop-blur-xl border border-white/20 shadow-[0_8px_32px_0_rgba(31,38,135,0.07)];
+}
+
+.dark-admin .neo-glass {
+  @apply bg-black/40 backdrop-blur-2xl border border-primary/20 shadow-[0_0_40px_rgba(0,255,255,0.05)];
 }
 
 .admin-grid {
   background-image: 
-    radial-gradient(at 0% 0%, hsla(38, 92%, 50%, 0.1) 0, transparent 50%),
-    radial-gradient(at 100% 100%, hsla(142, 71%, 45%, 0.1) 0, transparent 50%),
-    linear-gradient(to right, #ffffff02 1px, transparent 1px),
-    linear-gradient(to bottom, #ffffff02 1px, transparent 1px);
-  background-size: 100% 100%, 100% 100%, 40px 40px, 40px 40px;
+    radial-gradient(at 0% 0%, hsla(180, 100%, 50%, 0.05) 0, transparent 50%),
+    radial-gradient(at 100% 100%, hsla(142, 71%, 45%, 0.05) 0, transparent 50%),
+    linear-gradient(to right, rgba(0, 255, 255, 0.02) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(0, 255, 255, 0.02) 1px, transparent 1px);
+  background-size: 100% 100%, 100% 100%, 30px 30px, 30px 30px;
 }
 
 .portal-surface {
+  background-color: #f8fafc;
   background-image: 
-    radial-gradient(at 100% 0%, hsla(15, 50%, 45%, 0.08) 0, transparent 50%),
-    radial-gradient(at 0% 100%, hsla(220, 20%, 15%, 0.05) 0, transparent 50%);
+    radial-gradient(at 100% 0%, hsla(270, 100%, 60%, 0.05) 0, transparent 50%),
+    radial-gradient(at 0% 100%, hsla(270, 100%, 60%, 0.03) 0, transparent 50%);
 }
 
-.glass-card {
-  @apply bg-card/70 backdrop-blur-2xl border border-white/10 shadow-2xl;
+.cyber-button {
+  @apply relative overflow-hidden transition-all duration-300 active:scale-95;
 }
 
-.command-gradient {
-  background: linear-gradient(135deg, hsl(38 92% 50%) 0%, hsl(142 71% 45%) 100%);
+.cyber-button::after {
+  content: '';
+  @apply absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full skew-x-[-20deg] transition-transform duration-1000;
 }
 
-@keyframes spin-slow {
-  from { transform: rotate(0deg); }
-  to { transform: rotate(360deg); }
+.cyber-button:hover::after {
+  @apply translate-x-[200%];
 }
 
-.animate-spin-slow {
-  animation: spin-slow 20s linear infinite;
+@keyframes pulse-cyan {
+  0% { box-shadow: 0 0 0 0 rgba(0, 255, 255, 0.4); }
+  70% { box-shadow: 0 0 0 10px rgba(0, 255, 255, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(0, 255, 255, 0); }
 }
 
-.boutique-shadow {
-  @apply shadow-[0_20px_60px_-15px_rgba(15,50,45,0.15)];
+.animate-pulse-cyan {
+  animation: pulse-cyan 2s infinite;
+}
+
+@keyframes float {
+  0%, 100% { transform: translateY(0px); }
+  50% { transform: translateY(-10px); }
+}
+
+.animate-float {
+  animation: float 6s ease-in-out infinite;
 }

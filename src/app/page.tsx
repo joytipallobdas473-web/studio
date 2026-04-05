@@ -9,15 +9,13 @@ import {
   Store, 
   ChevronRight, 
   Globe, 
-  Activity,
-  Cpu,
-  Layers,
-  ShieldCheck,
-  Star,
-  Terminal,
   Zap,
   Box,
-  Fingerprint
+  Fingerprint,
+  Terminal,
+  ShieldCheck,
+  Cpu,
+  Activity
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
@@ -43,72 +41,67 @@ export default function EntryGateway() {
     return (
       <div className="min-h-screen flex items-center justify-center bg-[#020617]">
         <div className="flex flex-col items-center gap-8">
-          <div className="bg-primary/5 p-12 rounded-full animate-pulse border border-primary/20">
-            <Loader2 className="h-16 w-16 animate-spin text-primary" />
+          <div className="p-1 w-24 h-24 rounded-full bg-gradient-to-tr from-primary to-cyan-400 animate-spin">
+            <div className="w-full h-full bg-[#020617] rounded-full flex items-center justify-center">
+              <Loader2 className="h-10 w-10 animate-spin text-primary" />
+            </div>
           </div>
-          <p className="text-[11px] font-black uppercase tracking-[1.2em] text-primary/40">Synchronizing Neural Link...</p>
+          <p className="text-[10px] font-black uppercase tracking-[1em] text-primary/60 animate-pulse">Initializing Neural Link</p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-[#020617] flex flex-col items-center justify-center p-6 relative overflow-hidden selection:bg-primary selection:text-white">
-      {/* Cinematic Grid & Glow Effects */}
-      <div className="absolute inset-0 bg-[linear-gradient(to_right,#ffffff03_1px,transparent_1px),linear-gradient(to_bottom,#ffffff03_1px,transparent_1px)] bg-[size:60px_60px] [mask-image:radial-gradient(ellipse_90%_90%_at_50%_50%,#000_60%,transparent_100%)] opacity-40" />
+    <div className="min-h-screen bg-[#020617] flex flex-col items-center justify-center p-6 relative overflow-hidden">
+      {/* Neo-Grid Background */}
+      <div className="absolute inset-0 bg-[linear-gradient(to_right,#ffffff05_1px,transparent_1px),linear-gradient(to_bottom,#ffffff05_1px,transparent_1px)] bg-[size:40px_40px] opacity-20" />
+      <div className="absolute inset-0 bg-gradient-to-b from-transparent via-[#020617]/80 to-[#020617]" />
       
-      {/* Dynamic Background Glows */}
+      {/* Dynamic Aura */}
       <div className={cn(
-        "absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] rounded-full blur-[180px] transition-all duration-1000 opacity-20",
-        hoveredNode === "retail" ? "bg-primary/40" : hoveredNode === "admin" ? "bg-amber-500/40" : "bg-blue-500/20"
+        "absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[1000px] h-[1000px] rounded-full blur-[150px] transition-all duration-1000 opacity-10",
+        hoveredNode === "retail" ? "bg-purple-500" : hoveredNode === "admin" ? "bg-cyan-500" : "bg-blue-500"
       )} />
 
-      <div className="w-full max-w-7xl space-y-24 relative z-10 animate-in fade-in slide-in-from-bottom-10 duration-1000">
-        {/* Header Telemetry */}
-        <div className="flex flex-col items-center text-center space-y-10">
-          <div className="inline-flex items-center gap-4 px-6 py-2 glass-card rounded-full border-primary/20 bg-primary/5 shadow-2xl backdrop-blur-md">
-             <div className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
-             <span className="text-[10px] font-black uppercase tracking-[0.6em] text-primary">Aether Network v3.0 // Regional Grid</span>
+      <div className="w-full max-w-7xl space-y-24 relative z-10">
+        {/* Header Protocol */}
+        <div className="flex flex-col items-center text-center space-y-8">
+          <div className="inline-flex items-center gap-3 px-5 py-1.5 rounded-full border border-white/10 bg-white/5 backdrop-blur-md shadow-2xl">
+             <div className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse shadow-[0_0_10px_#10b981]" />
+             <span className="text-[9px] font-black uppercase tracking-[0.5em] text-white/60">Aether Grid v4.0 // Global Sync</span>
           </div>
           
-          <h1 className="text-7xl md:text-[10rem] font-black text-white tracking-tighter uppercase italic leading-[0.8] transition-all duration-700">
-            REGIONAL <br /> 
+          <h1 className="text-6xl md:text-[9rem] font-black text-white tracking-tighter uppercase italic leading-[0.85] text-stroke transition-all duration-700">
+            NEO <br /> 
             <span className={cn(
-              "transition-all duration-700 block",
-              hoveredNode === "retail" ? "text-primary drop-shadow-[0_0_60px_rgba(15,50,45,0.8)]" : 
-              hoveredNode === "admin" ? "text-amber-500 drop-shadow-[0_0_60px_rgba(245,158,11,0.8)]" : 
-              "text-white/20"
+              "transition-all duration-1000",
+              hoveredNode === "retail" ? "text-purple-500 drop-shadow-[0_0_50px_rgba(168,85,247,0.5)]" : 
+              hoveredNode === "admin" ? "text-cyan-400 drop-shadow-[0_0_50px_rgba(34,211,238,0.5)]" : 
+              "text-white/10"
             )}>
               LOGISTICS
             </span>
           </h1>
 
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-8 md:gap-16 pt-8">
-             <div className="flex flex-col items-center gap-2 group cursor-default">
-                <Box className="h-5 w-5 text-primary/40 group-hover:text-primary transition-colors" />
-                <span className="text-[9px] font-black uppercase tracking-[0.4em] text-slate-500">Active Payloads</span>
-                <span className="text-sm font-mono font-bold text-white/80">4.2k</span>
-             </div>
-             <div className="flex flex-col items-center gap-2 group cursor-default">
-                <Zap className="h-5 w-5 text-primary/40 group-hover:text-primary transition-colors" />
-                <span className="text-[9px] font-black uppercase tracking-[0.4em] text-slate-500">Node Sync</span>
-                <span className="text-sm font-mono font-bold text-white/80">99.9%</span>
-             </div>
-             <div className="flex flex-col items-center gap-2 group cursor-default">
-                <Globe className="h-5 w-5 text-primary/40 group-hover:text-primary transition-colors" />
-                <span className="text-[9px] font-black uppercase tracking-[0.4em] text-slate-500">Sectors</span>
-                <span className="text-sm font-mono font-bold text-white/80">North East</span>
-             </div>
-             <div className="flex flex-col items-center gap-2 group cursor-default">
-                <ShieldCheck className="h-5 w-5 text-primary/40 group-hover:text-primary transition-colors" />
-                <span className="text-[9px] font-black uppercase tracking-[0.4em] text-slate-500">Security</span>
-                <span className="text-sm font-mono font-bold text-white/80">Verified</span>
-             </div>
+          <div className="flex flex-wrap justify-center gap-12 pt-4">
+             {[
+               { icon: Box, label: "Payloads", val: "4.8k" },
+               { icon: Zap, label: "Latency", val: "12ms" },
+               { icon: Globe, label: "Regions", val: "NE-01" },
+               { icon: ShieldCheck, label: "Secured", val: "AES-256" }
+             ].map((stat, i) => (
+               <div key={i} className="flex flex-col items-center gap-1 group opacity-40 hover:opacity-100 transition-opacity">
+                  <stat.icon className="h-4 w-4 text-primary" />
+                  <span className="text-[8px] font-black uppercase tracking-widest text-slate-500">{stat.label}</span>
+                  <span className="text-xs font-mono font-bold text-white">{stat.val}</span>
+               </div>
+             ))}
           </div>
         </div>
 
-        {/* Dual Entry Nodes */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-12 max-w-6xl mx-auto">
+        {/* Entry Nodes */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-5xl mx-auto">
           {/* RETAIL NODE */}
           <Link 
             href="/login" 
@@ -116,26 +109,29 @@ export default function EntryGateway() {
             onMouseEnter={() => setHoveredNode("retail")}
             onMouseLeave={() => setHoveredNode(null)}
           >
-            <Card className="h-full glass-card border-white/5 rounded-[3rem] overflow-hidden group-hover:scale-[1.02] group-hover:border-primary/30 transition-all duration-500 bg-white/5 backdrop-blur-2xl relative">
-              <div className="absolute top-0 right-0 p-12 bg-primary/10 rounded-full blur-3xl opacity-0 group-hover:opacity-100 transition-opacity" />
-              <CardContent className="p-16 space-y-12 relative z-10">
+            <div className="relative h-full p-px rounded-[2rem] bg-white/5 hover:bg-gradient-to-br hover:from-purple-500/50 hover:to-transparent transition-all duration-500">
+              <div className="h-full bg-[#030712] rounded-[2rem] p-12 space-y-8 relative overflow-hidden">
+                <div className="absolute top-0 right-0 -translate-y-1/2 translate-x-1/2 w-64 h-64 bg-purple-500/10 rounded-full blur-3xl group-hover:bg-purple-500/20 transition-all" />
+                
                 <div className="flex justify-between items-center">
-                  <div className="bg-primary/10 p-8 rounded-[2rem] border border-primary/20 group-hover:bg-primary group-hover:text-white transition-all duration-500">
-                    <Store className="h-10 w-10" />
+                  <div className="p-6 rounded-2xl bg-purple-500/10 text-purple-500 border border-purple-500/20 group-hover:bg-purple-500 group-hover:text-white transition-all duration-500">
+                    <Store className="h-8 w-8" />
                   </div>
-                  <Badge variant="outline" className="px-6 py-2 rounded-full border-primary/20 text-primary font-black text-[9px] uppercase tracking-[0.4em]">Boutique Hub</Badge>
+                  <Badge variant="outline" className="px-4 py-1 rounded-full border-purple-500/30 text-purple-400 font-black text-[8px] uppercase tracking-widest bg-purple-500/5">Retail Portal</Badge>
                 </div>
-                <div className="space-y-6">
-                  <h2 className="text-5xl font-black text-white uppercase italic tracking-tighter leading-none group-hover:translate-x-2 transition-transform">Branch Portal</h2>
-                  <p className="text-slate-400 text-base font-medium leading-relaxed max-w-xs">
-                    Access premium node synchronization and silk catalog reorder telemetry.
+                
+                <div className="space-y-4">
+                  <h2 className="text-4xl font-black text-white uppercase italic tracking-tighter leading-tight">Branch Node</h2>
+                  <p className="text-slate-500 text-sm font-medium leading-relaxed max-w-[240px]">
+                    Initialize stock reorder and boutique grid synchronization.
                   </p>
                 </div>
-                <div className="flex items-center gap-4 text-primary font-black uppercase tracking-[0.4em] text-[11px] pt-8 opacity-60 group-hover:opacity-100 transition-all">
-                  Initialize Link <ChevronRight className="h-5 w-5 group-hover:translate-x-2 transition-transform" />
+                
+                <div className="flex items-center gap-3 text-purple-400 font-black uppercase tracking-[0.3em] text-[10px] pt-4 group-hover:translate-x-2 transition-transform">
+                  Access Portal <ChevronRight className="h-4 w-4" />
                 </div>
-              </CardContent>
-            </Card>
+              </div>
+            </div>
           </Link>
 
           {/* ADMIN NODE */}
@@ -145,43 +141,49 @@ export default function EntryGateway() {
             onMouseEnter={() => setHoveredNode("admin")}
             onMouseLeave={() => setHoveredNode(null)}
           >
-            <Card className="h-full glass-card border-white/5 rounded-[3rem] overflow-hidden group-hover:scale-[1.02] group-hover:border-amber-500/30 transition-all duration-500 bg-white/5 backdrop-blur-2xl relative">
-              <div className="absolute top-0 right-0 p-12 bg-amber-500/10 rounded-full blur-3xl opacity-0 group-hover:opacity-100 transition-opacity" />
-              <CardContent className="p-16 space-y-12 relative z-10">
+            <div className="relative h-full p-px rounded-[2rem] bg-white/5 hover:bg-gradient-to-br hover:from-cyan-500/50 hover:to-transparent transition-all duration-500">
+              <div className="h-full bg-[#030712] rounded-[2rem] p-12 space-y-8 relative overflow-hidden">
+                <div className="absolute top-0 right-0 -translate-y-1/2 translate-x-1/2 w-64 h-64 bg-cyan-500/10 rounded-full blur-3xl group-hover:bg-cyan-500/20 transition-all" />
+                
                 <div className="flex justify-between items-center">
-                  <div className="bg-amber-500/10 p-8 rounded-[2rem] border border-amber-500/20 text-amber-500 group-hover:bg-amber-500 group-hover:text-black transition-all duration-500">
-                    <Terminal className="h-10 w-10" />
+                  <div className="p-6 rounded-2xl bg-cyan-500/10 text-cyan-400 border border-cyan-500/20 group-hover:bg-cyan-400 group-hover:text-black transition-all duration-500">
+                    <Terminal className="h-8 w-8" />
                   </div>
-                  <Badge variant="outline" className="px-6 py-2 rounded-full border-amber-500/20 text-amber-500 font-black text-[9px] uppercase tracking-[0.4em]">Master Protocol</Badge>
+                  <Badge variant="outline" className="px-4 py-1 rounded-full border-cyan-500/30 text-cyan-400 font-black text-[8px] uppercase tracking-widest bg-cyan-500/5">Command Level</Badge>
                 </div>
-                <div className="space-y-6">
-                  <h2 className="text-5xl font-black text-white uppercase italic tracking-tighter leading-none group-hover:translate-x-2 transition-transform">Command Deck</h2>
-                  <p className="text-slate-400 text-base font-medium leading-relaxed max-w-xs">
-                    Orchestrate regional grid clusters and manage global network telemetry.
+                
+                <div className="space-y-4">
+                  <h2 className="text-4xl font-black text-white uppercase italic tracking-tighter leading-tight">Command Deck</h2>
+                  <p className="text-slate-500 text-sm font-medium leading-relaxed max-w-[240px]">
+                    Orchestrate regional clusters and global traffic telemetry.
                   </p>
                 </div>
-                <div className="flex items-center gap-4 text-amber-500 font-black uppercase tracking-[0.4em] text-[11px] pt-8 opacity-60 group-hover:opacity-100 transition-all">
-                  Access Neural Hub <ChevronRight className="h-5 w-5 group-hover:translate-x-2 transition-transform" />
+                
+                <div className="flex items-center gap-3 text-cyan-400 font-black uppercase tracking-[0.3em] text-[10px] pt-4 group-hover:translate-x-2 transition-transform">
+                  Enter Hub <ChevronRight className="h-4 w-4" />
                 </div>
-              </CardContent>
-            </Card>
+              </div>
+            </div>
           </Link>
         </div>
 
-        {/* Global Footer Footer */}
-        <div className="flex flex-col items-center gap-12 pt-16 border-t border-white/5">
-           <div className="flex items-center gap-16 px-12 py-6 glass-card rounded-full border-white/5 bg-white/5 backdrop-blur-3xl shadow-2xl">
-             <div className="flex items-center gap-4">
-               <Fingerprint className="h-4 w-4 text-primary" />
-               <span className="text-[10px] font-black uppercase tracking-[0.4em] text-slate-500">Signature Encrypted</span>
+        {/* Infrastructure Tag */}
+        <div className="flex flex-col items-center gap-8 pt-12 border-t border-white/5 opacity-40">
+           <div className="flex items-center gap-12 text-slate-500">
+             <div className="flex items-center gap-3">
+               <Cpu className="h-3.5 w-3.5" />
+               <span className="text-[9px] font-black uppercase tracking-widest">Neural Link v4.0</span>
              </div>
-             <div className="h-4 w-px bg-white/10" />
-             <div className="flex items-center gap-4">
-               <Activity className="h-4 w-4 text-emerald-500" />
-               <span className="text-[10px] font-black uppercase tracking-[0.4em] text-slate-500">Network Optimal</span>
+             <div className="flex items-center gap-3">
+               <Fingerprint className="h-3.5 w-3.5" />
+               <span className="text-[9px] font-black uppercase tracking-widest">Encrypted</span>
+             </div>
+             <div className="flex items-center gap-3">
+               <Activity className="h-3.5 w-3.5" />
+               <span className="text-[9px] font-black uppercase tracking-widest">Healthy</span>
              </div>
            </div>
-           <p className="text-[9px] font-black uppercase tracking-[0.8em] text-slate-600">Secure Regional Logistics Infrastructure // 2024</p>
+           <p className="text-[8px] font-black uppercase tracking-[1em] text-slate-700">AETHER LOGISTICS INFRASTRUCTURE // NORTH EAST HUB</p>
         </div>
       </div>
     </div>
