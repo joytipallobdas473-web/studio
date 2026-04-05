@@ -41,7 +41,7 @@
     --secondary-foreground: 180 100% 50%;
     --muted: 222 47% 10%;
     --muted-foreground: 180 20% 60%;
-    --accent: 142 71% 45%; /* Keep Emerald for Success */
+    --accent: 142 71% 45%; /* Emerald Success */
     --accent-foreground: 222 47% 2%;
     --destructive: 0 100% 50%;
     --destructive-foreground: 222 47% 2%;
@@ -69,17 +69,17 @@
   }
 }
 
-.neo-glass {
-  @apply bg-white/10 backdrop-blur-xl border border-white/20 shadow-[0_8px_32px_0_rgba(31,38,135,0.07)];
+.glass-card {
+  @apply bg-white/60 backdrop-blur-xl border border-white/20 shadow-[0_8px_32px_0_rgba(31,38,135,0.07)];
 }
 
-.dark-admin .neo-glass {
+.dark-admin .glass-card {
   @apply bg-black/40 backdrop-blur-2xl border border-primary/20 shadow-[0_0_40px_rgba(0,255,255,0.05)];
 }
 
 .admin-grid {
   background-image: 
-    radial-gradient(at 0% 0%, hsla(180, 100%, 50%, 0.05) 0, transparent 50%),
+    radial-gradient(at 0% 0%, hsla(180, 100% , 50%, 0.05) 0, transparent 50%),
     radial-gradient(at 100% 100%, hsla(142, 71%, 45%, 0.05) 0, transparent 50%),
     linear-gradient(to right, rgba(0, 255, 255, 0.02) 1px, transparent 1px),
     linear-gradient(to bottom, rgba(0, 255, 255, 0.02) 1px, transparent 1px);
@@ -93,17 +93,8 @@
     radial-gradient(at 0% 100%, hsla(270, 100%, 60%, 0.03) 0, transparent 50%);
 }
 
-.cyber-button {
-  @apply relative overflow-hidden transition-all duration-300 active:scale-95;
-}
-
-.cyber-button::after {
-  content: '';
-  @apply absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full skew-x-[-20deg] transition-transform duration-1000;
-}
-
-.cyber-button:hover::after {
-  @apply translate-x-[200%];
+.command-gradient {
+  background: linear-gradient(135deg, hsl(var(--primary)) 0%, #06b6d4 100%);
 }
 
 @keyframes pulse-cyan {
@@ -116,11 +107,19 @@
   animation: pulse-cyan 2s infinite;
 }
 
-@keyframes float {
-  0%, 100% { transform: translateY(0px); }
-  50% { transform: translateY(-10px); }
+.text-stroke {
+  -webkit-text-stroke: 1px rgba(255, 255, 255, 0.1);
 }
 
-.animate-float {
-  animation: float 6s ease-in-out infinite;
+.custom-scrollbar::-webkit-scrollbar {
+  width: 6px;
+}
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: transparent;
+}
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  @apply bg-primary/20 rounded-full;
+}
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  @apply bg-primary/40;
 }

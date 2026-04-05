@@ -1,12 +1,11 @@
 "use client";
 
-import { useEffect, useMemo } from "react";
+import { useEffect } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import { useUser, useFirestore, useDoc, useMemoFirebase } from "@/firebase";
 import { doc } from "firebase/firestore";
 import { Navbar } from "@/components/navbar";
-import { Loader2, Cpu } from "lucide-react";
-import { toast } from "@/hooks/use-toast";
+import { Cpu } from "lucide-react";
 
 const MASTER_ADMIN_UID = "j96izCkggNcL002AHiJjzGb18Bf2";
 

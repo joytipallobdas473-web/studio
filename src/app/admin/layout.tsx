@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useMemo } from "react";
+import { useEffect, useState } from "react";
 import { SidebarProvider, Sidebar, SidebarContent, SidebarHeader, SidebarMenu, SidebarMenuItem, SidebarMenuButton, SidebarGroup, SidebarGroupLabel, SidebarGroupContent, SidebarInset, SidebarTrigger, SidebarFooter } from "@/components/ui/sidebar";
 import { LayoutDashboard, Store, Package, ShoppingCart, LogOut, Terminal, Loader2, Settings, Shield, Cpu, Activity } from "lucide-react";
 import Link from "next/link";
