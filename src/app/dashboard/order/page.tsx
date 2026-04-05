@@ -41,7 +41,8 @@ import {
   Briefcase,
   TrendingDown,
   Layers,
-  Sparkles
+  Sparkles,
+  ShoppingBasket
 } from "lucide-react";
 import { useFirestore, useCollection, useUser, useMemoFirebase, useDoc } from "@/firebase";
 import { collection, serverTimestamp, query, doc } from "firebase/firestore";
@@ -52,9 +53,9 @@ import { cn } from "@/lib/utils";
 const CATEGORIES = [
   { id: "all", name: "Master Collection", icon: LayoutGrid },
   { id: "Electronics", name: "High-Tech Nodes", icon: Cpu },
-  { id: "Apparel", name: "Silk & Apparel", icon: Shirt },
-  { id: "Grocery", name: "Boutique Pantry", icon: Apple },
-  { id: "Office Supplies", name: "Executive Suite", icon: Briefcase },
+  { id: "Apparel", name: "Fashion Clusters", icon: Shirt },
+  { id: "Grocery", name: "Pantry Boutique", icon: Apple },
+  { id: "Office Supplies", name: "Registry Tools", icon: Briefcase },
 ];
 
 interface CartItem {
@@ -199,7 +200,7 @@ export default function NewOrderPage() {
       paymentMethod: paymentMethod,
       email: store?.email || user.email || "N/A",
       status: "pending",
-      storeName: store?.name || "Boutique Node", 
+      storeName: store?.name || "Branch Node", 
       location: store?.location || "North East",
       createdAt: serverTimestamp()
     };
@@ -220,18 +221,18 @@ export default function NewOrderPage() {
 
   if (submitted) {
     return (
-      <div className="flex flex-col items-center justify-center min-h-[65vh] text-center space-y-10 animate-in zoom-in duration-500">
-        <div className="bg-indigo-50 p-12 rounded-[4rem] shadow-sm relative border border-indigo-100">
-          <CheckCircle className="h-24 w-24 text-indigo-600" />
-          <div className="absolute top-0 right-0 p-4 bg-white rounded-full shadow-lg -translate-y-1/2 translate-x-1/2 border border-indigo-50">
-            <Sparkles className="h-6 w-6 text-indigo-600 animate-pulse" />
+      <div className="flex flex-col items-center justify-center min-h-[65vh] text-center space-y-8 animate-in zoom-in duration-500">
+        <div className="bg-emerald-50 p-10 rounded-full shadow-lg relative border border-emerald-100">
+          <CheckCircle className="h-20 w-20 text-emerald-600" />
+          <div className="absolute top-0 right-0 p-3 bg-white rounded-full shadow-md -translate-y-1/4 translate-x-1/4 border border-emerald-50">
+            <Sparkles className="h-5 w-5 text-emerald-600 animate-pulse" />
           </div>
         </div>
-        <div className="space-y-4">
-          <h2 className="text-4xl font-black text-slate-900 tracking-tighter uppercase italic leading-none">Transmission Success</h2>
+        <div className="space-y-2">
+          <h2 className="text-3xl font-black text-slate-900 tracking-tighter uppercase italic leading-none">Transmission Success</h2>
           <p className="text-slate-500 font-bold tracking-widest uppercase text-[10px]">Your reorder packet is live on the regional grid.</p>
         </div>
-        <Button variant="outline" onClick={() => router.push("/dashboard")} className="h-16 rounded-[2rem] px-12 border-slate-200 text-indigo-600 font-black uppercase tracking-[0.4em] text-[10px] hover:bg-slate-50 transition-all">Return to Dashboard</Button>
+        <Button variant="outline" onClick={() => router.push("/dashboard")} className="h-14 rounded-xl px-10 border-slate-200 text-emerald-600 font-black uppercase tracking-[0.3em] text-[10px] hover:bg-emerald-50 transition-all">Return to Dashboard</Button>
       </div>
     );
   }
@@ -239,115 +240,115 @@ export default function NewOrderPage() {
   if (!isClient) {
     return (
       <div className="flex h-[500px] items-center justify-center">
-        <Loader2 className="h-12 w-12 animate-spin text-primary opacity-30" />
+        <Loader2 className="h-10 w-10 animate-spin text-emerald-600 opacity-30" />
       </div>
     );
   }
 
   return (
-    <div className="space-y-12 pb-40 animate-in fade-in duration-700 relative">
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-10 bg-white p-10 rounded-[3rem] border border-slate-200 shadow-sm">
-        <div className="space-y-2">
-          <h1 className="text-4xl font-black text-slate-900 tracking-tighter italic uppercase leading-none">Sku Catalog</h1>
-          <p className="text-slate-500 font-black flex items-center gap-3 text-[10px] uppercase tracking-[0.4em]">
-            <span className="h-2 w-2 rounded-full bg-indigo-600 animate-pulse shadow-[0_0_10px_rgba(79,70,229,0.4)]" />
-            Stocking: {store?.name || 'Aether Node'}
+    <div className="space-y-10 pb-40 animate-in fade-in duration-700 relative">
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-8 bg-white p-8 rounded-[2rem] border border-slate-200 shadow-sm">
+        <div className="space-y-1">
+          <h1 className="text-3xl font-black text-slate-900 tracking-tighter italic uppercase leading-none">SKU Provision</h1>
+          <p className="text-slate-500 font-bold flex items-center gap-2 text-[10px] uppercase tracking-[0.3em]">
+            <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
+            Active Node: {store?.name || 'Aether'}
           </p>
         </div>
-        <div className="flex items-center gap-5 w-full md:w-auto">
-          <div className="relative flex-1 md:w-96">
-            <Search className="absolute left-6 top-1/2 -translate-y-1/2 h-5 w-5 text-slate-400" />
+        <div className="flex items-center gap-4 w-full md:w-auto">
+          <div className="relative flex-1 md:w-80">
+            <Search className="absolute left-5 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
             <Input 
               placeholder="Query SKU Signature..." 
-              className="pl-16 h-16 bg-slate-50 border-none rounded-[2rem] focus:ring-indigo-600 text-base font-bold text-slate-900 placeholder:text-slate-400" 
+              className="pl-12 h-14 bg-slate-50 border-none rounded-xl focus:ring-emerald-600 font-bold text-slate-900" 
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
             />
           </div>
           <Sheet>
             <SheetTrigger asChild>
-              <Button className="h-16 w-16 md:w-auto md:px-10 rounded-[2rem] bg-slate-900 text-white shadow-xl relative border-none hover:bg-slate-800 transition-all">
-                <ShoppingCart className="h-6 w-6" />
+              <Button className="h-14 w-14 md:w-auto md:px-8 rounded-xl bg-slate-900 text-white shadow-lg relative border-none hover:bg-slate-800 transition-all">
+                <ShoppingCart className="h-5 w-5" />
                 {cartItemCount > 0 && (
-                  <span className="absolute -top-3 -right-3 bg-indigo-600 text-white text-[11px] font-black h-8 w-8 rounded-full border-4 border-white flex items-center justify-center shadow-lg">
+                  <span className="absolute -top-2 -right-2 bg-emerald-600 text-white text-[10px] font-black h-6 w-6 rounded-full border-2 border-white flex items-center justify-center shadow-md">
                     {cartItemCount}
                   </span>
                 )}
-                <span className="hidden md:inline ml-4 font-black uppercase tracking-[0.3em] text-[10px]">Registry</span>
+                <span className="hidden md:inline ml-3 font-black uppercase tracking-widest text-[10px]">Curated Packet</span>
               </Button>
             </SheetTrigger>
-            <SheetContent className="rounded-l-[3.5rem] border-none p-0 bg-white max-w-[550px] shadow-2xl flex flex-col h-full overflow-hidden">
-              <SheetHeader className="p-12 pb-6">
-                <SheetTitle className="text-3xl font-black text-slate-900 uppercase italic tracking-tighter flex items-center gap-5">
-                  <ShoppingBag className="h-8 w-8 text-indigo-600" /> Curated Packet
+            <SheetContent className="rounded-l-[2.5rem] border-none p-0 bg-white max-w-[500px] shadow-2xl flex flex-col h-full overflow-hidden">
+              <SheetHeader className="p-10 pb-4">
+                <SheetTitle className="text-2xl font-black text-slate-900 uppercase italic tracking-tighter flex items-center gap-4">
+                  <ShoppingBasket className="h-6 w-6 text-emerald-600" /> Current Curation
                 </SheetTitle>
               </SheetHeader>
               
-              <div className="flex-1 overflow-y-auto px-12 py-6 space-y-10 custom-scrollbar">
+              <div className="flex-1 overflow-y-auto px-10 py-4 space-y-8 custom-scrollbar">
                 {cartItemCount === 0 ? (
-                  <div className="h-full flex flex-col items-center justify-center text-center space-y-6 opacity-30 italic">
-                    <Sparkles className="h-20 w-20 text-slate-200" />
-                    <p className="font-black uppercase tracking-[0.5em] text-[11px]">Identity Registry Empty</p>
+                  <div className="h-full flex flex-col items-center justify-center text-center space-y-4 opacity-30 italic">
+                    <Package className="h-16 w-16 text-slate-200" />
+                    <p className="font-black uppercase tracking-[0.4em] text-[10px]">Curation Registry Empty</p>
                   </div>
                 ) : (
-                  <div className="space-y-6">
+                  <div className="space-y-4">
                     {Object.values(cart).map((item) => (
-                      <div key={item.id} className="flex items-center justify-between p-6 bg-slate-50 rounded-[2.5rem] border border-slate-100 group hover:border-indigo-200 transition-all">
-                        <div className="flex-1 min-w-0 pr-6">
-                          <h4 className="font-black text-slate-900 text-[12px] uppercase italic truncate leading-none">{item.name}</h4>
-                          <div className="flex items-center gap-3 mt-2">
-                             <span className="text-[10px] text-slate-300 font-bold line-through">₹{(item.mrp * item.quantity).toFixed(0)}</span>
-                             <span className="text-[12px] font-mono font-black text-indigo-600">₹{(item.price * item.quantity).toFixed(0)}</span>
+                      <div key={item.id} className="flex items-center justify-between p-5 bg-slate-50 rounded-2xl border border-slate-100 group hover:border-emerald-200 transition-all">
+                        <div className="flex-1 min-w-0 pr-4">
+                          <h4 className="font-black text-slate-900 text-[11px] uppercase italic truncate leading-none">{item.name}</h4>
+                          <div className="flex items-center gap-2 mt-1.5">
+                             <span className="text-[10px] font-mono font-black text-emerald-600">₹{(item.price * item.quantity).toFixed(0)}</span>
+                             <span className="text-[8px] text-slate-300 font-bold uppercase tracking-widest">({item.sku})</span>
                           </div>
                         </div>
-                        <div className="flex items-center gap-4">
-                          <div className="flex items-center bg-white rounded-2xl border border-slate-200 overflow-hidden h-11 shadow-sm">
-                            <button onClick={() => updateQuantity(item.id, -1)} className="px-3 hover:bg-slate-50 transition-colors text-slate-400">
-                              <Minus className="h-3.5 w-3.5" />
+                        <div className="flex items-center gap-3">
+                          <div className="flex items-center bg-white rounded-lg border border-slate-200 overflow-hidden h-9 shadow-sm">
+                            <button onClick={() => updateQuantity(item.id, -1)} className="px-2 hover:bg-slate-50 text-slate-400">
+                              <Minus className="h-3 w-3" />
                             </button>
-                            <span className="w-10 text-center font-black text-sm text-indigo-600">{item.quantity}</span>
-                            <button onClick={() => updateQuantity(item.id, 1)} className="px-3 hover:bg-slate-50 transition-colors text-slate-400">
-                              <Plus className="h-3.5 w-3.5" />
+                            <span className="w-8 text-center font-black text-xs text-emerald-600">{item.quantity}</span>
+                            <button onClick={() => updateQuantity(item.id, 1)} className="px-2 hover:bg-slate-50 text-slate-400">
+                              <Plus className="h-3 w-3" />
                             </button>
                           </div>
-                          <Button variant="ghost" size="icon" className="h-11 w-11 text-rose-500 hover:bg-rose-50 rounded-2xl" onClick={() => removeFromCart(item.id)}>
-                            <Trash2 className="h-4.5 w-4.5" />
+                          <Button variant="ghost" size="icon" className="h-9 w-9 text-rose-500 hover:bg-rose-50 rounded-lg" onClick={() => removeFromCart(item.id)}>
+                            <Trash2 className="h-4 w-4" />
                           </Button>
                         </div>
                       </div>
                     ))}
                     
-                    <div className="pt-12 space-y-10 border-t border-slate-100">
-                      <div className="space-y-4">
-                        <Label className="text-[11px] font-black uppercase tracking-[0.4em] text-slate-400 ml-2">Payment Protocol</Label>
+                    <div className="pt-8 space-y-8 border-t border-slate-100">
+                      <div className="space-y-3">
+                        <Label className="text-[10px] font-black uppercase tracking-[0.3em] text-slate-400 ml-1">Payment Strategy</Label>
                         <Select value={paymentMethod} onValueChange={setPaymentMethod}>
-                          <SelectTrigger className="h-16 rounded-[1.5rem] bg-slate-50 border-none font-black text-[11px] uppercase tracking-widest text-slate-900">
+                          <SelectTrigger className="h-14 rounded-xl bg-slate-50 border-none font-black text-[10px] uppercase tracking-widest text-slate-900">
                             <SelectValue />
                           </SelectTrigger>
-                          <SelectContent className="rounded-2xl border-none shadow-2xl">
-                            <SelectItem value="cash" className="font-black uppercase text-[10px] tracking-widest"><Banknote className="h-4 w-4 mr-3" /> Settlement On Delivery</SelectItem>
-                            <SelectItem value="after_delivery" className="font-black uppercase text-[10px] tracking-widest"><CreditCard className="h-4 w-4 mr-3" /> Regional Credit</SelectItem>
+                          <SelectContent className="rounded-xl border-none shadow-2xl">
+                            <SelectItem value="cash" className="font-black uppercase text-[10px] tracking-widest"><Banknote className="h-4 w-4 mr-2" /> Cash Settlement</SelectItem>
+                            <SelectItem value="after_delivery" className="font-black uppercase text-[10px] tracking-widest"><CreditCard className="h-4 w-4 mr-2" /> Regional Credit</SelectItem>
                           </SelectContent>
                         </Select>
                       </div>
 
-                      <div className="space-y-4">
-                        <Label className="text-[11px] font-black uppercase tracking-[0.4em] text-slate-400 ml-2">Destination Node</Label>
+                      <div className="space-y-3">
+                        <Label className="text-[10px] font-black uppercase tracking-[0.3em] text-slate-400 ml-1">Destination Coordinate</Label>
                         <Textarea 
                           value={deliveryAddress} 
                           onChange={(e) => setDeliveryAddress(e.target.value)}
-                          className="min-h-[120px] rounded-[1.5rem] bg-slate-50 border-none font-bold text-sm p-6"
-                          placeholder="Delivery Coordinate"
+                          className="min-h-[100px] rounded-xl bg-slate-50 border-none font-bold text-xs p-4"
+                          placeholder="Final delivery address..."
                         />
                       </div>
 
-                      <div className="space-y-4">
-                        <Label className="text-[11px] font-black uppercase tracking-[0.4em] text-slate-400 ml-2">Contact Signal</Label>
+                      <div className="space-y-3">
+                        <Label className="text-[10px] font-black uppercase tracking-[0.3em] text-slate-400 ml-1">Identity Signal (Phone)</Label>
                         <Input 
                           value={phoneNumber} 
                           onChange={(e) => setPhoneNumber(e.target.value)}
-                          className="h-16 rounded-[1.5rem] bg-slate-50 border-none font-black text-sm p-6"
-                          placeholder="Identity Phone"
+                          className="h-14 rounded-xl bg-slate-50 border-none font-black text-xs p-4"
+                          placeholder="Contact number..."
                         />
                       </div>
                     </div>
@@ -355,23 +356,23 @@ export default function NewOrderPage() {
                 )}
               </div>
 
-              <SheetFooter className="p-12 bg-slate-50/50 border-t border-slate-100">
-                <div className="w-full space-y-8">
+              <SheetFooter className="p-10 bg-slate-50/50 border-t border-slate-100">
+                <div className="w-full space-y-6">
                   <div className="flex justify-between items-end">
-                    <div className="space-y-1">
-                      <span className="text-[11px] font-black uppercase tracking-[0.5em] text-slate-400">Total Valuation</span>
-                      <p className="text-[10px] font-bold text-emerald-600 uppercase tracking-widest">Savings Applied</p>
+                    <div className="space-y-0.5">
+                      <span className="text-[10px] font-black uppercase tracking-widest text-slate-400">Total Valuation</span>
+                      <p className="text-[9px] font-bold text-emerald-600 uppercase tracking-widest">Protocol Active</p>
                     </div>
-                    <span className="text-4xl font-black text-slate-900 tracking-tighter font-mono italic">₹{cartTotal.toFixed(0)}</span>
+                    <span className="text-3xl font-black text-slate-900 tracking-tighter font-mono italic">₹{cartTotal.toFixed(0)}</span>
                   </div>
                   <Button 
-                    className="w-full h-18 bg-indigo-600 hover:bg-indigo-700 text-white font-black rounded-[2rem] shadow-xl shadow-indigo-100 uppercase tracking-[0.4em] text-[12px] border-none" 
+                    className="w-full h-16 bg-emerald-600 hover:bg-emerald-700 text-white font-black rounded-xl shadow-xl shadow-emerald-100 uppercase tracking-[0.3em] text-[11px] border-none transition-all hover:scale-[1.01]" 
                     disabled={cartItemCount === 0 || isSubmitting}
                     onClick={handleSubmitOrder}
                   >
-                    {isSubmitting ? <Loader2 className="h-7 w-7 animate-spin" /> : (
-                      <div className="flex items-center gap-4">
-                        Commit Packet <ArrowRight className="h-5 w-5" />
+                    {isSubmitting ? <Loader2 className="h-6 w-6 animate-spin" /> : (
+                      <div className="flex items-center gap-3">
+                        Commit Packet <ArrowRight className="h-4 w-4" />
                       </div>
                     )}
                   </Button>
@@ -382,12 +383,12 @@ export default function NewOrderPage() {
         </div>
       </div>
 
-      <div className="flex flex-col lg:flex-row gap-12">
-        <aside className="w-full lg:w-80 shrink-0 space-y-8">
-          <Card className="border border-slate-200 shadow-sm overflow-hidden bg-white rounded-[3rem]">
-            <CardHeader className="bg-slate-50/50 py-6 px-8">
-              <CardTitle className="text-[11px] font-black flex items-center gap-3 uppercase tracking-[0.5em] text-indigo-600">
-                <Filter className="h-4 w-4" /> Collection
+      <div className="flex flex-col lg:flex-row gap-10">
+        <aside className="w-full lg:w-72 shrink-0 space-y-6">
+          <Card className="border border-slate-200/60 shadow-sm overflow-hidden bg-white rounded-2xl">
+            <CardHeader className="bg-slate-50/50 py-4 px-6 border-b border-slate-100">
+              <CardTitle className="text-[10px] font-black flex items-center gap-2 uppercase tracking-[0.3em] text-emerald-600">
+                <Filter className="h-3.5 w-3.5" /> Sector Clusters
               </CardTitle>
             </CardHeader>
             <CardContent className="p-0">
@@ -397,31 +398,32 @@ export default function NewOrderPage() {
                     key={cat.id}
                     onClick={() => setSelectedCategory(cat.id)}
                     className={cn(
-                      "flex items-center justify-between px-8 py-5 text-[11px] transition-all hover:bg-slate-50 text-left border-l-[6px] font-black uppercase tracking-[0.2em]",
-                      selectedCategory === cat.id ? "border-indigo-600 bg-indigo-50/30 text-indigo-600" : "border-transparent text-slate-400"
+                      "flex items-center gap-3 px-6 py-4 text-[10px] transition-all hover:bg-slate-50 text-left border-l-4 font-black uppercase tracking-widest",
+                      selectedCategory === cat.id ? "border-emerald-600 bg-emerald-50/30 text-emerald-600" : "border-transparent text-slate-400"
                     )}
                   >
-                    <span className="flex items-center gap-4"><cat.icon className={cn("h-4.5 w-4.5", selectedCategory === cat.id ? "text-indigo-600" : "opacity-30")} />{cat.name}</span>
+                    <cat.icon className={cn("h-4 w-4", selectedCategory === cat.id ? "text-emerald-600" : "opacity-30")} />
+                    {cat.name}
                   </button>
                 ))}
               </div>
             </CardContent>
           </Card>
           
-          <div className="bg-indigo-50/50 p-8 rounded-[2.5rem] border border-indigo-100 space-y-4">
-            <h4 className="text-[10px] font-black uppercase tracking-[0.3em] text-indigo-600">Regional Tip</h4>
-            <p className="text-[11px] font-medium text-slate-500 leading-relaxed italic">"Multi-angle visual slots allow you to verify stock identity before commitment."</p>
+          <div className="bg-emerald-50/50 p-6 rounded-2xl border border-emerald-100 space-y-3">
+            <h4 className="text-[9px] font-black uppercase tracking-widest text-emerald-600">Network Insight</h4>
+            <p className="text-[10px] font-medium text-slate-500 leading-relaxed italic">"SKU identity packets are synchronized globally across the regional grid."</p>
           </div>
         </aside>
 
         <main className="flex-1">
           {loading ? (
-            <div className="flex flex-col items-center justify-center py-40 gap-6">
-              <Loader2 className="h-14 w-14 animate-spin text-indigo-600 opacity-20" />
-              <p className="text-[11px] font-black uppercase tracking-[0.6em] text-slate-300">Syncing Boutique Grid...</p>
+            <div className="flex flex-col items-center justify-center py-32 gap-4">
+              <Loader2 className="h-10 w-10 animate-spin text-emerald-600 opacity-20" />
+              <p className="text-[9px] font-black uppercase tracking-[0.5em] text-slate-300">Syncing Catalog Registry...</p>
             </div>
           ) : filteredProducts.length > 0 ? (
-            <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-8">
+            <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-6">
               {filteredProducts.map((product) => {
                 const validImages = (product.imageUrls || []).filter((u: string) => !!u);
                 const primaryImage = validImages[0] || product.imageUrl || `https://picsum.photos/seed/${product.id}/600/400`;
@@ -431,8 +433,8 @@ export default function NewOrderPage() {
                 const savings = mrp > price ? Math.round(((mrp - price) / mrp) * 100) : 0;
 
                 return (
-                  <Card key={product.id} className="group overflow-hidden border border-slate-200 shadow-sm hover:shadow-md transition-all duration-500 flex flex-col bg-white rounded-[3.5rem] relative">
-                    <div className="relative h-56 w-full bg-slate-50 overflow-hidden flex items-center justify-center">
+                  <Card key={product.id} className="group overflow-hidden border border-slate-200/60 shadow-sm hover:shadow-lg transition-all duration-500 flex flex-col bg-white rounded-[2rem] relative">
+                    <div className="relative h-48 w-full bg-slate-50 overflow-hidden">
                       {validImages.length > 1 ? (
                         <Carousel className="w-full h-full">
                           <CarouselContent className="h-full">
@@ -442,8 +444,8 @@ export default function NewOrderPage() {
                               </CarouselItem>
                             ))}
                           </CarouselContent>
-                          <CarouselPrevious className="left-4 h-9 w-9 bg-white/80 border-none hover:bg-white text-indigo-600" />
-                          <CarouselNext className="right-4 h-9 w-9 bg-white/80 border-none hover:bg-white text-indigo-600" />
+                          <CarouselPrevious className="left-2 h-7 w-7 bg-white/80 border-none hover:bg-white text-emerald-600" />
+                          <CarouselNext className="right-2 h-7 w-7 bg-white/80 border-none hover:bg-white text-emerald-600" />
                         </Carousel>
                       ) : (
                         <img 
@@ -453,45 +455,39 @@ export default function NewOrderPage() {
                         />
                       )}
                       
-                      <div className="absolute top-6 left-6 flex flex-col gap-3 z-10">
-                        <Badge className="bg-white/95 text-indigo-600 border-none text-[9px] font-black uppercase tracking-[0.4em] px-4 py-1.5 rounded-2xl shadow-sm">
+                      <div className="absolute top-4 left-4 flex flex-col gap-2 z-10">
+                        <Badge className="bg-white/95 text-emerald-600 border-none text-[8px] font-black uppercase tracking-widest px-3 py-1 rounded-lg shadow-sm">
                           {product.category}
                         </Badge>
                         {savings > 0 && (
-                          <Badge className="bg-indigo-600 text-white border-none text-[9px] font-black uppercase tracking-[0.3em] px-4 py-1.5 rounded-2xl flex items-center gap-2 shadow-lg">
-                            <TrendingDown className="h-3 w-3" /> {savings}% OFF
+                          <Badge className="bg-emerald-600 text-white border-none text-[8px] font-black uppercase tracking-widest px-3 py-1 rounded-lg flex items-center gap-1.5 shadow-md">
+                            <TrendingDown className="h-2.5 w-2.5" /> {savings}% SAVING
                           </Badge>
                         )}
                       </div>
-                      
-                      {validImages.length > 1 && (
-                        <div className="absolute bottom-6 right-6 bg-slate-900/10 backdrop-blur-md p-2 rounded-xl z-10 border border-white/20">
-                          <Layers className="h-4 w-4 text-white" />
-                        </div>
-                      )}
                     </div>
-                    <CardContent className="p-8 flex-1 space-y-5">
-                      <div className="space-y-2">
-                        <h3 className="font-black text-lg text-slate-900 leading-tight group-hover:text-indigo-600 transition-colors italic uppercase tracking-tighter">{product.name}</h3>
-                        <p className="text-[10px] text-slate-400 font-mono font-bold tracking-[0.3em] uppercase">PKT_SIG: {product.sku}</p>
+                    <CardContent className="p-6 flex-1 space-y-4">
+                      <div className="space-y-1">
+                        <h3 className="font-black text-sm text-slate-900 leading-tight group-hover:text-emerald-600 transition-colors italic uppercase tracking-tight">{product.name}</h3>
+                        <p className="text-[9px] text-slate-400 font-mono font-bold tracking-widest uppercase">{product.sku}</p>
                       </div>
                       <div className="flex flex-col">
-                        <div className="flex items-center gap-3">
-                           <span className="text-sm text-slate-300 font-bold line-through">₹{mrp.toFixed(0)}</span>
-                           <span className="text-4xl font-black text-slate-900 tracking-tighter font-mono italic">₹{price.toFixed(0)}</span>
+                        <div className="flex items-center gap-2">
+                           <span className="text-[10px] text-slate-300 font-bold line-through">₹{mrp.toFixed(0)}</span>
+                           <span className="text-2xl font-black text-slate-900 tracking-tighter font-mono italic">₹{price.toFixed(0)}</span>
                         </div>
-                        <p className="text-[10px] text-indigo-600 font-black uppercase tracking-[0.2em] mt-2 italic">
-                          Regional Pricing Active
+                        <p className="text-[8px] text-emerald-600 font-black uppercase tracking-[0.2em] mt-1 italic">
+                          Boutique Rate Active
                         </p>
                       </div>
                     </CardContent>
-                    <CardFooter className="p-8 pt-0">
+                    <CardFooter className="p-6 pt-0">
                       <Button 
-                        className="w-full h-16 bg-slate-50 text-slate-900 hover:bg-indigo-600 hover:text-white font-black rounded-[1.5rem] shadow-none transition-all text-[11px] uppercase tracking-[0.4em] border border-slate-100" 
+                        className="w-full h-12 bg-slate-50 text-slate-900 hover:bg-emerald-600 hover:text-white font-black rounded-xl shadow-none transition-all text-[10px] uppercase tracking-widest border border-slate-100" 
                         onClick={() => addToCart(product)} 
                         disabled={!product.stockQuantity || product.stockQuantity <= 0}
                       >
-                        {!product.stockQuantity || product.stockQuantity <= 0 ? "Node Depleted" : "Curation Entry"}
+                        {!product.stockQuantity || product.stockQuantity <= 0 ? "Depleted" : "Initialize Curation"}
                       </Button>
                     </CardFooter>
                   </Card>
@@ -499,22 +495,22 @@ export default function NewOrderPage() {
               })}
             </div>
           ) : (
-            <div className="text-center py-40 bg-white rounded-[4rem] border-2 border-dashed border-slate-100 shadow-none">
-              <Package className="h-24 w-24 text-slate-100 mx-auto mb-8" />
-              <h3 className="font-black text-slate-900 uppercase italic tracking-tighter text-xl">Identity Mismatch</h3>
-              <p className="text-[11px] text-slate-400 mt-3 uppercase font-bold tracking-[0.5em]">No SKUs matching your query protocol.</p>
+            <div className="text-center py-32 bg-white rounded-[2.5rem] border-2 border-dashed border-slate-100 shadow-none">
+              <Package className="h-16 w-16 text-slate-100 mx-auto mb-6" />
+              <h3 className="font-black text-slate-900 uppercase italic tracking-tighter text-lg">Identity Conflict</h3>
+              <p className="text-[10px] text-slate-400 mt-2 uppercase font-bold tracking-widest">No SKUs matching your cluster query.</p>
             </div>
           )}
         </main>
       </div>
 
       {cartItemCount > 0 && (
-        <div className="fixed bottom-12 left-1/2 -translate-x-1/2 z-50 md:hidden animate-in slide-in-from-bottom-20 duration-700">
+        <div className="fixed bottom-10 left-1/2 -translate-x-1/2 z-50 md:hidden animate-in slide-in-from-bottom-10 duration-500">
           <Sheet>
             <SheetTrigger asChild>
-              <Button className="h-20 px-10 rounded-full bg-slate-900 text-white shadow-2xl font-black uppercase tracking-[0.4em] text-[11px] flex items-center gap-6 border-none">
-                <ShoppingCart className="h-6 w-6" />
-                <span className="bg-indigo-600 px-4 py-2 rounded-full">₹{cartTotal.toFixed(0)}</span>
+              <Button className="h-16 px-8 rounded-full bg-slate-900 text-white shadow-2xl font-black uppercase tracking-widest text-[10px] flex items-center gap-4 border-none">
+                <ShoppingCart className="h-5 w-5" />
+                <span className="bg-emerald-600 px-3 py-1 rounded-lg">₹{cartTotal.toFixed(0)}</span>
               </Button>
             </SheetTrigger>
           </Sheet>

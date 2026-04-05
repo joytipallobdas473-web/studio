@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useUser, useFirestore, useDoc, useMemoFirebase, updateDocumentNonBlocking } from "@/firebase";
@@ -8,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { User as UserIcon, Mail, MapPin, Building, Fingerprint, Loader2, BadgeCheck, Clock, Copy, Check, Camera, Upload, X } from "lucide-react";
+import { User as UserIcon, Mail, MapPin, Building, Fingerprint, Loader2, BadgeCheck, Clock, Copy, Check, Camera, Upload, X, Shield } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 import { useState, useRef } from "react";
@@ -48,7 +47,7 @@ export default function ProfilePage() {
       toast({
         variant: 'destructive',
         title: 'Camera Access Denied',
-        description: 'Please enable camera permissions to update your profile photo.',
+        description: 'Please enable camera permissions to update your identity photo.',
       });
     }
   };
@@ -93,14 +92,14 @@ export default function ProfilePage() {
     updateDocumentNonBlocking(docRef, { imageUrl: previewUrl });
     setIsPhotoDialogOpen(false);
     setPreviewUrl("");
-    toast({ title: "Profile Synchronized", description: "Identity photo updated successfully." });
+    toast({ title: "Identity Synchronized", description: "Node visual ID updated successfully." });
   };
 
   const copyUid = () => {
     if (user?.uid) {
       navigator.clipboard.writeText(user.uid);
       setCopied(true);
-      toast({ title: "UID Copied", description: "Identity signature saved to clipboard." });
+      toast({ title: "Signature Copied", description: "Node UID saved to clipboard." });
       setTimeout(() => setCopied(false), 2000);
     }
   };
@@ -108,78 +107,94 @@ export default function ProfilePage() {
   if (isUserLoading || storeLoading) {
     return (
       <div className="flex h-[60vh] items-center justify-center">
-        <Loader2 className="h-8 w-8 animate-spin text-primary opacity-50" />
+        <Loader2 className="h-10 w-10 animate-spin text-emerald-600 opacity-30" />
       </div>
     );
   }
 
   return (
-    <div className="max-w-4xl mx-auto space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
-      <div className="flex justify-between items-end">
+    <div className="max-w-4xl mx-auto space-y-10 animate-in fade-in duration-700">
+      <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
         <div>
-          <h1 className="text-3xl font-bold text-primary italic uppercase tracking-tight leading-none">Account Settings</h1>
-          <p className="text-muted-foreground font-medium mt-2">Manage your branch details and network identity.</p>
+          <div className="flex items-center gap-2 mb-2">
+             <div className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
+             <span className="text-[10px] font-black tracking-[0.4em] text-emerald-600 uppercase">Node Management</span>
+          </div>
+          <h1 className="text-3xl font-black text-slate-900 italic uppercase tracking-tight leading-none">Identity Core</h1>
+          <p className="text-slate-500 font-medium text-sm mt-2">Manage your regional branch credentials and visual signature.</p>
         </div>
         {storeData?.status && (
           <Badge className={cn(
-            "h-8 px-4 font-bold uppercase tracking-widest text-[10px] rounded-xl",
-            storeData.status === 'active' ? 'bg-emerald-100 text-emerald-700 border-emerald-200' : 'bg-amber-100 text-amber-700 border-amber-200'
+            "h-10 px-6 font-black uppercase tracking-widest text-[10px] rounded-xl border shadow-none",
+            storeData.status === 'active' ? 'bg-emerald-50 text-emerald-700 border-emerald-200' : 'bg-amber-50 text-amber-700 border-amber-200'
           )}>
-            {storeData.status === 'active' ? <BadgeCheck className="w-3 h-3 mr-2" /> : <Clock className="w-3 h-3 mr-2" />}
-            {storeData.status}
+            {storeData.status === 'active' ? <BadgeCheck className="w-4 h-4 mr-2" /> : <Clock className="w-4 h-4 mr-2" />}
+            PROTOCOL: {storeData.status}
           </Badge>
         )}
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
         <div className="md:col-span-1 space-y-6">
-          <Card className="border-none shadow-sm overflow-hidden bg-white rounded-[2rem]">
-            <CardContent className="pt-8 text-center space-y-4">
-              <Avatar className="h-24 w-24 mx-auto border-4 border-slate-100">
-                <AvatarImage src={storeData?.imageUrl || `https://picsum.photos/seed/${user?.uid}/200`} />
-                <AvatarFallback className="bg-primary text-white font-bold">
-                  {storeData?.managerName?.substring(0, 2).toUpperCase() || "JD"}
-                </AvatarFallback>
-              </Avatar>
+          <Card className="border-none shadow-sm overflow-hidden bg-white rounded-[2rem] group">
+            <CardContent className="pt-10 text-center space-y-6">
+              <div className="relative inline-block">
+                <Avatar className="h-28 w-28 mx-auto border-4 border-slate-50 shadow-inner">
+                  <AvatarImage src={storeData?.imageUrl || `https://picsum.photos/seed/${user?.uid}/200`} />
+                  <AvatarFallback className="bg-emerald-600 text-white font-black text-xl">
+                    {storeData?.managerName?.substring(0, 2).toUpperCase() || "JD"}
+                  </AvatarFallback>
+                </Avatar>
+                <Button 
+                  size="icon" 
+                  variant="outline" 
+                  className="absolute bottom-0 right-0 h-9 w-9 rounded-full bg-white border-slate-200 text-emerald-600 shadow-md hover:bg-emerald-50 transition-all"
+                  onClick={() => setIsPhotoDialogOpen(true)}
+                >
+                  <Camera className="h-4 w-4" />
+                </Button>
+              </div>
               <div>
-                <h3 className="text-xl font-bold text-slate-900">{storeData?.managerName || "New Manager"}</h3>
-                <p className="text-xs text-muted-foreground font-medium uppercase tracking-tight">
-                  {storeData?.name || "Unregistered Branch"}
+                <h3 className="text-xl font-black text-slate-900 uppercase italic tracking-tight">{storeData?.managerName || "New Controller"}</h3>
+                <p className="text-[10px] text-slate-400 font-black uppercase tracking-widest mt-1">
+                  {storeData?.name || "Pending Designation"}
                 </p>
               </div>
-              <Button 
-                variant="outline" 
-                className="w-full h-11 rounded-xl font-bold border-slate-200 text-slate-600"
-                onClick={() => setIsPhotoDialogOpen(true)}
-              >
-                Update Photo
-              </Button>
+              <div className="pt-2">
+                <Button 
+                  variant="outline" 
+                  className="w-full h-12 rounded-xl font-black uppercase tracking-widest text-[9px] border-slate-200 text-slate-600 hover:bg-emerald-50 hover:text-emerald-600 transition-all"
+                  onClick={() => setIsPhotoDialogOpen(true)}
+                >
+                  Update Visual ID
+                </Button>
+              </div>
             </CardContent>
           </Card>
 
           <Card className="border-none shadow-sm bg-white rounded-[2rem]">
-            <CardHeader className="pb-3">
-              <CardTitle className="text-[10px] font-black uppercase tracking-[0.3em] text-slate-400">Security Nodes</CardTitle>
+            <CardHeader className="pb-4">
+              <CardTitle className="text-[10px] font-black uppercase tracking-[0.3em] text-slate-400">Security Cluster</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
-                  <Fingerprint className="h-4 w-4 text-accent" />
-                  <span className="text-sm font-bold text-slate-600 uppercase">Secure UID</span>
+                  <Shield className="h-4 w-4 text-emerald-600" />
+                  <span className="text-[10px] font-black text-slate-600 uppercase tracking-widest">Node UID</span>
                 </div>
-                <div className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
+                <div className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
               </div>
               <div className="relative group">
-                <div className="text-[10px] text-slate-400 font-mono break-all bg-slate-50 p-4 rounded-xl border border-slate-100 pr-12">
+                <div className="text-[10px] text-slate-400 font-mono break-all bg-slate-50 p-5 rounded-xl border border-slate-100 pr-12 shadow-inner">
                   {user?.uid}
                 </div>
                 <Button 
                   size="icon" 
                   variant="ghost" 
-                  className="absolute right-1 top-1/2 -translate-y-1/2 h-8 w-8 text-slate-300 hover:text-primary"
+                  className="absolute right-2 top-1/2 -translate-y-1/2 h-8 w-8 text-slate-300 hover:text-emerald-600"
                   onClick={copyUid}
                 >
-                  {copied ? <Check className="h-3 w-3 text-emerald-500" /> : <Copy className="h-3 w-3" />}
+                  {copied ? <Check className="h-4 w-4 text-emerald-500" /> : <Copy className="h-4 w-4" />}
                 </Button>
               </div>
             </CardContent>
@@ -188,47 +203,47 @@ export default function ProfilePage() {
 
         <div className="md:col-span-2 space-y-6">
           <Card className="border-none shadow-sm bg-white rounded-[2.5rem]">
-            <CardHeader className="p-8 pb-0">
-              <CardTitle className="text-lg font-black uppercase italic tracking-tighter text-primary">Branch Registry</CardTitle>
-              <CardDescription className="font-medium">Your current information in the regional logistics network.</CardDescription>
+            <CardHeader className="p-10 pb-0">
+              <CardTitle className="text-xl font-black uppercase italic tracking-tighter text-emerald-600">Branch Registry</CardTitle>
+              <CardDescription className="font-medium text-slate-500">Official regional node credentials stored in the Aether Network.</CardDescription>
             </CardHeader>
-            <CardContent className="p-8 space-y-6">
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+            <CardContent className="p-10 space-y-8">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-8">
                 <div className="space-y-2">
-                  <Label className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-1">Manager Identity</Label>
+                  <Label className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-1">Controller Signature</Label>
                   <div className="relative">
-                    <UserIcon className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-primary opacity-30" />
-                    <Input readOnly value={storeData?.managerName || ""} className="pl-12 h-14 bg-slate-50 border-none rounded-2xl font-bold" />
+                    <UserIcon className="absolute left-5 top-1/2 -translate-y-1/2 h-4 w-4 text-emerald-600 opacity-30" />
+                    <Input readOnly value={storeData?.managerName || ""} className="pl-14 h-14 bg-slate-50 border-none rounded-xl font-bold text-slate-900" />
                   </div>
                 </div>
                 <div className="space-y-2">
-                  <Label className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-1">Contact Email</Label>
+                  <Label className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-1">Comms Signal (Email)</Label>
                   <div className="relative">
-                    <Mail className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-primary opacity-30" />
-                    <Input readOnly value={storeData?.email || user?.email || ""} className="pl-12 h-14 bg-slate-50 border-none rounded-2xl font-bold" />
+                    <Mail className="absolute left-5 top-1/2 -translate-y-1/2 h-4 w-4 text-emerald-600 opacity-30" />
+                    <Input readOnly value={storeData?.email || user?.email || ""} className="pl-14 h-14 bg-slate-50 border-none rounded-xl font-bold text-slate-900" />
                   </div>
                 </div>
               </div>
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-8">
                 <div className="space-y-2">
-                  <Label className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-1">Branch Designation</Label>
+                  <Label className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-1">Node Designation</Label>
                   <div className="relative">
-                    <Building className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-primary opacity-30" />
-                    <Input readOnly value={storeData?.name || "Pending..."} className="pl-12 h-14 bg-slate-50 border-none rounded-2xl font-bold" />
+                    <Building className="absolute left-5 top-1/2 -translate-y-1/2 h-4 w-4 text-emerald-600 opacity-30" />
+                    <Input readOnly value={storeData?.name || "Awaiting Name..."} className="pl-14 h-14 bg-slate-50 border-none rounded-xl font-bold text-slate-900" />
                   </div>
                 </div>
                 <div className="space-y-2">
-                  <Label className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-1">Node Location</Label>
+                  <Label className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-1">Grid Coordinate (Location)</Label>
                   <div className="relative">
-                    <MapPin className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-primary opacity-30" />
-                    <Input readOnly value={storeData?.location || "Not Set"} className="pl-12 h-14 bg-slate-50 border-none rounded-2xl font-bold" />
+                    <MapPin className="absolute left-5 top-1/2 -translate-y-1/2 h-4 w-4 text-emerald-600 opacity-30" />
+                    <Input readOnly value={storeData?.location || "Node Not Set"} className="pl-14 h-14 bg-slate-50 border-none rounded-xl font-bold text-slate-900" />
                   </div>
                 </div>
               </div>
             </CardContent>
-            <CardFooter className="p-8 border-t border-slate-50 pt-6 flex justify-end items-center bg-slate-50/30">
-               <Button className="bg-primary hover:bg-primary/90 rounded-2xl font-black h-12 px-8 uppercase tracking-widest text-[10px]">Commit Changes</Button>
+            <CardFooter className="p-10 border-t border-slate-50 pt-8 flex justify-end items-center bg-slate-50/20">
+               <Button className="bg-emerald-600 hover:bg-emerald-700 rounded-xl font-black h-12 px-10 uppercase tracking-widest text-[10px] shadow-lg shadow-emerald-50">Commit Registry Updates</Button>
             </CardFooter>
           </Card>
         </div>
@@ -240,10 +255,10 @@ export default function ProfilePage() {
       }}>
         <DialogContent className="rounded-[2.5rem] border-none p-10 bg-white max-w-md shadow-2xl">
           <DialogHeader>
-            <DialogTitle className="text-2xl font-black text-primary uppercase italic tracking-tighter">Update Visual ID</DialogTitle>
+            <DialogTitle className="text-2xl font-black text-emerald-600 uppercase italic tracking-tighter">Identity Signature</DialogTitle>
           </DialogHeader>
-          <div className="space-y-6 py-6 flex flex-col items-center">
-            <div className="relative h-48 w-48 rounded-full overflow-hidden bg-slate-100 border-4 border-primary/10 shadow-inner group">
+          <div className="space-y-8 py-6 flex flex-col items-center">
+            <div className="relative h-56 w-56 rounded-full overflow-hidden bg-slate-50 border-4 border-emerald-50 shadow-inner group">
               {isCameraActive ? (
                 <video ref={videoRef} className="h-full w-full object-cover" autoPlay muted playsInline />
               ) : previewUrl ? (
@@ -256,24 +271,24 @@ export default function ProfilePage() {
             <div className="flex flex-col w-full gap-3">
               {!isCameraActive ? (
                 <>
-                  <Button variant="secondary" className="h-12 rounded-xl font-black uppercase text-[10px] tracking-widest bg-primary text-white" onClick={startCamera}>
+                  <Button variant="secondary" className="h-14 rounded-xl font-black uppercase text-[10px] tracking-widest bg-emerald-600 text-white shadow-md hover:bg-emerald-700" onClick={startCamera}>
                     <Camera className="h-4 w-4 mr-2" /> Start Lens
                   </Button>
-                  <Button variant="outline" className="h-12 rounded-xl font-black uppercase text-[10px] tracking-widest border-slate-200" onClick={() => fileInputRef.current?.click()}>
+                  <Button variant="outline" className="h-14 rounded-xl font-black uppercase text-[10px] tracking-widest border-slate-200 text-slate-600" onClick={() => fileInputRef.current?.click()}>
                     <Upload className="h-4 w-4 mr-2" /> Upload Photo
                   </Button>
                   <input type="file" ref={fileInputRef} className="hidden" accept="image/*" onChange={handleFileUpload} />
                 </>
               ) : (
-                <Button className="h-12 rounded-xl font-black uppercase text-[10px] tracking-widest bg-emerald-500 text-white" onClick={capturePhoto}>
+                <Button className="h-14 rounded-xl font-black uppercase text-[10px] tracking-widest bg-emerald-500 text-white shadow-lg" onClick={capturePhoto}>
                   Capture Frame
                 </Button>
               )}
             </div>
           </div>
-          <DialogFooter className="gap-3">
+          <DialogFooter className="gap-3 pt-4">
             <Button variant="ghost" className="h-12 rounded-xl font-black uppercase text-[10px] tracking-widest text-slate-400" onClick={() => setIsPhotoDialogOpen(false)}>Abort</Button>
-            <Button className="h-12 rounded-xl font-black uppercase text-[10px] tracking-widest bg-primary text-white px-8" onClick={savePhoto} disabled={!previewUrl}>Commit Update</Button>
+            <Button className="h-12 rounded-xl font-black uppercase text-[10px] tracking-widest bg-slate-900 text-white px-10" onClick={savePhoto} disabled={!previewUrl}>Authorize Update</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>

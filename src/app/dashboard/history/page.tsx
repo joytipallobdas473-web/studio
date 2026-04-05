@@ -5,7 +5,7 @@ import { collection, query, where } from "firebase/firestore";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
-import { Search, Filter, ArrowUpDown, Clock, Truck, PackageCheck, XCircle, Loader2, Phone, MapPin, Banknote, CreditCard } from "lucide-react";
+import { Search, Filter, ArrowUpDown, Clock, Truck, PackageCheck, XCircle, Loader2, Phone, MapPin, Banknote, CreditCard, BoxSelect } from "lucide-react";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { useState, useMemo } from "react";
 import { format } from "date-fns";
@@ -56,96 +56,113 @@ export default function HistoryPage() {
 
   const getStatusColor = (status: string) => {
     switch ((status || "").toLowerCase()) {
-      case "delivered": return "text-green-700 bg-green-50 border-green-200";
-      case "processing": return "text-blue-700 bg-blue-50 border-blue-200";
-      case "pending": return "text-yellow-700 bg-yellow-50 border-yellow-200";
-      case "shipped": return "text-purple-700 bg-purple-50 border-purple-200";
-      case "cancelled": return "text-red-700 bg-red-50 border-red-200";
-      default: return "text-gray-700 bg-gray-50 border-gray-200";
+      case "delivered": return "text-emerald-700 bg-emerald-50 border-emerald-200";
+      case "processing": return "text-sky-700 bg-sky-50 border-sky-200";
+      case "pending": return "text-amber-700 bg-amber-50 border-amber-200";
+      case "shipped": return "text-blue-700 bg-blue-50 border-blue-200";
+      case "cancelled": return "text-rose-700 bg-rose-50 border-rose-200";
+      default: return "text-slate-700 bg-slate-50 border-slate-200";
     }
   };
 
   if (loading) {
     return (
       <div className="flex h-[400px] items-center justify-center">
-        <Loader2 className="h-8 w-8 animate-spin text-primary opacity-50" />
+        <Loader2 className="h-10 w-10 animate-spin text-emerald-600 opacity-30" />
       </div>
     );
   }
 
   return (
-    <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
-      <div className="space-y-1">
-        <h1 className="text-3xl font-bold text-primary tracking-tight italic uppercase">Order Registry</h1>
-        <p className="text-muted-foreground font-medium">Comprehensive history of reorder packets for this node.</p>
+    <div className="space-y-8 animate-in fade-in duration-700">
+      <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
+        <div className="space-y-1">
+          <div className="flex items-center gap-2">
+             <div className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
+             <span className="text-[10px] font-black tracking-[0.4em] text-emerald-600 uppercase">Telemetry Registry</span>
+          </div>
+          <h1 className="text-3xl font-black text-slate-900 tracking-tight italic uppercase">Packet History</h1>
+          <p className="text-slate-500 font-medium text-sm">Comprehensive log of reorder packets for this branch node.</p>
+        </div>
+        <div className="flex gap-3">
+           <Badge variant="outline" className="h-10 px-4 rounded-xl border-slate-200 text-slate-500 font-bold uppercase tracking-widest text-[9px] bg-white">
+             {orders.length} Packets Logged
+           </Badge>
+        </div>
       </div>
 
-      <div className="flex flex-col md:flex-row gap-4 items-center bg-white p-6 rounded-[2rem] shadow-sm border border-slate-100">
+      <div className="flex flex-col md:flex-row gap-4 items-center bg-white p-5 rounded-2xl shadow-sm border border-slate-200/60">
         <div className="relative flex-1">
           <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
           <Input 
-            placeholder="Filter by ID, Item, Phone, or Address..." 
-            className="pl-11 h-12 bg-slate-50 border-none rounded-xl font-medium" 
+            placeholder="Search by ID, Product, or Location..." 
+            className="pl-11 h-12 bg-slate-50 border-none rounded-xl font-bold text-slate-900 placeholder:text-slate-400" 
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
           />
         </div>
         <div className="flex gap-2 w-full md:w-auto">
-          <Badge variant="outline" className="h-12 px-5 cursor-pointer hover:bg-slate-50 flex items-center gap-2 rounded-xl border-slate-100 text-[10px] font-black uppercase tracking-widest text-slate-500">
-            <Filter className="h-4 w-4 opacity-50" /> Filter
-          </Badge>
-          <Badge variant="outline" className="h-12 px-5 cursor-pointer hover:bg-slate-50 flex items-center gap-2 rounded-xl border-slate-100 text-[10px] font-black uppercase tracking-widest text-slate-500">
-            <ArrowUpDown className="h-4 w-4 opacity-50" /> Sort
-          </Badge>
+          <Button variant="outline" className="h-12 px-6 rounded-xl border-slate-200 text-slate-500 font-black uppercase tracking-widest text-[9px] bg-white hover:bg-slate-50">
+            <Filter className="h-4 w-4 mr-2 opacity-50" /> Filter
+          </Button>
+          <Button variant="outline" className="h-12 px-6 rounded-xl border-slate-200 text-slate-500 font-black uppercase tracking-widest text-[9px] bg-white hover:bg-slate-50">
+            <ArrowUpDown className="h-4 w-4 mr-2 opacity-50" /> Sort
+          </Button>
         </div>
       </div>
 
-      <Card className="border-none shadow-sm overflow-hidden rounded-[2.5rem] bg-white">
+      <Card className="border-none shadow-sm overflow-hidden rounded-[2rem] bg-white">
         <CardContent className="p-0">
           <Table>
-            <TableHeader className="bg-slate-50/50 h-16">
+            <TableHeader className="bg-slate-50/50 h-14">
               <TableRow className="border-slate-100">
-                <TableHead className="font-black uppercase text-[10px] tracking-[0.2em] pl-8">Packet Signature</TableHead>
-                <TableHead className="font-black uppercase text-[10px] tracking-[0.2em]">Contact & Payment</TableHead>
-                <TableHead className="font-black uppercase text-[10px] tracking-[0.2em]">Payload</TableHead>
-                <TableHead className="font-black uppercase text-[10px] tracking-[0.2em]">Net Value</TableHead>
-                <TableHead className="font-black uppercase text-[10px] tracking-[0.2em] pr-8">Flow Status</TableHead>
+                <TableHead className="font-black uppercase text-[10px] tracking-[0.2em] pl-8">Signature</TableHead>
+                <TableHead className="font-black uppercase text-[10px] tracking-[0.2em]">Deployment Details</TableHead>
+                <TableHead className="font-black uppercase text-[10px] tracking-[0.2em]">Payload Data</TableHead>
+                <TableHead className="font-black uppercase text-[10px] tracking-[0.2em]">Valuation</TableHead>
+                <TableHead className="font-black uppercase text-[10px] tracking-[0.2em] pr-8 text-right">Status</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {filteredOrders && filteredOrders.length > 0 ? filteredOrders.map((order) => (
-                <TableRow key={order.id} className="hover:bg-slate-50/50 transition-colors h-24 border-slate-100">
-                  <TableCell className="font-mono font-bold text-primary text-[11px] uppercase pl-8">
-                    {order.id.substring(0, 8)}
-                    <p className="text-[9px] text-slate-400 font-bold uppercase tracking-tighter mt-1">
-                      {order.createdAt?.seconds ? format(order.createdAt.seconds * 1000, 'yyyy-MM-dd') : 'SYNCING'}
-                    </p>
+                <TableRow key={order.id} className="hover:bg-slate-50/50 transition-colors h-24 border-slate-100 group">
+                  <TableCell className="pl-8">
+                    <div className="flex flex-col">
+                      <span className="font-mono font-black text-emerald-600 text-xs tracking-widest uppercase">#{order.id.substring(0, 8)}</span>
+                      <span className="text-[9px] text-slate-400 font-bold uppercase tracking-widest mt-1">
+                        {order.createdAt?.seconds ? format(order.createdAt.seconds * 1000, 'yyyy-MM-dd') : 'PENDING'}
+                      </span>
+                    </div>
                   </TableCell>
                   <TableCell>
                     <div className="flex flex-col gap-1 py-4">
                       <div className="flex items-center gap-3">
                         <div className="flex items-center gap-1.5 text-xs font-bold text-slate-600">
-                          <Phone className="h-3 w-3 text-primary opacity-50" />
+                          <Phone className="h-3 w-3 text-emerald-600 opacity-50" />
                           {order.phoneNumber || "N/A"}
                         </div>
                         <Badge variant="secondary" className="h-5 px-2 text-[8px] font-black uppercase bg-slate-100 text-slate-500 border-none">
                           {order.paymentMethod === 'cash' ? <Banknote className="h-2 w-2 mr-1" /> : <CreditCard className="h-2 w-2 mr-1" />}
-                          {order.paymentMethod === 'after_delivery' ? 'AFTER DEL' : 'CASH'}
+                          {order.paymentMethod === 'after_delivery' ? 'CREDIT' : 'CASH'}
                         </Badge>
                       </div>
                       <div className="flex items-start gap-2 text-[10px] text-slate-400 font-medium max-w-[200px]">
-                        <MapPin className="h-3 w-3 shrink-0 text-accent opacity-50" />
-                        <span className="truncate">{order.deliveryAddress || "Not Provided"}</span>
+                        <MapPin className="h-3 w-3 shrink-0 text-emerald-600/40" />
+                        <span className="truncate">{order.deliveryAddress || "Branch Node Coordinate"}</span>
                       </div>
                     </div>
                   </TableCell>
-                  <TableCell className="font-bold text-slate-800 text-sm uppercase italic">
-                    {order.items || 'Restock Packet'}
-                    <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest mt-0.5">Qty: {order.quantity || 1}</p>
+                  <TableCell>
+                    <div className="space-y-0.5">
+                      <span className="font-black text-slate-800 text-xs uppercase italic group-hover:text-emerald-600 transition-colors">{order.items || 'Restock Packet'}</span>
+                      <p className="text-[9px] text-slate-400 font-black uppercase tracking-widest">Qty: {order.quantity || 1}</p>
+                    </div>
                   </TableCell>
-                  <TableCell className="font-black text-primary text-base tracking-tight">₹{(order.total || 0).toFixed(2)}</TableCell>
-                  <TableCell className="pr-8">
-                    <Badge variant="outline" className={`capitalize flex items-center w-fit h-8 px-4 text-[9px] font-black tracking-[0.1em] rounded-xl ${getStatusColor(order.status)}`}>
+                  <TableCell className="font-black text-slate-900 text-base tracking-tighter italic font-mono">
+                    ₹{(order.total || 0).toFixed(0)}
+                  </TableCell>
+                  <TableCell className="pr-8 text-right">
+                    <Badge variant="outline" className={`capitalize inline-flex items-center h-8 px-4 text-[9px] font-black tracking-widest rounded-lg border shadow-none ${getStatusColor(order.status)}`}>
                       {getStatusIcon(order.status)}
                       {order.status}
                     </Badge>
@@ -153,8 +170,9 @@ export default function HistoryPage() {
                 </TableRow>
               )) : (
                 <TableRow>
-                  <TableCell colSpan={5} className="text-center py-32 text-slate-400 italic font-medium">
-                    No order telemetry detected in history logs.
+                  <TableCell colSpan={5} className="text-center py-32 text-slate-300">
+                    <BoxSelect className="h-16 w-16 mx-auto mb-4 opacity-10" />
+                    <p className="font-black uppercase tracking-[0.4em] text-[10px] italic">Telemetry Log Empty</p>
                   </TableCell>
                 </TableRow>
               )}

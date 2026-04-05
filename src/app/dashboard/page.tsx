@@ -27,7 +27,8 @@ import {
   Layers,
   Sparkles,
   Minus,
-  Plus
+  Plus,
+  ArrowUpRight
 } from "lucide-react";
 import Link from "next/link";
 import { Badge } from "@/components/ui/badge";
@@ -154,33 +155,33 @@ export default function DashboardPage() {
       label: "Open Request", 
       value: orders?.filter(o => o.status === 'pending')?.length?.toString() || "0", 
       icon: ShoppingCart, 
-      color: "text-indigo-600", 
-      bg: "bg-indigo-50" 
+      color: "text-emerald-600", 
+      bg: "bg-emerald-50" 
     },
     { 
       label: "In Transit", 
       value: orders?.filter(o => o.status === 'shipped')?.length?.toString() || "0", 
       icon: Truck, 
-      color: "text-blue-600", 
-      bg: "bg-blue-50" 
+      color: "text-sky-600", 
+      bg: "bg-sky-50" 
     },
     { 
-      label: "Node Sync", 
+      label: "Completed Sync", 
       value: orders?.filter(o => o.status === 'delivered')?.length?.toString() || "0", 
       icon: PackageCheck, 
-      color: "text-emerald-600", 
-      bg: "bg-emerald-50" 
+      color: "text-emerald-700", 
+      bg: "bg-emerald-100/50" 
     },
   ], [orders]);
 
   const getStatusColor = (status: string) => {
     switch ((status || "").toLowerCase()) {
-      case "delivered": return "text-emerald-600 bg-emerald-50 border-emerald-100";
-      case "processing": return "text-indigo-600 bg-indigo-50 border-indigo-100";
-      case "pending": return "text-amber-600 bg-amber-50 border-amber-100";
-      case "shipped": return "text-blue-600 bg-blue-50 border-blue-100";
-      case "cancelled": return "text-rose-600 bg-rose-50 border-rose-100";
-      case "return_pending": return "text-orange-600 bg-orange-50 border-orange-100";
+      case "delivered": return "text-emerald-700 bg-emerald-100 border-emerald-200";
+      case "processing": return "text-sky-700 bg-sky-50 border-sky-100";
+      case "pending": return "text-amber-700 bg-amber-50 border-amber-100";
+      case "shipped": return "text-blue-700 bg-blue-50 border-blue-100";
+      case "cancelled": return "text-rose-700 bg-rose-50 border-rose-100";
+      case "return_pending": return "text-orange-700 bg-orange-50 border-orange-100";
       default: return "text-slate-500 bg-slate-100 border-slate-200";
     }
   };
@@ -211,7 +212,7 @@ export default function DashboardPage() {
       .then(() => {
         setIsSubmittingReturn(false);
         setIsReturnDialogOpen(false);
-        toast({ title: "Damage Log Recorded", description: `${qty} units flagged for credit.` });
+        toast({ title: "Damage Log Recorded", description: `${qty} units flagged for audit.` });
       })
       .catch(() => {
         setIsSubmittingReturn(false);
@@ -222,154 +223,103 @@ export default function DashboardPage() {
   if (!isClient || authLoading || storeLoading || ordersLoading || productsLoading) {
     return (
       <div className="flex h-[60vh] items-center justify-center">
-        <Loader2 className="h-10 w-10 animate-spin text-primary opacity-30" />
+        <Loader2 className="h-10 w-10 animate-spin text-emerald-600 opacity-30" />
       </div>
     );
   }
 
   return (
-    <div className="space-y-10 animate-in fade-in duration-1000 pb-20">
-      {/* Header Protocol */}
-      <div className="relative">
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-10 bg-white p-10 rounded-[3rem] border border-slate-200 shadow-sm overflow-hidden">
-          <div className="space-y-4 relative z-10">
-            <div className="flex items-center gap-4">
-               <div className="p-3 bg-indigo-50 rounded-2xl">
-                 <Cpu className="h-6 w-6 text-indigo-600" />
-               </div>
-               <h1 className="text-4xl font-black text-slate-900 uppercase tracking-tighter leading-none">Branch Node</h1>
-               {store && (
-                <Badge variant="outline" className="font-black text-[9px] uppercase tracking-widest text-indigo-600 border-indigo-100 px-3 py-1 bg-indigo-50/50">
-                  ID: {store.id.substring(0, 6)}
-                </Badge>
-              )}
-            </div>
-            <p className="text-slate-500 font-medium text-lg leading-none">
-              Node Designation: <span className="text-indigo-600 font-black italic">{store?.name || "Aether Hub"}</span>
-            </p>
+    <div className="space-y-8 animate-in fade-in duration-700 pb-20">
+      {/* Dynamic Command Header */}
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-8 bg-white p-8 rounded-[2rem] border border-slate-200 shadow-sm relative overflow-hidden group">
+        <div className="absolute top-0 right-0 w-64 h-64 bg-emerald-50 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2 opacity-50 group-hover:opacity-100 transition-opacity" />
+        
+        <div className="space-y-2 relative z-10">
+          <div className="flex items-center gap-3">
+             <div className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
+             <span className="text-[10px] font-black tracking-[0.4em] text-emerald-600 uppercase">Live Branch Node</span>
           </div>
-          <div className="flex items-center gap-4 w-full md:w-auto relative z-10">
-            <Link href="/dashboard/order" className="flex-1 md:flex-none">
-              <Button className="w-full h-16 bg-indigo-600 hover:bg-indigo-700 text-white font-black rounded-2xl px-10 uppercase tracking-widest text-[10px] border-none shadow-xl shadow-indigo-200">
-                <PlusCircle className="mr-3 h-5 w-5" />
-                Initialize Provision
-              </Button>
-            </Link>
-            <TooltipProvider>
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <Button 
-                    variant="outline" 
-                    size="icon"
-                    onClick={() => setIsReturnDialogOpen(true)}
-                    className="h-16 w-16 rounded-2xl border-slate-200 bg-white text-slate-400 hover:text-indigo-600 transition-all shrink-0 shadow-sm"
-                  >
-                    <Undo2 className="h-5 w-5" />
-                  </Button>
-                </TooltipTrigger>
-                <TooltipContent className="bg-slate-900 text-white font-black text-[9px] uppercase tracking-widest p-3 rounded-xl">
-                  Damage Report Protocol
-                </TooltipContent>
-              </Tooltip>
-            </TooltipProvider>
-          </div>
+          <h1 className="text-3xl font-black text-slate-900 tracking-tighter uppercase italic leading-none">
+            {store?.name || "Aether Branch"}
+          </h1>
+          <p className="text-slate-500 font-medium text-sm flex items-center gap-2">
+            Regional Designation: <Badge variant="outline" className="rounded-lg text-[9px] font-bold uppercase tracking-widest text-emerald-600 border-emerald-100 px-2 py-0.5">{store?.id.substring(0, 8)}</Badge>
+          </p>
+        </div>
+
+        <div className="flex items-center gap-3 w-full md:w-auto relative z-10">
+          <Link href="/dashboard/order" className="flex-1 md:flex-none">
+            <Button className="w-full h-14 bg-emerald-600 hover:bg-emerald-700 text-white font-black rounded-xl px-8 uppercase tracking-widest text-[10px] shadow-lg shadow-emerald-100 border-none transition-all hover:scale-[1.02]">
+              <PlusCircle className="mr-2 h-4 w-4" />
+              New Provision
+            </Button>
+          </Link>
+          <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button 
+                  variant="outline" 
+                  size="icon"
+                  onClick={() => setIsReturnDialogOpen(true)}
+                  className="h-14 w-14 rounded-xl border-slate-200 bg-white text-slate-400 hover:text-emerald-600 transition-all shrink-0"
+                >
+                  <Undo2 className="h-5 w-5" />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent className="bg-slate-900 text-white text-[10px] font-bold uppercase tracking-widest p-2 rounded-lg">
+                Report Damage
+              </TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
         </div>
       </div>
 
-      {/* Stats Cluster */}
+      {/* Grid Status Stats */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         {stats.map((stat, i) => (
-          <Card className="border-none shadow-sm bg-white rounded-[2.5rem] overflow-hidden hover:shadow-md transition-all duration-500 group" key={i}>
-            <CardHeader className="flex flex-row items-center justify-between p-8 pb-4">
-              <span className="text-[9px] font-black uppercase tracking-[0.4em] text-slate-400">{stat.label}</span>
-              <div className={cn(stat.bg, stat.color, "p-3 rounded-2xl transition-transform group-hover:scale-110")}>
-                <stat.icon className="h-4 w-4" />
+          <Card className="border-none shadow-sm bg-white rounded-2xl overflow-hidden hover:shadow-md transition-all group" key={i}>
+            <CardContent className="p-6">
+              <div className="flex items-center justify-between mb-4">
+                <span className="text-[10px] font-black uppercase tracking-[0.3em] text-slate-400">{stat.label}</span>
+                <div className={cn(stat.bg, stat.color, "p-2.5 rounded-xl group-hover:scale-110 transition-transform")}>
+                  <stat.icon className="h-4 w-4" />
+                </div>
               </div>
-            </CardHeader>
-            <CardContent className="px-8 pb-8">
-              <div className="text-4xl font-black text-slate-900 tracking-tighter italic">{stat.value}</div>
-              <div className="flex items-center gap-2 mt-4">
-                 <div className="h-1 w-full bg-slate-50 rounded-full overflow-hidden">
-                    <div className="h-full bg-indigo-100 w-3/4 rounded-full" />
-                 </div>
+              <div className="text-3xl font-black text-slate-900 tracking-tighter italic">{stat.value}</div>
+              <div className="flex items-center gap-1.5 mt-4 text-[9px] font-bold text-emerald-600 uppercase tracking-widest">
+                <Activity className="h-3 w-3" /> Sync Active
               </div>
             </CardContent>
           </Card>
         ))}
       </div>
 
-      {/* Main Grid */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-10">
-        {/* Provision Cluster */}
-        <Card className="bg-slate-900 text-white shadow-2xl border-none rounded-[3rem] overflow-hidden flex flex-col group/catalog">
-          <CardHeader className="bg-white/5 p-8 pb-6 border-b border-white/5">
-            <CardTitle className="text-xl font-black flex items-center gap-4 uppercase italic tracking-tighter">
-              <Package className="h-6 w-6 text-indigo-400" />
-              Provision Registry
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="p-8 flex-1">
-            <div className="grid grid-cols-2 gap-4">
-              {productsList.length > 0 ? productsList.map((product) => {
-                const img = (product.imageUrls || []).filter(u => !!u)[0] || product.imageUrl || `https://picsum.photos/seed/${product.id}/100/100`;
-                let Icon = Package;
-                if (product.category === 'Electronics') Icon = Smartphone;
-                else if (product.category === 'Apparel') Icon = Shirt;
-                else if (product.category === 'Grocery') Icon = Apple;
-                else if (product.category === 'Office Supplies') Icon = Briefcase;
-
-                return (
-                  <Link key={product.id} href="/dashboard/order" className="group">
-                    <div className="flex flex-col items-center gap-3 p-4 bg-white/5 hover:bg-white/10 border border-white/5 rounded-2xl transition-all cursor-pointer h-full">
-                      <div className="relative h-16 w-16 rounded-xl overflow-hidden shrink-0 bg-white/10 flex items-center justify-center group-hover:scale-110 transition-transform">
-                        <img src={img} alt={product.name} className="h-full w-full object-cover" />
-                        <div className="absolute -bottom-1 -right-1 bg-indigo-600 p-1 rounded-lg border border-black/50">
-                          <Icon className="h-2.5 w-2.5 text-white" />
-                        </div>
-                      </div>
-                      <p className="font-black text-[9px] uppercase tracking-tighter italic truncate w-full text-center opacity-60 group-hover:text-indigo-400 group-hover:opacity-100 transition-all">{product.name}</p>
-                    </div>
-                  </Link>
-                );
-              }) : (
-                <p className="text-[9px] text-center font-black opacity-30 uppercase tracking-widest col-span-2 py-12">Registry Offline</p>
-              )}
-            </div>
-          </CardContent>
-          <CardFooter className="p-8 pt-0">
-            <Link href="/dashboard/order" className="w-full">
-              <Button className="w-full h-14 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl shadow-xl font-black uppercase tracking-widest text-[9px] hover:scale-[1.02] transition-all">
-                Access Catalog <ArrowRight className="ml-2 h-4 w-4" />
-              </Button>
-            </Link>
-          </CardFooter>
-        </Card>
-
-        {/* Analytics & Traffic */}
-        <div className="lg:col-span-2 space-y-10">
-           <Card className="border-none bg-white rounded-[3rem] overflow-hidden shadow-sm group">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        {/* Operations Hub */}
+        <div className="lg:col-span-2 space-y-8">
+           <Card className="border-none bg-white rounded-[2rem] overflow-hidden shadow-sm">
              <CardHeader className="p-8 pb-4">
                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-4 text-slate-900">
-                    <BarChart3 className="h-5 w-5 text-indigo-600" />
-                    <CardTitle className="text-xl font-black uppercase italic tracking-tighter">Procurement Insights</CardTitle>
+                  <div className="flex items-center gap-3">
+                    <BarChart3 className="h-5 w-5 text-emerald-600" />
+                    <CardTitle className="text-lg font-black uppercase italic tracking-tighter text-slate-900">Procurement Audit</CardTitle>
                   </div>
-                  <Badge variant="secondary" className="text-[8px] font-black uppercase tracking-widest px-3 py-1 bg-slate-50 text-slate-400 border-none">7 Cycle Audit</Badge>
+                  <Badge variant="secondary" className="text-[8px] font-bold uppercase tracking-widest bg-slate-50 text-slate-400 border-none">7 Cycle Log</Badge>
                </div>
              </CardHeader>
              <CardContent className="p-8 pt-0">
-                <div className="h-[200px] w-full">
+                <div className="h-[220px] w-full">
                   <ResponsiveContainer width="100%" height="100%">
                     <BarChart data={chartData}>
                       <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{fill: '#94a3b8', fontSize: 10, fontWeight: 800}} dy={10} />
                       <RechartsTooltip 
                         cursor={{fill: 'rgba(0,0,0,0.02)'}}
-                        contentStyle={{borderRadius: '16px', border: 'none', boxShadow: '0 10px 30px rgba(0,0,0,0.05)'}}
+                        contentStyle={{borderRadius: '12px', border: 'none', boxShadow: '0 10px 30px rgba(0,0,0,0.05)'}}
                         labelStyle={{fontWeight: 900, fontSize: '10px', textTransform: 'uppercase'}}
                       />
                       <Bar dataKey="spent" radius={[4, 4, 4, 4]}>
                         {chartData.map((entry, index) => (
-                          <Cell key={`cell-${index}`} fill={index === chartData.length - 1 ? '#4f46e5' : '#e2e8f0'} />
+                          <Cell key={`cell-${index}`} fill={index === chartData.length - 1 ? '#059669' : '#e2e8f0'} />
                         ))}
                       </Bar>
                     </BarChart>
@@ -378,100 +328,133 @@ export default function DashboardPage() {
              </CardContent>
            </Card>
 
-           <Card className="shadow-sm border border-slate-200 bg-white rounded-[3rem] overflow-hidden">
-            <CardHeader className="border-b border-slate-100 p-8 flex flex-row items-center justify-between">
-              <div className="flex items-center gap-4 text-slate-900">
-                <Activity className="h-5 w-5 text-indigo-600" />
-                <CardTitle className="text-xl font-black uppercase italic tracking-tighter">Telemetry Logs</CardTitle>
+           <Card className="shadow-sm border-none bg-white rounded-[2rem] overflow-hidden">
+            <CardHeader className="border-b border-slate-50 p-8 flex flex-row items-center justify-between">
+              <div className="flex items-center gap-3 text-slate-900">
+                <Activity className="h-5 w-5 text-emerald-600" />
+                <CardTitle className="text-lg font-black uppercase italic tracking-tighter">Live Telemetry</CardTitle>
               </div>
-              <div className="flex items-center gap-2">
-                 <div className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse shadow-[0_0_8px_#10b981]" />
-                 <span className="text-[8px] font-black uppercase tracking-widest text-emerald-600">Active Stream</span>
-              </div>
+              <Link href="/dashboard/history">
+                <Button variant="ghost" size="sm" className="text-[10px] font-black uppercase tracking-widest text-emerald-600 hover:bg-emerald-50">
+                  Full Log <ChevronRight className="ml-1 h-3 w-3" />
+                </Button>
+              </Link>
             </CardHeader>
             <CardContent className="p-0">
               <div className="divide-y divide-slate-50">
-                {orders.length > 0 ? orders.slice(0, 6).map((order) => (
-                  <div key={order.id} className="flex flex-col sm:flex-row sm:items-center justify-between p-8 hover:bg-slate-50 transition-all gap-6 group">
+                {orders.length > 0 ? orders.slice(0, 5).map((order) => (
+                  <div key={order.id} className="flex items-center justify-between p-6 hover:bg-slate-50 transition-all group">
                     <div className="space-y-1">
-                      <p className="font-black text-indigo-600 flex items-center gap-2 uppercase italic text-[10px] tracking-widest">
-                        PKT_{order.id.substring(0, 8)}
-                        <span className="text-[9px] font-bold text-slate-300">• {order.createdAt?.seconds ? format(order.createdAt.seconds * 1000, 'HH:mm') : 'SYNC'}</span>
-                      </p>
-                      <p className="text-sm font-black text-slate-700 uppercase tracking-tighter group-hover:text-indigo-600 transition-colors truncate max-w-[240px]">{order.items || 'Standard Packet'}</p>
+                      <div className="flex items-center gap-2">
+                        <span className="text-[9px] font-mono font-black text-emerald-600 uppercase tracking-widest">PKT-{order.id.substring(0, 6)}</span>
+                        <span className="text-[8px] font-bold text-slate-300 uppercase">{order.createdAt?.seconds ? format(order.createdAt.seconds * 1000, 'MMM dd') : 'SYNC'}</span>
+                      </div>
+                      <p className="text-sm font-bold text-slate-700 uppercase tracking-tight truncate max-w-[200px]">{order.items || 'Standard Packet'}</p>
                     </div>
-                    <div className="flex items-center justify-between sm:justify-end gap-10">
-                      <p className="text-lg font-black text-slate-900 font-mono tracking-tighter">₹{(order.total || 0).toFixed(0)}</p>
-                      <Badge className={cn("capitalize h-8 px-4 font-black rounded-xl text-[9px] tracking-widest uppercase border shadow-none", getStatusColor(order.status))}>
-                        {order.status === 'return_pending' ? 'DAMAGE' : order.status}
+                    <div className="flex items-center gap-6">
+                      <p className="text-sm font-black text-slate-900 font-mono tracking-tighter">₹{(order.total || 0).toFixed(0)}</p>
+                      <Badge className={cn("h-7 px-3 font-black rounded-lg text-[8px] tracking-widest uppercase border shadow-none", getStatusColor(order.status))}>
+                        {order.status}
                       </Badge>
                     </div>
                   </div>
                 )) : (
-                  <div className="py-24 text-center text-slate-200 font-black uppercase text-[10px] tracking-[0.5em] italic">Telemetry Stream Offline</div>
+                  <div className="py-20 text-center text-slate-200 font-black uppercase text-[10px] tracking-[0.5em] italic">Telemetry Stream Offline</div>
                 )}
-              </div>
-              <div className="p-8 border-t border-slate-100 bg-slate-50/50">
-                <Link href="/dashboard/history" className="block text-center">
-                  <Button variant="ghost" className="text-slate-400 font-black uppercase tracking-widest text-[9px] hover:text-indigo-600 hover:bg-white h-12 rounded-xl w-full transition-all">
-                    Full Log Registry <ChevronRight className="ml-2 h-4 w-4" />
-                  </Button>
-                </Link>
               </div>
             </CardContent>
           </Card>
         </div>
+
+        {/* Rapid Access Catalog */}
+        <Card className="bg-slate-900 text-white shadow-xl border-none rounded-[2.5rem] overflow-hidden flex flex-col h-full">
+          <CardHeader className="bg-white/5 p-8 border-b border-white/5">
+            <div className="flex items-center justify-between">
+              <CardTitle className="text-lg font-black flex items-center gap-3 uppercase italic tracking-tighter text-emerald-400">
+                <Package className="h-5 w-5" />
+                SKU Provision
+              </CardTitle>
+              <Badge className="bg-emerald-500 text-white border-none text-[8px] font-black uppercase px-2 py-0.5 rounded-lg">{productsList.length} Active</Badge>
+            </div>
+          </CardHeader>
+          <CardContent className="p-6 flex-1">
+            <div className="grid grid-cols-2 gap-3">
+              {productsList.length > 0 ? productsList.map((product) => {
+                const img = (product.imageUrls || []).filter(u => !!u)[0] || product.imageUrl || `https://picsum.photos/seed/${product.id}/100/100`;
+                return (
+                  <Link key={product.id} href="/dashboard/order" className="group">
+                    <div className="flex flex-col items-center gap-2 p-3 bg-white/5 hover:bg-white/10 border border-white/5 rounded-xl transition-all h-full">
+                      <div className="relative h-14 w-14 rounded-lg overflow-hidden shrink-0 bg-white/10 group-hover:scale-105 transition-transform">
+                        <img src={img} alt={product.name} className="h-full w-full object-cover" />
+                      </div>
+                      <p className="font-black text-[8px] uppercase tracking-tighter italic truncate w-full text-center opacity-60 group-hover:text-emerald-400 group-hover:opacity-100 transition-all">{product.name}</p>
+                    </div>
+                  </Link>
+                );
+              }) : (
+                <div className="col-span-2 py-12 text-center text-white/20 font-black uppercase text-[10px] tracking-widest">Registry Offline</div>
+              )}
+            </div>
+          </CardContent>
+          <CardFooter className="p-6 pt-0">
+            <Link href="/dashboard/order" className="w-full">
+              <Button className="w-full h-12 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl shadow-lg font-black uppercase tracking-widest text-[9px] border-none transition-all group">
+                Access Full Catalog <ArrowUpRight className="ml-2 h-3.5 w-3.5 group-hover:-translate-y-0.5 group-hover:translate-x-0.5 transition-transform" />
+              </Button>
+            </Link>
+          </CardFooter>
+        </Card>
       </div>
 
-      {/* Return Dialog Protocol */}
+      {/* Audit Modal Protocol */}
       <Dialog open={isReturnDialogOpen} onOpenChange={setIsReturnDialogOpen}>
-        <DialogContent className="rounded-[3rem] border-none p-10 bg-white max-w-2xl shadow-2xl">
-          <DialogHeader className="space-y-3">
-            <DialogTitle className="text-2xl font-black text-indigo-600 uppercase italic tracking-tighter flex items-center gap-3">
-              <Undo2 className="h-6 w-6" /> Damage Log Registry
+        <DialogContent className="rounded-[2.5rem] border-none p-8 bg-white max-w-xl shadow-2xl">
+          <DialogHeader className="space-y-2">
+            <DialogTitle className="text-xl font-black text-emerald-600 uppercase italic tracking-tighter flex items-center gap-3">
+              <Undo2 className="h-5 w-5" /> Damage Audit Registry
             </DialogTitle>
-            <DialogDescription className="font-medium text-slate-500 text-sm">
+            <DialogDescription className="font-medium text-slate-500 text-xs">
               Archive damaged SKU data for regional credit verification.
             </DialogDescription>
           </DialogHeader>
 
-          <div className="space-y-4 py-8">
+          <div className="py-6">
             {returnableProducts.length > 0 ? (
-              <div className="grid gap-4 max-h-[45vh] overflow-y-auto pr-4 custom-scrollbar">
+              <div className="space-y-3 max-h-[40vh] overflow-y-auto pr-2 custom-scrollbar">
                 {returnableProducts.map((item, idx) => (
-                  <div key={idx} className="flex flex-col sm:flex-row sm:items-center justify-between p-6 bg-slate-50 rounded-2xl border border-slate-100 group hover:border-indigo-200 transition-all gap-4">
-                    <div className="space-y-1">
-                      <h4 className="font-black text-slate-900 uppercase italic text-sm leading-tight">{item.name}</h4>
-                      <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Density: {item.totalQuantity} Units</p>
+                  <div key={idx} className="flex items-center justify-between p-4 bg-slate-50 rounded-xl border border-slate-100 hover:border-emerald-200 transition-all">
+                    <div className="space-y-0.5">
+                      <h4 className="font-black text-slate-900 uppercase italic text-xs leading-none">{item.name}</h4>
+                      <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest">Density: {item.totalQuantity} Units</p>
                     </div>
-                    <div className="flex items-center gap-4">
-                      <div className="flex items-center bg-white rounded-xl border border-slate-200 overflow-hidden h-10 shadow-sm">
-                        <button onClick={() => updateDamageQty(item.name, -1, item.totalQuantity)} className="px-3 hover:bg-slate-50 text-slate-400 hover:text-indigo-600"><Minus className="h-3.5 w-3.5" /></button>
-                        <span className="w-10 text-center font-black text-xs text-indigo-600">{damageReportQuantities[item.name] || 0}</span>
-                        <button onClick={() => updateDamageQty(item.name, 1, item.totalQuantity)} className="px-3 hover:bg-slate-50 text-slate-400 hover:text-indigo-600"><Plus className="h-3.5 w-3.5" /></button>
+                    <div className="flex items-center gap-3">
+                      <div className="flex items-center bg-white rounded-lg border border-slate-200 overflow-hidden h-8 shadow-sm">
+                        <button onClick={() => updateDamageQty(item.name, -1, item.totalQuantity)} className="px-2 hover:bg-slate-50 text-slate-400"><Minus className="h-3 w-3" /></button>
+                        <span className="w-8 text-center font-black text-xs text-emerald-600">{damageReportQuantities[item.name] || 0}</span>
+                        <button onClick={() => updateDamageQty(item.name, 1, item.totalQuantity)} className="px-2 hover:bg-slate-50 text-slate-400"><Plus className="h-3 w-3" /></button>
                       </div>
                       <Button 
                         size="sm" 
                         onClick={() => handleInitiateReturn(item)}
                         disabled={isSubmittingReturn || (damageReportQuantities[item.name] || 0) === 0}
-                        className="h-10 px-6 rounded-xl bg-slate-900 text-white font-black uppercase text-[9px] tracking-widest hover:bg-indigo-600 transition-all"
+                        className="h-8 px-4 rounded-lg bg-slate-900 text-white font-black uppercase text-[8px] tracking-widest hover:bg-emerald-600 transition-all"
                       >
-                        {isSubmittingReturn ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : "Log Entry"}
+                        {isSubmittingReturn ? <Loader2 className="h-3 w-3 animate-spin" /> : "Log Entry"}
                       </Button>
                     </div>
                   </div>
                 ))}
               </div>
             ) : (
-              <div className="text-center py-20 bg-slate-50 rounded-3xl border-2 border-dashed border-slate-200">
-                 <AlertCircle className="h-12 w-12 text-slate-200 mx-auto mb-4" />
-                 <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest italic">No Delivered Payloads Found</p>
+              <div className="text-center py-16 bg-slate-50 rounded-2xl border-2 border-dashed border-slate-200">
+                 <AlertCircle className="h-10 w-10 text-slate-200 mx-auto mb-3" />
+                 <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest italic">No Delivered Payloads Found</p>
               </div>
             )}
           </div>
 
-          <DialogFooter className="border-t border-slate-100 pt-8">
-            <Button variant="ghost" onClick={() => setIsReturnDialogOpen(false)} className="h-12 rounded-xl font-black uppercase tracking-widest text-[9px] text-slate-400 hover:text-rose-500">Terminate Protocol</Button>
+          <DialogFooter className="border-t border-slate-100 pt-6">
+            <Button variant="ghost" onClick={() => setIsReturnDialogOpen(false)} className="h-10 rounded-lg font-black uppercase tracking-widest text-[9px] text-slate-400 hover:text-rose-500">Close Protocol</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
