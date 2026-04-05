@@ -10,7 +10,7 @@ import { Button } from "@/components/ui/button";
 import { analyzeInventory, type InventoryAnalysisOutput } from "@/ai/flows/inventory-analyst";
 import { cn } from "@/lib/utils";
 import { toast } from "@/hooks/use-toast";
-import { Bar, BarChart, ResponsiveContainer, XAxis, YAxis, Tooltip, Cell } from "recharts";
+import { Bar, BarChart, ResponsiveContainer, XAxis, Tooltip, Cell } from "recharts";
 
 const MASTER_ADMIN_UID = "j96izCkggNcL002AHiJjzGb18Bf2";
 
@@ -54,7 +54,7 @@ export default function AdminOverview() {
     const lowStockCount = products?.filter(p => (p.stockQuantity || 0) < 10)?.length || 0;
 
     return [
-      { label: "New Node Request", value: pendingStoresCount.toString(), icon: Store, color: "text-blue-500", bg: "bg-blue-500/10" },
+      { label: "New store Request", value: pendingStoresCount.toString(), icon: Store, color: "text-blue-500", bg: "bg-blue-500/10" },
       { label: "Active SKUs", value: (products?.length || 0).toString(), icon: Package, color: "text-primary", bg: "bg-primary/10" },
       { label: "Order Traffic", value: activeOrdersCount.toString(), icon: ShoppingCart, color: "text-emerald-500", bg: "bg-emerald-500/10" },
       { label: "Inventory Risk", value: lowStockCount.toString(), icon: AlertCircle, color: "text-rose-500", bg: "bg-rose-500/10" },
