@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useEffect, useState } from "react";
@@ -71,8 +72,8 @@ export default function EntryGateway() {
              <span className="text-[9px] font-black uppercase tracking-[0.5em] text-white/60">Aether Grid v4.0 // Global Sync</span>
           </div>
           
-          <h1 className="text-6xl md:text-[9rem] font-black text-white tracking-tighter uppercase italic leading-[0.85] text-stroke transition-all duration-700">
-            NEO <br /> 
+          <h1 className="text-5xl md:text-[7rem] lg:text-[9rem] font-black text-white tracking-tighter uppercase italic leading-[0.85] text-stroke transition-all duration-700">
+            NORTH EAST <br /> 
             <span className={cn(
               "transition-all duration-1000",
               hoveredNode === "retail" ? "text-purple-500 drop-shadow-[0_0_50px_rgba(168,85,247,0.5)]" : 
