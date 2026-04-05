@@ -487,7 +487,7 @@ export default function NewOrderPage() {
                         onClick={() => addToCart(product)} 
                         disabled={!product.stockQuantity || product.stockQuantity <= 0}
                       >
-                        {!product.stockQuantity || product.stockQuantity <= 0 ? "Depleted" : "Initialize Curation"}
+                        {!product.stockQuantity || product.stockQuantity <= 0 ? "Depleted" : "Add to cart 🛒"}
                       </Button>
                     </CardFooter>
                   </Card>
