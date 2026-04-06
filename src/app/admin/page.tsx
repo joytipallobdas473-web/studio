@@ -11,6 +11,7 @@ import { analyzeInventory, type InventoryAnalysisOutput } from "@/ai/flows/inven
 import { cn } from "@/lib/utils";
 import { toast } from "@/hooks/use-toast";
 import { Bar, BarChart, ResponsiveContainer, XAxis, Tooltip, Cell } from "recharts";
+import { format, subDays, startOfDay, isSameDay } from "date-fns";
 
 const MASTER_ADMIN_UID = "j96izCkggNcL002AHiJjzGb18Bf2";
 
@@ -63,16 +64,24 @@ export default function AdminOverview() {
 
   const chartData = useMemo(() => {
     if (!orders) return [];
-    const last7Days = Array.from({ length: 7 }, (_, i) => {
-      const d = new Date();
-      d.setDate(d.getDate() - i);
-      return d.toLocaleDateString('en-IN', { weekday: 'short' });
-    }).reverse();
+    
+    // Generate last 7 days including today
+    const days = Array.from({ length: 7 }, (_, i) => subDays(new Date(), i)).reverse();
 
-    return last7Days.map(day => ({
-      name: day,
-      volume: Math.floor(Math.random() * 20) + 5, 
-    }));
+    return days.map(day => {
+      const dayLabel = format(day, 'eee');
+      // Filter orders that occurred on this specific day
+      const dayOrders = orders.filter(order => {
+        if (!order.createdAt?.seconds) return false;
+        const orderDate = new Date(order.createdAt.seconds * 1000);
+        return isSameDay(orderDate, day);
+      });
+
+      return {
+        name: dayLabel,
+        volume: dayOrders.length,
+      };
+    });
   }, [orders]);
 
   const handleRunAIAnalysis = async () => {

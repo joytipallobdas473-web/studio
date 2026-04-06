@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useFirestore, useCollection, useUser, useMemoFirebase, useDoc } from "@/firebase";
@@ -33,7 +32,7 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import { Badge } from "@/components/ui/badge";
-import { format } from "date-fns";
+import { format, subDays, isSameDay } from "date-fns";
 import { useMemo, useState, useEffect } from "react";
 import { cn } from "@/lib/utils";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from "@/components/ui/dialog";
@@ -90,17 +89,21 @@ export default function DashboardPage() {
 
   const chartData = useMemo(() => {
     if (!orders) return [];
-    const days = Array.from({ length: 7 }, (_, i) => {
-      const d = new Date();
-      d.setDate(d.getDate() - i);
-      return d.toLocaleDateString('en-IN', { weekday: 'short' });
-    }).reverse();
+    
+    // Last 7 days aggregation
+    const days = Array.from({ length: 7 }, (_, i) => subDays(new Date(), i)).reverse();
 
     return days.map(day => {
+      const dayLabel = format(day, 'eee');
       const dayTotal = orders
-        .filter(o => o.createdAt?.seconds && format(o.createdAt.seconds * 1000, 'EEE') === day)
+        .filter(o => {
+          if (!o.createdAt?.seconds) return false;
+          const oDate = new Date(o.createdAt.seconds * 1000);
+          return isSameDay(oDate, day);
+        })
         .reduce((sum, o) => sum + (o.total || 0), 0);
-      return { name: day, spent: dayTotal };
+      
+      return { name: dayLabel, spent: dayTotal };
     });
   }, [orders]);
 
@@ -332,7 +335,10 @@ export default function DashboardPage() {
            <Card className="shadow-sm border-none bg-white rounded-[2rem] overflow-hidden">
             <CardHeader className="border-b border-slate-50 p-8 flex flex-row items-center justify-between">
               <div className="flex items-center gap-3 text-slate-900">
-                <Activity className="h-5 w-5 text-emerald-600" />
+                <div className="relative">
+                  <Activity className="h-5 w-5 text-emerald-600" />
+                  <div className="absolute -top-1 -right-1 h-2 w-2 bg-emerald-500 rounded-full animate-ping" />
+                </div>
                 <CardTitle className="text-lg font-black uppercase italic tracking-tighter">Live Telemetry</CardTitle>
               </div>
               <Link href="/dashboard/history">
