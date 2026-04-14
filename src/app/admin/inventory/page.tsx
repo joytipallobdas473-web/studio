@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, useMemo, useRef, useEffect } from "react";
@@ -8,7 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { Plus, Search, Edit2, Trash2, Loader2, Filter, CheckCircle2, ImageIcon, Camera, CameraOff, Sparkles, Globe, X, Box, Upload, Wand2 } from "lucide-react";
+import { Plus, Search, Edit2, Trash2, Loader2, Filter, CheckCircle2, ImageIcon, Camera, CameraOff, Sparkles, Globe, X, Box, Upload, Wand2, Truck } from "lucide-react";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -46,6 +47,7 @@ export default function InventoryControl() {
   const [editingProduct, setEditingProduct] = useState<any>(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [filterCategory, setFilterCategory] = useState("all");
+  const [filterDistributor, setFilterDistributor] = useState("all");
   
   const initialFormState = {
     name: "",
@@ -54,11 +56,18 @@ export default function InventoryControl() {
     mrp: "",
     stockQuantity: "0",
     category: "Electronics",
+    distributorName: "",
     description: "",
     imageUrls: ["", "", ""]
   };
 
   const [formData, setFormData] = useState(initialFormState);
+
+  const distributors = useMemo(() => {
+    if (!products) return [];
+    const unique = new Set(products.map(p => p.distributorName).filter(Boolean));
+    return Array.from(unique).sort();
+  }, [products]);
 
   const handleOpenDialog = (product?: any) => {
     setActiveImageIndex(0);
@@ -78,6 +87,7 @@ export default function InventoryControl() {
         mrp: (product.mrp || product.price || 0).toString(),
         stockQuantity: (product.stockQuantity || 0).toString(),
         category: product.category || "Electronics",
+        distributorName: product.distributorName || "",
         description: product.description || "",
         imageUrls: initialImages
       });
@@ -211,6 +221,7 @@ export default function InventoryControl() {
       mrp: mrpNum,
       stockQuantity: stockNum,
       category: formData.category,
+      distributorName: formData.distributorName.trim(),
       description: formData.description.trim(),
       imageUrl: primaryImage,
       imageUrls: formData.imageUrls,
@@ -242,15 +253,18 @@ export default function InventoryControl() {
     let list = [...products].sort((a, b) => (a.name || "").localeCompare(b.name || ""));
     
     if (filterCategory !== "all") list = list.filter(p => p.category === filterCategory);
+    if (filterDistributor !== "all") list = list.filter(p => p.distributorName === filterDistributor);
+    
     if (searchQuery) {
       const lowerQuery = searchQuery.toLowerCase();
       list = list.filter(p => 
         (p.name || "").toLowerCase().includes(lowerQuery) ||
-        (p.sku || "").toLowerCase().includes(lowerQuery)
+        (p.sku || "").toLowerCase().includes(lowerQuery) ||
+        (p.distributorName || "").toLowerCase().includes(lowerQuery)
       );
     }
     return list;
-  }, [products, searchQuery, filterCategory]);
+  }, [products, searchQuery, filterCategory, filterDistributor]);
 
   if (loading) {
     return (
@@ -276,8 +290,8 @@ export default function InventoryControl() {
         </Button>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4 md:gap-6">
-        <div className="md:col-span-3 relative">
+      <div className="grid grid-cols-1 md:grid-cols-6 gap-4 md:gap-6">
+        <div className="md:col-span-2 relative">
           <Search className={cn("absolute left-6 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground transition-all", searchQuery && "text-primary animate-pulse")} />
           <Input 
             placeholder="Query SKU Identity..." 
@@ -292,7 +306,7 @@ export default function InventoryControl() {
           )}
         </div>
         <Select value={filterCategory} onValueChange={setFilterCategory}>
-          <SelectTrigger className="h-14 glass-card border-white/10 text-white rounded-2xl">
+          <SelectTrigger className="h-14 md:col-span-2 glass-card border-white/10 text-white rounded-2xl">
             <div className="flex items-center gap-3">
               <Filter className="h-5 w-5 text-muted-foreground" />
               <SelectValue placeholder="All Clusters" />
@@ -301,6 +315,18 @@ export default function InventoryControl() {
           <SelectContent className="glass-card border-white/10 text-white">
             <SelectItem value="all">All Clusters</SelectItem>
             {CATEGORIES.map(c => <SelectItem key={c} value={c}>{c}</SelectItem>)}
+          </SelectContent>
+        </Select>
+        <Select value={filterDistributor} onValueChange={setFilterDistributor}>
+          <SelectTrigger className="h-14 md:col-span-2 glass-card border-white/10 text-white rounded-2xl">
+            <div className="flex items-center gap-3">
+              <Truck className="h-5 w-5 text-muted-foreground" />
+              <SelectValue placeholder="All Distributors" />
+            </div>
+          </SelectTrigger>
+          <SelectContent className="glass-card border-white/10 text-white">
+            <SelectItem value="all">All Distributors</SelectItem>
+            {distributors.map(d => <SelectItem key={d} value={d}>{d}</SelectItem>)}
           </SelectContent>
         </Select>
       </div>
@@ -314,6 +340,7 @@ export default function InventoryControl() {
                   <TableRow className="h-20 border-white/5">
                     <TableHead className="pl-10 uppercase text-[10px] font-black tracking-widest text-muted-foreground">Identity Package</TableHead>
                     <TableHead className="uppercase text-[10px] font-black tracking-widest text-muted-foreground">Cluster</TableHead>
+                    <TableHead className="uppercase text-[10px] font-black tracking-widest text-muted-foreground">Distributor</TableHead>
                     <TableHead className="uppercase text-[10px] font-black tracking-widest text-muted-foreground">Valuation (MRP/Offer)</TableHead>
                     <TableHead className="uppercase text-[10px] font-black tracking-widest text-muted-foreground">Density</TableHead>
                     <TableHead className="text-right pr-10 uppercase text-[10px] font-black tracking-widest text-muted-foreground">Protocol</TableHead>
@@ -341,6 +368,12 @@ export default function InventoryControl() {
                         <Badge variant="outline" className="text-[9px] uppercase font-black px-3 py-1 rounded-xl border-white/10 text-muted-foreground">
                           {product.category}
                         </Badge>
+                      </TableCell>
+                      <TableCell>
+                        <div className="flex items-center gap-2 text-muted-foreground">
+                          <Truck className="h-3 w-3 opacity-50" />
+                          <span className="text-[10px] font-bold uppercase tracking-widest">{product.distributorName || "Internal"}</span>
+                        </div>
                       </TableCell>
                       <TableCell>
                          <div className="flex flex-col">
@@ -402,11 +435,14 @@ export default function InventoryControl() {
                           <span className="text-[9px] text-muted-foreground line-through decoration-rose-500/30">₹{(product.mrp || product.price || 0).toFixed(2)}</span>
                           <span className="font-mono text-sm text-primary font-black">₹{(product.price || 0).toFixed(2)}</span>
                        </div>
-                       <div className="flex items-center gap-2">
-                         <Box className={cn("h-3 w-3", (product.stockQuantity || 0) < 10 ? "text-rose-500" : "text-emerald-500")} />
-                         <span className={cn("text-xs font-black font-mono", (product.stockQuantity || 0) < 10 ? "text-rose-500" : "text-emerald-500")}>
-                           {product.stockQuantity || 0}
-                         </span>
+                       <div className="flex flex-col items-end">
+                         <div className="flex items-center gap-2">
+                           <Box className={cn("h-3 w-3", (product.stockQuantity || 0) < 10 ? "text-rose-500" : "text-emerald-500")} />
+                           <span className={cn("text-xs font-black font-mono", (product.stockQuantity || 0) < 10 ? "text-rose-500" : "text-emerald-500")}>
+                             {product.stockQuantity || 0}
+                           </span>
+                         </div>
+                         <span className="text-[8px] font-black uppercase text-muted-foreground mt-1">{product.distributorName || "Internal"}</span>
                        </div>
                     </div>
 
@@ -446,9 +482,15 @@ export default function InventoryControl() {
                   <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Identity Tag</Label>
                   <Input value={formData.name} onChange={(e) => setFormData({...formData, name: e.target.value})} className="h-14 rounded-2xl bg-white/5 border-none text-white font-bold" />
                 </div>
-                <div className="space-y-3">
-                  <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Registry SKU</Label>
-                  <Input value={formData.sku} onChange={(e) => setFormData({...formData, sku: e.target.value})} className="h-14 rounded-2xl font-mono uppercase font-bold bg-white/5 border-none text-white" />
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-3">
+                    <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Registry SKU</Label>
+                    <Input value={formData.sku} onChange={(e) => setFormData({...formData, sku: e.target.value})} className="h-14 rounded-2xl font-mono uppercase font-bold bg-white/5 border-none text-white" />
+                  </div>
+                  <div className="space-y-3">
+                    <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Distributor</Label>
+                    <Input value={formData.distributorName} onChange={(e) => setFormData({...formData, distributorName: e.target.value})} placeholder="Supplier Node" className="h-14 rounded-2xl font-bold bg-white/5 border-none text-white" />
+                  </div>
                 </div>
                 <div className="space-y-3">
                   <div className="flex items-center justify-between">
