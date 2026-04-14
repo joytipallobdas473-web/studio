@@ -1,18 +1,18 @@
+
 "use client";
 
 import { useState, useMemo, useEffect } from "react";
-import { useFirestore, useCollection, useMemoFirebase, useUser } from "@/firebase";
+import { useFirestore, useCollection, useMemoFirebase, useUser, useDoc } from "@/firebase";
 import { collection, doc, query } from "firebase/firestore";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Download, Search, FileText, Filter, Loader2, Phone, MapPin, Mail, Globe, CheckCircle2, Banknote, CreditCard, AlertTriangle } from "lucide-react";
+import { Download, Search, FileText, Filter, Loader2, Phone, MapPin, Mail, Globe, CheckCircle2, Truck } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
 import { format } from "date-fns";
 import { updateDocumentNonBlocking } from "@/firebase";
-import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 
 const MASTER_ADMIN_UID = "j96izCkggNcL002AHiJjzGb18Bf2";
@@ -40,9 +40,16 @@ export default function AdminOrdersPage() {
     setIsClient(true);
   }, []);
 
+  const adminRoleRef = useMemoFirebase(() => {
+    if (!db || !user) return null;
+    return doc(db, "roles_admin", user.uid);
+  }, [db, user?.uid]);
+
+  const { data: adminRole } = useDoc(adminRoleRef);
+
   const isAdmin = useMemo(() => {
-    return user?.email?.toLowerCase().includes("admin") || user?.uid === MASTER_ADMIN_UID;
-  }, [user]);
+    return user?.email?.toLowerCase().includes("admin") || user?.uid === MASTER_ADMIN_UID || !!adminRole;
+  }, [user, adminRole]);
 
   const ordersQuery = useMemoFirebase(() => {
     if (!db || !user || !isAdmin) return null;
@@ -63,7 +70,6 @@ export default function AdminOrdersPage() {
   const handleStatusUpdate = (orderId: string, newStatus: string) => {
     if (!db) return;
     const orderRef = doc(db, "orders", orderId);
-    
     updateDocumentNonBlocking(orderRef, { status: newStatus });
     toast({ title: "Protocol Synchronized", description: `Packet ${orderId.substring(0, 6)} status updated.` });
   };
@@ -71,22 +77,24 @@ export default function AdminOrdersPage() {
   const handlePaymentUpdate = (orderId: string, newPaymentMethod: string) => {
     if (!db) return;
     const orderRef = doc(db, "orders", orderId);
-    
     updateDocumentNonBlocking(orderRef, { paymentMethod: newPaymentMethod });
     toast({ title: "Payment Protocol Synchronized", description: `Packet ${orderId.substring(0, 6)} updated.` });
   };
 
-  const filteredOrders = orders.filter(order => {
-    const matchesStore = storeFilter === "all" || order.storeName === storeFilter;
-    const matchesStatus = statusFilter === "all" || order.status === statusFilter;
-    const matchesSearch = 
-      order.id.toLowerCase().includes(searchQuery.toLowerCase()) || 
-      (order.storeName || "").toLowerCase().includes(searchQuery.toLowerCase()) ||
-      (order.phoneNumber || "").toLowerCase().includes(searchQuery.toLowerCase()) ||
-      (order.email || "").toLowerCase().includes(searchQuery.toLowerCase()) ||
-      (order.deliveryAddress || "").toLowerCase().includes(searchQuery.toLowerCase());
-    return matchesStore && matchesStatus && matchesSearch;
-  });
+  const filteredOrders = useMemo(() => {
+    const query = searchQuery.toLowerCase();
+    return orders.filter(order => {
+      const matchesStore = storeFilter === "all" || order.storeName === storeFilter;
+      const matchesStatus = statusFilter === "all" || order.status === statusFilter;
+      const matchesSearch = 
+        order.id.toLowerCase().includes(query) || 
+        (order.storeName || "").toLowerCase().includes(query) ||
+        (order.phoneNumber || "").toLowerCase().includes(query) ||
+        (order.email || "").toLowerCase().includes(query) ||
+        (order.deliveryAddress || "").toLowerCase().includes(query);
+      return matchesStore && matchesStatus && matchesSearch;
+    });
+  }, [orders, storeFilter, statusFilter, searchQuery]);
 
   const downloadPO = (orderId?: string) => {
     const ordersToExport = orderId ? orders.filter(o => o.id === orderId) : filteredOrders;

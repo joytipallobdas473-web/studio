@@ -1,29 +1,31 @@
+
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import { SidebarProvider, Sidebar, SidebarContent, SidebarHeader, SidebarMenu, SidebarMenuItem, SidebarMenuButton, SidebarGroup, SidebarGroupLabel, SidebarGroupContent, SidebarInset, SidebarTrigger, SidebarFooter } from "@/components/ui/sidebar";
-import { LayoutDashboard, Store, Package, ShoppingCart, LogOut, Terminal, Loader2, Settings, Shield, Cpu, Activity } from "lucide-react";
+import { LayoutDashboard, Store, Package, ShoppingCart, LogOut, Settings, Shield, Cpu } from "lucide-react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { cn } from "@/lib/utils";
-import { useAuth, useUser } from "@/firebase";
+import { useAuth, useUser, useFirestore, useDoc, useMemoFirebase } from "@/firebase";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { signOut } from "firebase/auth";
 import { toast } from "@/hooks/use-toast";
+import { doc } from "firebase/firestore";
 
 const MASTER_ADMIN_UID = "j96izCkggNcL002AHiJjzGb18Bf2";
 
 function AdminSidebar() {
   const pathname = usePathname();
 
-  const menuItems = [
+  const menuItems = useMemo(() => [
     { title: "Grid Stats", icon: LayoutDashboard, href: "/admin" },
     { title: "Retail Nodes", icon: Store, href: "/admin/stores" },
     { title: "Inventory", icon: Package, href: "/admin/inventory" },
     { title: "Traffic Logs", icon: ShoppingCart, href: "/admin/orders" },
     { title: "Security Core", icon: Settings, href: "/admin/settings" },
-  ];
+  ], []);
 
   return (
     <Sidebar className="bg-black border-r border-primary/10">
@@ -86,21 +88,31 @@ function AdminSidebar() {
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
   const auth = useAuth();
+  const db = useFirestore();
   const router = useRouter();
   const { user, isUserLoading } = useUser();
   const pathname = usePathname();
   const [authorized, setAuthorized] = useState<boolean | null>(null);
 
+  const roleRef = useMemoFirebase(() => {
+    if (!db || !user) return null;
+    return doc(db, "roles_admin", user.uid);
+  }, [db, user?.uid]);
+
+  const { data: roleDoc, isLoading: roleLoading } = useDoc(roleRef);
+
   useEffect(() => {
-    if (isUserLoading) return;
+    if (isUserLoading || roleLoading) return;
 
     if (!user) {
       if (pathname !== "/admin/login") {
         router.push("/admin/login");
       }
     } else {
-      const isAdmin = user.email?.toLowerCase().includes("admin") || user.uid === MASTER_ADMIN_UID;
-      if (isAdmin) {
+      const isEmailAdmin = user.email?.toLowerCase().includes("admin") || user.uid === MASTER_ADMIN_UID;
+      const isRegistryAdmin = !!roleDoc;
+      
+      if (isEmailAdmin || isRegistryAdmin) {
         setAuthorized(true);
       } else {
         setAuthorized(false);
@@ -114,9 +126,9 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         }
       }
     }
-  }, [user, isUserLoading, router, pathname]);
+  }, [user, isUserLoading, roleDoc, roleLoading, router, pathname]);
 
-  if (isUserLoading || (user && authorized === null)) {
+  if (isUserLoading || roleLoading || (user && authorized === null)) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-black">
         <div className="flex flex-col items-center gap-6">

@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, useEffect } from "react";
@@ -7,9 +8,10 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { Mail, Lock, Loader2, ArrowLeft, ShieldAlert, Zap, Globe, AlertTriangle, Fingerprint, ShieldCheck } from "lucide-react";
-import { useAuth, useUser } from "@/firebase";
+import { Mail, Lock, Loader2, ArrowLeft, AlertTriangle, Fingerprint, ShieldCheck } from "lucide-react";
+import { useAuth, useUser, useFirestore } from "@/firebase";
 import { signInWithEmailAndPassword, signOut } from "firebase/auth";
+import { doc, getDoc } from "firebase/firestore";
 import { toast } from "@/hooks/use-toast";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 
@@ -18,6 +20,7 @@ const MASTER_ADMIN_UID = "j96izCkggNcL002AHiJjzGb18Bf2";
 export default function AdminLoginPage() {
   const router = useRouter();
   const auth = useAuth();
+  const db = useFirestore();
   const { user, isUserLoading } = useUser();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -25,33 +28,47 @@ export default function AdminLoginPage() {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    if (!isUserLoading && user) {
-      const isAdmin = user.email?.toLowerCase().includes("admin") || user.uid === MASTER_ADMIN_UID;
-      if (isAdmin) {
-        router.push("/admin");
-      } else {
-        setError("Unauthorized Identity Signature.");
+    const checkAuthStatus = async () => {
+      if (!isUserLoading && user && db) {
+        const isEmailAdmin = user.email?.toLowerCase().includes("admin") || user.uid === MASTER_ADMIN_UID;
+        
+        // If email check fails, verify registry whitelist
+        if (!isEmailAdmin) {
+          const roleDoc = await getDoc(doc(db, "roles_admin", user.uid));
+          if (roleDoc.exists()) {
+            router.push("/admin");
+            return;
+          }
+          setError("Unauthorized Identity Signature.");
+        } else {
+          router.push("/admin");
+        }
       }
-    }
-  }, [user, isUserLoading, router]);
+    };
+    checkAuthStatus();
+  }, [user, isUserLoading, db, router]);
 
   const handleAdminSignIn = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
-    if (!auth) return;
+    if (!auth || !db) return;
     
     setIsLoading(true);
     try {
       const userCredential = await signInWithEmailAndPassword(auth, email.toLowerCase().trim(), password);
       const signedInUser = userCredential.user;
       
-      const isAdmin = signedInUser.email?.toLowerCase().includes("admin") || signedInUser.uid === MASTER_ADMIN_UID;
+      const isEmailAdmin = signedInUser.email?.toLowerCase().includes("admin") || signedInUser.uid === MASTER_ADMIN_UID;
       
-      if (!isAdmin) {
-        await signOut(auth);
-        setIsLoading(false);
-        setError("Access Denied: Unrecognized administrator signature.");
-        return;
+      // Verification logic including registry
+      if (!isEmailAdmin) {
+        const roleDoc = await getDoc(doc(db, "roles_admin", signedInUser.uid));
+        if (!roleDoc.exists()) {
+          await signOut(auth);
+          setIsLoading(false);
+          setError("Access Denied: Unrecognized administrator signature.");
+          return;
+        }
       }
 
       toast({ title: "Command Access Authorized" });
@@ -73,7 +90,6 @@ export default function AdminLoginPage() {
 
   return (
     <div className="min-h-screen flex flex-col items-center justify-center p-6 bg-background relative overflow-hidden">
-      {/* Structural Decorative Elements */}
       <div className="absolute inset-0 bg-[radial-gradient(#e5e7eb_1px,transparent_1px)] [background-size:20px_20px] opacity-30" />
       <div className="absolute top-0 right-0 w-1/3 h-1/3 bg-primary/5 blur-[120px] rounded-full" />
       

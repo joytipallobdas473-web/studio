@@ -1,17 +1,18 @@
+
 "use client";
 
 import { useState, useMemo, useEffect } from "react";
-import { useFirestore, useCollection, useMemoFirebase, useUser } from "@/firebase";
-import { collection, query } from "firebase/firestore";
+import { useFirestore, useCollection, useMemoFirebase, useUser, useDoc } from "@/firebase";
+import { collection, query, doc } from "firebase/firestore";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Store, Package, ShoppingCart, AlertCircle, Loader2, Cpu, Activity, Zap, Globe, TrendingUp, CheckCircle2, BarChart3 } from "lucide-react";
+import { Store, Package, ShoppingCart, AlertCircle, Loader2, Cpu, Activity, Zap, Globe, TrendingUp, BarChart3, CheckCircle2 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { analyzeInventory, type InventoryAnalysisOutput } from "@/ai/flows/inventory-analyst";
 import { cn } from "@/lib/utils";
 import { toast } from "@/hooks/use-toast";
 import { Bar, BarChart, ResponsiveContainer, XAxis, Tooltip, Cell } from "recharts";
-import { format, subDays, startOfDay, isSameDay } from "date-fns";
+import { format, subDays, isSameDay } from "date-fns";
 
 const MASTER_ADMIN_UID = "j96izCkggNcL002AHiJjzGb18Bf2";
 
@@ -26,9 +27,16 @@ export default function AdminOverview() {
     setIsClient(true);
   }, []);
 
+  const adminRoleRef = useMemoFirebase(() => {
+    if (!db || !user) return null;
+    return doc(db, "roles_admin", user.uid);
+  }, [db, user?.uid]);
+
+  const { data: adminRole } = useDoc(adminRoleRef);
+
   const isAdmin = useMemo(() => {
-    return user?.email?.toLowerCase().includes("admin") || user?.uid === MASTER_ADMIN_UID;
-  }, [user]);
+    return user?.email?.toLowerCase().includes("admin") || user?.uid === MASTER_ADMIN_UID || !!adminRole;
+  }, [user, adminRole]);
 
   const storesQuery = useMemoFirebase(() => {
     if (!db || !user || !isAdmin) return null;
@@ -65,12 +73,10 @@ export default function AdminOverview() {
   const chartData = useMemo(() => {
     if (!orders) return [];
     
-    // Generate last 7 days including today
     const days = Array.from({ length: 7 }, (_, i) => subDays(new Date(), i)).reverse();
 
     return days.map(day => {
       const dayLabel = format(day, 'eee');
-      // Filter orders that occurred on this specific day
       const dayOrders = orders.filter(order => {
         if (!order.createdAt?.seconds) return false;
         const orderDate = new Date(order.createdAt.seconds * 1000);
@@ -82,6 +88,15 @@ export default function AdminOverview() {
         volume: dayOrders.length,
       };
     });
+  }, [orders]);
+
+  const sortedOrders = useMemo(() => {
+    if (!orders) return [];
+    return [...orders].sort((a, b) => {
+      const timeA = a.createdAt?.seconds || 0;
+      const timeB = b.createdAt?.seconds || 0;
+      return timeB - timeA;
+    }).slice(0, 6);
   }, [orders]);
 
   const handleRunAIAnalysis = async () => {
@@ -123,16 +138,13 @@ export default function AdminOverview() {
   if (anyLoading && (!stores && !orders && !products)) {
     return (
       <div className="flex h-[60vh] items-center justify-center">
-        <Loader2 className="h-10 w-10 animate-spin text-primary opacity-30" />
+        <div className="flex flex-col items-center gap-4">
+          <Loader2 className="h-10 w-10 animate-spin text-primary opacity-30" />
+          <p className="text-[10px] font-black uppercase tracking-[0.5em] text-primary/40">Syncing Grid Intelligence</p>
+        </div>
       </div>
     );
   }
-
-  const sortedOrders = orders ? [...orders].sort((a, b) => {
-    const timeA = a.createdAt?.seconds || 0;
-    const timeB = b.createdAt?.seconds || 0;
-    return timeB - timeA;
-  }).slice(0, 6) : [];
 
   return (
     <div className="space-y-10 animate-in fade-in duration-700">
