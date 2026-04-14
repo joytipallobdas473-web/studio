@@ -4,6 +4,7 @@
 import { useState, useMemo, useRef, useEffect } from "react";
 import { useFirestore, useCollection, useMemoFirebase, useUser } from "@/firebase";
 import { collection, doc, serverTimestamp } from "firebase/firestore";
+import Image from "next/image";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -27,7 +28,6 @@ export default function InventoryControl() {
   const { user } = useUser();
   const videoRef = useRef<HTMLVideoElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const [hasCameraPermission, setHasCameraPermission] = useState<boolean | null>(null);
   const [isCameraActive, setIsCameraActive] = useState(false);
   const [activeImageIndex, setActiveImageIndex] = useState(0);
   const [isDescribing, setIsDescribing] = useState(false);
@@ -120,7 +120,6 @@ export default function InventoryControl() {
       const stream = await navigator.mediaDevices.getUserMedia({ 
         video: { facingMode: "environment" } 
       });
-      setHasCameraPermission(true);
       setIsCameraActive(true);
       setTimeout(() => {
         if (videoRef.current) {
@@ -128,31 +127,18 @@ export default function InventoryControl() {
         }
       }, 100);
     } catch (error) {
-      try {
-        const fallbackStream = await navigator.mediaDevices.getUserMedia({ video: true });
-        setHasCameraPermission(true);
-        setIsCameraActive(true);
-        setTimeout(() => {
-          if (videoRef.current) {
-            videoRef.current.srcObject = fallbackStream;
-          }
-        }, 100);
-      } catch (fallbackError) {
-        setHasCameraPermission(false);
-        toast({
-          variant: 'destructive',
-          title: 'Camera Access Denied',
-          description: 'Please enable camera permissions in your browser settings to capture product photos.',
-        });
-      }
+      toast({
+        variant: 'destructive',
+        title: 'Camera Access Denied',
+        description: 'Please enable camera permissions in your browser settings to capture product photos.',
+      });
     }
   };
 
   const stopCamera = () => {
     if (videoRef.current && videoRef.current.srcObject) {
       const stream = videoRef.current.srcObject as MediaStream;
-      const tracks = stream.getTracks();
-      tracks.forEach(track => track.stop());
+      stream.getTracks().forEach(track => track.stop());
       videoRef.current.srcObject = null;
     }
     setIsCameraActive(false);
@@ -166,7 +152,7 @@ export default function InventoryControl() {
       const ctx = canvas.getContext('2d');
       if (ctx) {
         ctx.drawImage(videoRef.current, 0, 0, canvas.width, canvas.height);
-        const dataUri = canvas.toDataURL('image/jpeg');
+        const dataUri = canvas.toDataURL('image/jpeg', 0.8);
         const newImages = [...formData.imageUrls];
         newImages[activeImageIndex] = dataUri;
         setFormData({ ...formData, imageUrls: newImages });
@@ -189,10 +175,6 @@ export default function InventoryControl() {
       };
       reader.readAsDataURL(file);
     }
-  };
-
-  const triggerFileUpload = () => {
-    fileInputRef.current?.click();
   };
 
   useEffect(() => {
@@ -352,10 +334,12 @@ export default function InventoryControl() {
                       <TableCell className="pl-10">
                         <div className="flex items-center gap-6">
                           <div className="relative h-14 w-14 rounded-2xl overflow-hidden bg-white/5 border border-white/10">
-                            <img 
+                            <Image 
                               src={product.imageUrl || (product.imageUrls && product.imageUrls[0]) || `https://picsum.photos/seed/${product.sku}/100/100`} 
                               alt={product.name} 
-                              className="h-full w-full object-cover" 
+                              fill
+                              className="object-cover" 
+                              data-ai-hint="product photo"
                             />
                           </div>
                           <div className="flex flex-col">
@@ -413,10 +397,12 @@ export default function InventoryControl() {
               <Card key={product.id} className="border-none glass-card rounded-3xl overflow-hidden p-6 relative group">
                 <div className="flex gap-6 items-start">
                   <div className="relative h-20 w-20 rounded-2xl overflow-hidden bg-white/5 border border-white/10 shrink-0">
-                    <img 
+                    <Image 
                       src={product.imageUrl || (product.imageUrls && product.imageUrls[0]) || `https://picsum.photos/seed/${product.sku}/100/100`} 
                       alt={product.name} 
-                      className="h-full w-full object-cover" 
+                      fill
+                      className="object-cover" 
+                      data-ai-hint="product photo"
                     />
                   </div>
                   <div className="flex-1 space-y-3 min-w-0">
@@ -526,7 +512,7 @@ export default function InventoryControl() {
                         )}
                       >
                         {url ? (
-                          <img src={url} alt={`Slot ${idx+1}`} className="w-full h-full object-cover" />
+                          <Image src={url} alt={`Slot ${idx+1}`} fill className="object-cover" data-ai-hint="product angle" />
                         ) : (
                           <div className="w-full h-full flex items-center justify-center bg-white/5 text-[10px] font-black text-muted-foreground uppercase italic">
                             Slot {idx + 1}
@@ -554,7 +540,7 @@ export default function InventoryControl() {
                    {isCameraActive ? (
                      <video ref={videoRef} className="w-full h-full object-cover" autoPlay muted playsInline />
                    ) : formData.imageUrls[activeImageIndex] ? (
-                     <img src={formData.imageUrls[activeImageIndex]} alt="Preview" className="w-full h-full object-cover" />
+                     <Image src={formData.imageUrls[activeImageIndex]} alt="Preview" fill className="object-cover" data-ai-hint="product capture" />
                    ) : (
                      <div className="flex flex-col items-center gap-4">
                         <ImageIcon className="h-10 w-10 text-white/10" />
@@ -569,7 +555,7 @@ export default function InventoryControl() {
                         <Button variant="secondary" className="flex-1 h-12 bg-primary text-background rounded-xl font-black uppercase text-[10px] tracking-widest" onClick={startCamera}>
                           <Camera className="h-4 w-4 mr-2" /> Start Lens
                         </Button>
-                        <Button variant="outline" className="flex-1 h-12 bg-white/5 border-white/10 text-white rounded-xl font-black uppercase text-[10px] tracking-widest" onClick={triggerFileUpload}>
+                        <Button variant="outline" className="flex-1 h-12 bg-white/5 border-white/10 text-white rounded-xl font-black uppercase text-[10px] tracking-widest" onClick={() => fileInputRef.current?.click()}>
                           <Upload className="h-4 w-4 mr-2" /> Upload Photo
                         </Button>
                         <input 

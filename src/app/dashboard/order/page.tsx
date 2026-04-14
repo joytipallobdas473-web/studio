@@ -1,7 +1,9 @@
+
 "use client";
 
 import { useState, useMemo, useEffect } from "react";
 import { useRouter } from "next/navigation";
+import Image from "next/image";
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -90,7 +92,7 @@ export default function NewOrderPage() {
   const storeRef = useMemoFirebase(() => {
     if (!db || !user) return null;
     return doc(db, "stores", user.uid);
-  }, [db, user]);
+  }, [db, user?.uid]);
 
   const { data: store } = useDoc(storeRef);
 
@@ -165,8 +167,8 @@ export default function NewOrderPage() {
     });
   };
 
-  const cartTotal = Object.values(cart).reduce((sum, item) => sum + (item.price * item.quantity), 0);
-  const cartItemCount = Object.values(cart).reduce((sum, item) => sum + item.quantity, 0);
+  const cartTotal = useMemo(() => Object.values(cart).reduce((sum, item) => sum + (item.price * item.quantity), 0), [cart]);
+  const cartItemCount = useMemo(() => Object.values(cart).reduce((sum, item) => sum + item.quantity, 0), [cart]);
 
   const handleSubmitOrder = () => {
     if (!db || !user || cartItemCount === 0) {
@@ -439,8 +441,8 @@ export default function NewOrderPage() {
                         <Carousel className="w-full h-full">
                           <CarouselContent className="h-full">
                             {validImages.map((url: string, idx: number) => (
-                              <CarouselItem key={idx} className="h-full">
-                                <img src={url} alt={`${product.name} angle ${idx+1}`} className="w-full h-full object-cover" />
+                              <CarouselItem key={idx} className="h-full relative">
+                                <Image src={url} alt={`${product.name} angle ${idx+1}`} fill className="object-cover" data-ai-hint="product angle" />
                               </CarouselItem>
                             ))}
                           </CarouselContent>
@@ -448,10 +450,12 @@ export default function NewOrderPage() {
                           <CarouselNext className="right-2 h-7 w-7 bg-white/80 border-none hover:bg-white text-emerald-600" />
                         </Carousel>
                       ) : (
-                        <img 
+                        <Image 
                           src={primaryImage}
                           alt={product.name}
-                          className="h-full w-full object-cover group-hover:scale-105 transition-transform duration-700"
+                          fill
+                          className="object-cover group-hover:scale-105 transition-transform duration-700"
+                          data-ai-hint="product photo"
                         />
                       )}
                       

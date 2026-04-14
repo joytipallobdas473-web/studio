@@ -1,7 +1,9 @@
+
 "use client";
 
 import { useFirestore, useCollection, useUser, useMemoFirebase, useDoc } from "@/firebase";
 import { collection, query, doc, where, serverTimestamp } from "firebase/firestore";
+import Image from "next/image";
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { 
@@ -40,8 +42,6 @@ import { addDocumentNonBlocking } from "@/firebase";
 import { toast } from "@/hooks/use-toast";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { Bar, BarChart, ResponsiveContainer, XAxis, Tooltip as RechartsTooltip, Cell } from "recharts";
-
-const MASTER_ADMIN_UID = "j96izCkggNcL002AHiJjzGb18Bf2";
 
 export default function DashboardPage() {
   const db = useFirestore();
@@ -89,10 +89,7 @@ export default function DashboardPage() {
 
   const chartData = useMemo(() => {
     if (!orders) return [];
-    
-    // Last 7 days aggregation
     const days = Array.from({ length: 7 }, (_, i) => subDays(new Date(), i)).reverse();
-
     return days.map(day => {
       const dayLabel = format(day, 'eee');
       const dayTotal = orders
@@ -102,7 +99,6 @@ export default function DashboardPage() {
           return isSameDay(oDate, day);
         })
         .reduce((sum, o) => sum + (o.total || 0), 0);
-      
       return { name: dayLabel, spent: dayTotal };
     });
   }, [orders]);
@@ -111,7 +107,6 @@ export default function DashboardPage() {
     if (!orders) return [];
     const delivered = orders.filter(o => o.status === 'delivered');
     const uniqueItemsMap = new Map();
-    
     delivered.forEach(o => {
       const key = o.items;
       if (!uniqueItemsMap.has(key)) {
@@ -128,16 +123,13 @@ export default function DashboardPage() {
         existing.orders.push(o.id);
       }
     });
-    
     return Array.from(uniqueItemsMap.values());
   }, [orders]);
 
   useEffect(() => {
     if (isReturnDialogOpen && returnableProducts.length > 0) {
       const initial: Record<string, number> = {};
-      returnableProducts.forEach(p => {
-        initial[p.name] = 0;
-      });
+      returnableProducts.forEach(p => { initial[p.name] = 0; });
       setDamageReportQuantities(initial);
     }
   }, [isReturnDialogOpen, returnableProducts]);
@@ -155,27 +147,9 @@ export default function DashboardPage() {
   }, [rawProducts]);
 
   const stats = useMemo(() => [
-    { 
-      label: "Open Request", 
-      value: orders?.filter(o => o.status === 'pending')?.length?.toString() || "0", 
-      icon: ShoppingCart, 
-      color: "text-emerald-600", 
-      bg: "bg-emerald-50" 
-    },
-    { 
-      label: "In Transit", 
-      value: orders?.filter(o => o.status === 'shipped')?.length?.toString() || "0", 
-      icon: Truck, 
-      color: "text-sky-600", 
-      bg: "bg-sky-50" 
-    },
-    { 
-      label: "Completed Sync", 
-      value: orders?.filter(o => o.status === 'delivered')?.length?.toString() || "0", 
-      icon: PackageCheck, 
-      color: "text-emerald-700", 
-      bg: "bg-emerald-100/50" 
-    },
+    { label: "Open Request", value: orders?.filter(o => o.status === 'pending')?.length?.toString() || "0", icon: ShoppingCart, color: "text-emerald-600", bg: "bg-emerald-50" },
+    { label: "In Transit", value: orders?.filter(o => o.status === 'shipped')?.length?.toString() || "0", icon: Truck, color: "text-sky-600", bg: "bg-sky-50" },
+    { label: "Completed Sync", value: orders?.filter(o => o.status === 'delivered')?.length?.toString() || "0", icon: PackageCheck, color: "text-emerald-700", bg: "bg-emerald-100/50" },
   ], [orders]);
 
   const getStatusColor = (status: string) => {
@@ -194,9 +168,7 @@ export default function DashboardPage() {
     if (!db || !user) return;
     const qty = damageReportQuantities[item.name] || 0;
     if (qty === 0) return;
-    
     setIsSubmittingReturn(true);
-
     const returnData = {
       items: `DAMAGE REPORT: ${item.name}`,
       productId: item.productId || "",
@@ -211,7 +183,6 @@ export default function DashboardPage() {
       storeName: store?.name || "Retailer Node",
       createdAt: serverTimestamp()
     };
-
     addDocumentNonBlocking(collection(db, "orders"), returnData)
       .then(() => {
         setIsSubmittingReturn(false);
@@ -234,72 +205,53 @@ export default function DashboardPage() {
 
   return (
     <div className="space-y-8 animate-in fade-in duration-700 pb-20">
-      {/* Dynamic Command Header */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-8 bg-white p-8 rounded-[2rem] border border-slate-200 shadow-sm relative overflow-hidden group">
         <div className="absolute top-0 right-0 w-64 h-64 bg-emerald-50 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2 opacity-50 group-hover:opacity-100 transition-opacity" />
-        
         <div className="space-y-2 relative z-10">
           <div className="flex items-center gap-3">
              <div className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
              <span className="text-[10px] font-black tracking-[0.4em] text-emerald-600 uppercase">Live Branch Node</span>
           </div>
-          <h1 className="text-3xl font-black text-slate-900 tracking-tighter uppercase italic leading-none">
-            {store?.name || "Aether Branch"}
-          </h1>
+          <h1 className="text-3xl font-black text-slate-900 tracking-tighter uppercase italic leading-none">{store?.name || "Aether Branch"}</h1>
           <div className="text-slate-500 font-medium text-sm flex items-center gap-2">
             Regional Designation: <Badge variant="outline" className="rounded-lg text-[9px] font-bold uppercase tracking-widest text-emerald-600 border-emerald-100 px-2 py-0.5">{store?.id.substring(0, 8)}</Badge>
           </div>
         </div>
-
         <div className="flex items-center gap-3 w-full md:w-auto relative z-10">
           <Link href="/dashboard/order" className="flex-1 md:flex-none">
             <Button className="w-full h-14 bg-emerald-600 hover:bg-emerald-700 text-white font-black rounded-xl px-8 uppercase tracking-widest text-[10px] shadow-lg shadow-emerald-100 border-none transition-all hover:scale-[1.02]">
-              <PlusCircle className="mr-2 h-4 w-4" />
-              New order
+              <PlusCircle className="mr-2 h-4 w-4" /> New order
             </Button>
           </Link>
           <TooltipProvider>
             <Tooltip>
               <TooltipTrigger asChild>
-                <Button 
-                  variant="outline" 
-                  size="icon"
-                  onClick={() => setIsReturnDialogOpen(true)}
-                  className="h-14 w-14 rounded-xl border-slate-200 bg-white text-slate-400 hover:text-emerald-600 transition-all shrink-0"
-                >
+                <Button variant="outline" size="icon" onClick={() => setIsReturnDialogOpen(true)} className="h-14 w-14 rounded-xl border-slate-200 bg-white text-slate-400 hover:text-emerald-600 transition-all shrink-0">
                   <Undo2 className="h-5 w-5" />
                 </Button>
               </TooltipTrigger>
-              <TooltipContent className="bg-slate-900 text-white text-[10px] font-bold uppercase tracking-widest p-2 rounded-lg">
-                Report Damage
-              </TooltipContent>
+              <TooltipContent className="bg-slate-900 text-white text-[10px] font-bold uppercase tracking-widest p-2 rounded-lg">Report Damage</TooltipContent>
             </Tooltip>
           </TooltipProvider>
         </div>
       </div>
 
-      {/* Grid Status Stats */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         {stats.map((stat, i) => (
           <Card className="border-none shadow-sm bg-white rounded-2xl overflow-hidden hover:shadow-md transition-all group" key={i}>
             <CardContent className="p-6">
               <div className="flex items-center justify-between mb-4">
                 <span className="text-[10px] font-black uppercase tracking-[0.3em] text-slate-400">{stat.label}</span>
-                <div className={cn(stat.bg, stat.color, "p-2.5 rounded-xl group-hover:scale-110 transition-transform")}>
-                  <stat.icon className="h-4 w-4" />
-                </div>
+                <div className={cn(stat.bg, stat.color, "p-2.5 rounded-xl group-hover:scale-110 transition-transform")}><stat.icon className="h-4 w-4" /></div>
               </div>
               <div className="text-3xl font-black text-slate-900 tracking-tighter italic">{stat.value}</div>
-              <div className="flex items-center gap-1.5 mt-4 text-[9px] font-bold text-emerald-600 uppercase tracking-widest">
-                <Activity className="h-3 w-3" /> Sync Active
-              </div>
+              <div className="flex items-center gap-1.5 mt-4 text-[9px] font-bold text-emerald-600 uppercase tracking-widest"><Activity className="h-3 w-3" /> Sync Active</div>
             </CardContent>
           </Card>
         ))}
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        {/* Operations Hub */}
         <div className="lg:col-span-2 space-y-8">
            <Card className="border-none bg-white rounded-[2rem] overflow-hidden shadow-sm">
              <CardHeader className="p-8 pb-4">
@@ -316,15 +268,9 @@ export default function DashboardPage() {
                   <ResponsiveContainer width="100%" height="100%">
                     <BarChart data={chartData}>
                       <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{fill: '#94a3b8', fontSize: 10, fontWeight: 800}} dy={10} />
-                      <RechartsTooltip 
-                        cursor={{fill: 'rgba(0,0,0,0.02)'}}
-                        contentStyle={{borderRadius: '12px', border: 'none', boxShadow: '0 10px 30px rgba(0,0,0,0.05)'}}
-                        labelStyle={{fontWeight: 900, fontSize: '10px', textTransform: 'uppercase'}}
-                      />
+                      <RechartsTooltip cursor={{fill: 'rgba(0,0,0,0.02)'}} contentStyle={{borderRadius: '12px', border: 'none', boxShadow: '0 10px 30px rgba(0,0,0,0.05)'}} labelStyle={{fontWeight: 900, fontSize: '10px', textTransform: 'uppercase'}} />
                       <Bar dataKey="spent" radius={[4, 4, 4, 4]}>
-                        {chartData.map((entry, index) => (
-                          <Cell key={`cell-${index}`} fill={index === chartData.length - 1 ? '#059669' : '#e2e8f0'} />
-                        ))}
+                        {chartData.map((entry, index) => <Cell key={`cell-${index}`} fill={index === chartData.length - 1 ? '#059669' : '#e2e8f0'} />)}
                       </Bar>
                     </BarChart>
                   </ResponsiveContainer>
@@ -342,9 +288,7 @@ export default function DashboardPage() {
                 <CardTitle className="text-lg font-black uppercase italic tracking-tighter">Live Telemetry</CardTitle>
               </div>
               <Link href="/dashboard/history">
-                <Button variant="ghost" size="sm" className="text-[10px] font-black uppercase tracking-widest text-emerald-600 hover:bg-emerald-50">
-                  Full Log <ChevronRight className="ml-1 h-3 w-3" />
-                </Button>
+                <Button variant="ghost" size="sm" className="text-[10px] font-black uppercase tracking-widest text-emerald-600 hover:bg-emerald-50">Full Log <ChevronRight className="ml-1 h-3 w-3" /></Button>
               </Link>
             </CardHeader>
             <CardContent className="p-0">
@@ -360,27 +304,19 @@ export default function DashboardPage() {
                     </div>
                     <div className="flex items-center gap-6">
                       <p className="text-sm font-black text-slate-900 font-mono tracking-tighter">₹{(order.total || 0).toFixed(0)}</p>
-                      <Badge className={cn("h-7 px-3 font-black rounded-lg text-[8px] tracking-widest uppercase border shadow-none", getStatusColor(order.status))}>
-                        {order.status}
-                      </Badge>
+                      <Badge className={cn("h-7 px-3 font-black rounded-lg text-[8px] tracking-widest uppercase border shadow-none", getStatusColor(order.status))}>{order.status}</Badge>
                     </div>
                   </div>
-                )) : (
-                  <div className="py-20 text-center text-slate-200 font-black uppercase text-[10px] tracking-[0.5em] italic">Telemetry Stream Offline</div>
-                )}
+                )) : <div className="py-20 text-center text-slate-200 font-black uppercase text-[10px] tracking-[0.5em] italic">Telemetry Stream Offline</div>}
               </div>
             </CardContent>
           </Card>
         </div>
 
-        {/* Rapid Access Catalog */}
         <Card className="bg-slate-900 text-white shadow-xl border-none rounded-[2.5rem] overflow-hidden flex flex-col h-full">
           <CardHeader className="bg-white/5 p-8 border-b border-white/5">
             <div className="flex items-center justify-between">
-              <CardTitle className="text-lg font-black flex items-center gap-3 uppercase italic tracking-tighter text-emerald-400">
-                <Package className="h-5 w-5" />
-                SKU Provision
-              </CardTitle>
+              <CardTitle className="text-lg font-black flex items-center gap-3 uppercase italic tracking-tighter text-emerald-400"><Package className="h-5 w-5" /> SKU Provision</CardTitle>
               <Badge className="bg-emerald-500 text-white border-none text-[8px] font-black uppercase px-2 py-0.5 rounded-lg">{productsList.length} Active</Badge>
             </div>
           </CardHeader>
@@ -392,15 +328,13 @@ export default function DashboardPage() {
                   <Link key={product.id} href="/dashboard/order" className="group">
                     <div className="flex flex-col items-center gap-2 p-3 bg-white/5 hover:bg-white/10 border border-white/5 rounded-xl transition-all h-full">
                       <div className="relative h-14 w-14 rounded-lg overflow-hidden shrink-0 bg-white/10 group-hover:scale-105 transition-transform">
-                        <img src={img} alt={product.name} className="h-full w-full object-cover" />
+                        <Image src={img} alt={product.name} fill className="object-cover" data-ai-hint="product photo" />
                       </div>
                       <p className="font-black text-[8px] uppercase tracking-tighter italic truncate w-full text-center opacity-60 group-hover:text-emerald-400 group-hover:opacity-100 transition-all">{product.name}</p>
                     </div>
                   </Link>
                 );
-              }) : (
-                <div className="col-span-2 py-12 text-center text-white/20 font-black uppercase text-[10px] tracking-widest">Registry Offline</div>
-              )}
+              }) : <div className="col-span-2 py-12 text-center text-white/20 font-black uppercase text-[10px] tracking-widest">Registry Offline</div>}
             </div>
           </CardContent>
           <CardFooter className="p-6 pt-0">
@@ -413,18 +347,12 @@ export default function DashboardPage() {
         </Card>
       </div>
 
-      {/* Audit Modal Protocol */}
       <Dialog open={isReturnDialogOpen} onOpenChange={setIsReturnDialogOpen}>
         <DialogContent className="rounded-[2.5rem] border-none p-8 bg-white max-w-xl shadow-2xl">
           <DialogHeader className="space-y-2">
-            <DialogTitle className="text-xl font-black text-emerald-600 uppercase italic tracking-tighter flex items-center gap-3">
-              <Undo2 className="h-5 w-5" /> Damage Audit Registry
-            </DialogTitle>
-            <DialogDescription className="font-medium text-slate-500 text-xs">
-              Archive damaged SKU data for regional credit verification.
-            </DialogDescription>
+            <DialogTitle className="text-xl font-black text-emerald-600 uppercase italic tracking-tighter flex items-center gap-3"><Undo2 className="h-5 w-5" /> Damage Audit Registry</DialogTitle>
+            <DialogDescription className="font-medium text-slate-500 text-xs">Archive damaged SKU data for regional credit verification.</DialogDescription>
           </DialogHeader>
-
           <div className="py-6">
             {returnableProducts.length > 0 ? (
               <div className="space-y-3 max-h-[40vh] overflow-y-auto pr-2 custom-scrollbar">
@@ -440,12 +368,7 @@ export default function DashboardPage() {
                         <span className="w-8 text-center font-black text-xs text-emerald-600">{damageReportQuantities[item.name] || 0}</span>
                         <button onClick={() => updateDamageQty(item.name, 1, item.totalQuantity)} className="px-2 hover:bg-slate-50 text-slate-400"><Plus className="h-3 w-3" /></button>
                       </div>
-                      <Button 
-                        size="sm" 
-                        onClick={() => handleInitiateReturn(item)}
-                        disabled={isSubmittingReturn || (damageReportQuantities[item.name] || 0) === 0}
-                        className="h-8 px-4 rounded-lg bg-slate-900 text-white font-black uppercase text-[8px] tracking-widest hover:bg-emerald-600 transition-all"
-                      >
+                      <Button size="sm" onClick={() => handleInitiateReturn(item)} disabled={isSubmittingReturn || (damageReportQuantities[item.name] || 0) === 0} className="h-8 px-4 rounded-lg bg-slate-900 text-white font-black uppercase text-[8px] tracking-widest hover:bg-emerald-600 transition-all">
                         {isSubmittingReturn ? <Loader2 className="h-3 w-3 animate-spin" /> : "Log Entry"}
                       </Button>
                     </div>
@@ -459,7 +382,6 @@ export default function DashboardPage() {
               </div>
             )}
           </div>
-
           <DialogFooter className="border-t border-slate-100 pt-6">
             <Button variant="ghost" onClick={() => setIsReturnDialogOpen(false)} className="h-10 rounded-lg font-black uppercase tracking-widest text-[9px] text-slate-400 hover:text-rose-500">Close Protocol</Button>
           </DialogFooter>

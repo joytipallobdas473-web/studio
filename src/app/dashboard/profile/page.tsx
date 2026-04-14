@@ -1,7 +1,9 @@
+
 "use client";
 
 import { useUser, useFirestore, useDoc, useMemoFirebase, updateDocumentNonBlocking } from "@/firebase";
 import { doc } from "firebase/firestore";
+import Image from "next/image";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -28,7 +30,7 @@ export default function ProfilePage() {
   const storeRef = useMemoFirebase(() => {
     if (!db || !user) return null;
     return doc(db, "stores", user.uid);
-  }, [db, user]);
+  }, [db, user?.uid]);
 
   const { data: storeData, isLoading: storeLoading } = useDoc(storeRef);
 
@@ -69,7 +71,7 @@ export default function ProfilePage() {
       const ctx = canvas.getContext('2d');
       if (ctx) {
         ctx.drawImage(videoRef.current, 0, 0, canvas.width, canvas.height);
-        setPreviewUrl(canvas.toDataURL('image/jpeg'));
+        setPreviewUrl(canvas.toDataURL('image/jpeg', 0.8));
         stopCamera();
       }
     }
@@ -262,9 +264,9 @@ export default function ProfilePage() {
               {isCameraActive ? (
                 <video ref={videoRef} className="h-full w-full object-cover" autoPlay muted playsInline />
               ) : previewUrl ? (
-                <img src={previewUrl} alt="New Profile" className="h-full w-full object-cover" />
+                <Image src={previewUrl} alt="New Profile" fill className="object-cover" data-ai-hint="profile preview" />
               ) : (
-                <img src={storeData?.imageUrl || `https://picsum.photos/seed/${user?.uid}/200`} alt="Current Profile" className="h-full w-full object-cover" />
+                <Image src={storeData?.imageUrl || `https://picsum.photos/seed/${user?.uid}/200`} alt="Current Profile" fill className="object-cover" data-ai-hint="current profile" />
               )}
             </div>
 

@@ -3,6 +3,7 @@
 
 import { useFirestore, useCollection, useMemoFirebase, useUser } from "@/firebase";
 import { collection, doc, updateDoc, query, orderBy, deleteDoc } from "firebase/firestore";
+import Image from "next/image";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -26,7 +27,7 @@ export default function StoreManagement() {
   const storesQuery = useMemoFirebase(() => {
     if (!db || !user || !isAdmin) return null;
     return query(collection(db, "stores"), orderBy("createdAt", "desc"));
-  }, [db, user, isAdmin]);
+  }, [db, user?.uid, isAdmin]);
 
   const { data: stores, isLoading: loading } = useCollection(storesQuery);
 
@@ -109,10 +110,12 @@ export default function StoreManagement() {
                     <TableCell className="pl-10">
                       <div className="flex items-center gap-6">
                         <div className="relative h-14 w-14 rounded-2xl overflow-hidden bg-white/5 border border-white/10 shrink-0">
-                          <img 
+                          <Image 
                             src={store.imageUrl || `https://picsum.photos/seed/${store.id}/100/100`} 
                             alt={store.name} 
-                            className="h-full w-full object-cover" 
+                            fill
+                            className="object-cover" 
+                            data-ai-hint="store profile"
                           />
                         </div>
                         <div className="flex flex-col">
