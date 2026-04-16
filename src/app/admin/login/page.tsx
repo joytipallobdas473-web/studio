@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState, useEffect } from "react";
@@ -8,12 +7,13 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { Mail, Lock, Loader2, ArrowLeft, AlertTriangle, Fingerprint, ShieldCheck } from "lucide-react";
+import { Mail, Lock, Loader2, ArrowLeft, AlertTriangle, Fingerprint, ShieldCheck, Eye, EyeOff, KeyRound } from "lucide-react";
 import { useAuth, useUser, useFirestore } from "@/firebase";
-import { signInWithEmailAndPassword, signOut } from "firebase/auth";
+import { signInWithEmailAndPassword, signOut, sendPasswordResetEmail } from "firebase/auth";
 import { doc, getDoc } from "firebase/firestore";
 import { toast } from "@/hooks/use-toast";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 
 const MASTER_ADMIN_UID = "j96izCkggNcL002AHiJjzGb18Bf2";
 
@@ -24,8 +24,14 @@ export default function AdminLoginPage() {
   const { user, isUserLoading } = useUser();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  // Reset Password State
+  const [isResetOpen, setIsResetOpen] = useState(false);
+  const [resetEmail, setResetEmail] = useState("");
+  const [isResetting, setIsResetting] = useState(false);
 
   useEffect(() => {
     const checkAuthStatus = async () => {
@@ -80,6 +86,30 @@ export default function AdminLoginPage() {
     }
   };
 
+  const handleResetPassword = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!auth || !resetEmail) return;
+
+    setIsResetting(true);
+    try {
+      await sendPasswordResetEmail(auth, resetEmail.trim().toLowerCase());
+      toast({
+        title: "Security Link Transmitted",
+        description: "Admin reset protocol sent to authorized email node.",
+      });
+      setIsResetOpen(false);
+      setResetEmail("");
+    } catch (error: any) {
+      toast({
+        title: "Transmission Failure",
+        description: "Could not authorize reset request.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsResetting(false);
+    }
+  };
+
   if (isUserLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
@@ -129,10 +159,10 @@ export default function AdminLoginPage() {
                 <Label className="text-[9px] font-black uppercase tracking-widest text-slate-400 ml-1">Admin Signature</Label>
                 <div className="relative">
                   <Mail className="absolute left-5 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-300" />
-                  <Input 
+                  <input 
                     type="email" 
                     placeholder="admin@protocol.io" 
-                    className="pl-14 h-14 bg-slate-50 border-none rounded-2xl focus:ring-primary font-bold text-slate-900 placeholder:text-slate-300 text-sm" 
+                    className="flex h-14 w-full bg-slate-50 border-none rounded-2xl focus:ring-2 focus:ring-primary outline-none pl-14 font-bold text-slate-900 placeholder:text-slate-300 text-sm" 
                     required 
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
@@ -144,14 +174,30 @@ export default function AdminLoginPage() {
                 <Label className="text-[9px] font-black uppercase tracking-widest text-slate-400 ml-1">Secure Passkey</Label>
                 <div className="relative">
                   <Lock className="absolute left-5 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-300" />
-                  <Input 
-                    type="password" 
+                  <input 
+                    type={showPassword ? "text" : "password"} 
                     placeholder="••••••••" 
-                    className="pl-14 h-14 bg-slate-50 border-none rounded-2xl focus:ring-primary font-bold text-slate-900 placeholder:text-slate-300" 
+                    className="flex h-14 w-full bg-slate-50 border-none rounded-2xl focus:ring-2 focus:ring-primary outline-none pl-14 pr-12 font-bold text-slate-900 placeholder:text-slate-300" 
                     required 
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                   />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="absolute right-5 top-1/2 -translate-y-1/2 text-slate-300 hover:text-primary transition-colors"
+                  >
+                    {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                  </button>
+                </div>
+                <div className="flex justify-end">
+                   <button 
+                    type="button" 
+                    onClick={() => setIsResetOpen(true)}
+                    className="text-[9px] font-black uppercase tracking-widest text-slate-400 hover:text-primary transition-colors"
+                   >
+                     Reset Credentials?
+                   </button>
                 </div>
               </div>
 
@@ -173,6 +219,42 @@ export default function AdminLoginPage() {
           </div>
         </Card>
       </div>
+
+      {/* Admin Reset Dialog */}
+      <Dialog open={isResetOpen} onOpenChange={setIsResetOpen}>
+        <DialogContent className="rounded-[2.5rem] p-10 border-none bg-white max-w-sm shadow-2xl">
+          <DialogHeader className="space-y-4">
+            <div className="bg-primary/10 h-16 w-16 rounded-2xl flex items-center justify-center text-primary mx-auto">
+              <ShieldCheck className="h-8 w-8" />
+            </div>
+            <DialogTitle className="text-xl font-black text-slate-900 uppercase italic tracking-tighter text-center">Admin Reset Protocol</DialogTitle>
+            <DialogDescription className="text-center text-slate-500 font-medium text-xs leading-relaxed">
+              Enter your authorized admin email to initiate identity recovery.
+            </DialogDescription>
+          </DialogHeader>
+          <form onSubmit={handleResetPassword} className="space-y-6 mt-4">
+            <div className="space-y-2">
+              <Label className="text-[9px] font-black uppercase tracking-widest text-slate-400 ml-1">Admin Email</Label>
+              <input 
+                type="email" 
+                placeholder="admin@protocol.io" 
+                className="flex h-14 w-full bg-slate-50 border-none rounded-xl outline-none px-6 font-bold text-slate-900" 
+                required 
+                value={resetEmail}
+                onChange={(e) => setResetEmail(e.target.value)}
+              />
+            </div>
+            <DialogFooter className="flex-col gap-3 sm:flex-col">
+              <Button type="submit" className="w-full h-14 bg-primary text-white font-black rounded-xl uppercase tracking-widest text-[10px]" disabled={isResetting}>
+                {isResetting ? <Loader2 className="h-4 w-4 animate-spin" /> : "Initiate Recovery"}
+              </Button>
+              <Button type="button" variant="ghost" className="w-full h-12 text-slate-400 font-black uppercase tracking-widest text-[9px]" onClick={() => setIsResetOpen(false)}>
+                Abort
+              </Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

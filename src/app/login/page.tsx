@@ -7,12 +7,13 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
-import { Mail, Lock, Loader2, ArrowLeft, ChevronRight, MapPin, Store, Fingerprint, Keyboard } from "lucide-react";
+import { Mail, Lock, Loader2, ArrowLeft, ChevronRight, MapPin, Store, Fingerprint, Keyboard, Eye, EyeOff, KeyRound } from "lucide-react";
 import { useAuth, useUser, useFirestore, useDoc, useMemoFirebase } from "@/firebase";
-import { signInWithEmailAndPassword } from "firebase/auth";
+import { signInWithEmailAndPassword, sendPasswordResetEmail } from "firebase/auth";
 import { doc } from "firebase/firestore";
 import { toast } from "@/hooks/use-toast";
 import { BiometricPrompt } from "@/components/biometric-prompt";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 
 const MASTER_ADMIN_UID = "j96izCkggNcL002AHiJjzGb18Bf2";
 
@@ -23,8 +24,14 @@ export default function RetailerLoginPage() {
   const { user, isUserLoading } = useUser();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [loginMethod, setLoginMethod] = useState<"standard" | "biometric">("standard");
+  
+  // Reset Password State
+  const [isResetOpen, setIsResetOpen] = useState(false);
+  const [resetEmail, setResetEmail] = useState("");
+  const [isResetting, setIsResetting] = useState(false);
 
   const storeRef = useMemoFirebase(() => {
     if (!db || !user) return null;
@@ -67,6 +74,30 @@ export default function RetailerLoginPage() {
     }
   };
 
+  const handleResetPassword = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!auth || !resetEmail) return;
+
+    setIsResetting(true);
+    try {
+      await sendPasswordResetEmail(auth, resetEmail.trim().toLowerCase());
+      toast({
+        title: "Protocol Reset Sent",
+        description: "Verification link transmitted to your email node.",
+      });
+      setIsResetOpen(false);
+      setResetEmail("");
+    } catch (error: any) {
+      toast({
+        title: "Transmission Failed",
+        description: "Could not verify identity for reset.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsResetting(false);
+    }
+  };
+
   const handleBiometricComplete = () => {
     toast({
       title: "Biometric Protocol Accepted",
@@ -92,7 +123,7 @@ export default function RetailerLoginPage() {
   return (
     <div className="min-h-screen flex flex-col items-center justify-center p-6 bg-[#ECF0F5]">
       <div className="w-full max-w-md space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
-        <Link href="/admin" className="flex items-center gap-2 text-slate-400 hover:text-primary transition-colors font-bold text-xs uppercase tracking-widest group">
+        <Link href="/admin/login" className="flex items-center gap-2 text-slate-400 hover:text-primary transition-colors font-bold text-xs uppercase tracking-widest group">
           <ArrowLeft className="h-4 w-4 group-hover:-translate-x-1 transition-transform" />
           Switch to Admin Console
         </Link>
@@ -151,13 +182,29 @@ export default function RetailerLoginPage() {
                   <div className="relative">
                     <Lock className="absolute left-5 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
                     <Input 
-                      type="password" 
+                      type={showPassword ? "text" : "password"} 
                       placeholder="••••••••" 
-                      className="pl-14 h-14 bg-slate-50 border-slate-100 rounded-2xl focus:ring-primary font-bold text-slate-900" 
+                      className="pl-14 pr-12 h-14 bg-slate-50 border-slate-100 rounded-2xl focus:ring-primary font-bold text-slate-900" 
                       required 
                       value={password}
                       onChange={(e) => setPassword(e.target.value)}
                     />
+                    <button
+                      type="button"
+                      onClick={() => setShowPassword(!showPassword)}
+                      className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-300 hover:text-primary transition-colors"
+                    >
+                      {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                    </button>
+                  </div>
+                  <div className="flex justify-end">
+                    <button 
+                      type="button"
+                      onClick={() => setIsResetOpen(true)}
+                      className="text-[9px] font-black uppercase tracking-widest text-slate-400 hover:text-primary transition-colors"
+                    >
+                      Forgot Passkey?
+                    </button>
                   </div>
                 </div>
 
@@ -182,12 +229,48 @@ export default function RetailerLoginPage() {
              </div>
              <Link href="/register" className="w-full">
                <Button variant="outline" className="w-full h-14 rounded-2xl border-slate-200 text-slate-600 font-bold hover:bg-slate-50 uppercase tracking-widest text-[10px]">
-                 NEW STORE REGISTION
+                 NEW STORE REGISTRATION
                </Button>
              </Link>
           </CardFooter>
         </Card>
       </div>
+
+      {/* Reset Password Dialog */}
+      <Dialog open={isResetOpen} onOpenChange={setIsResetOpen}>
+        <DialogContent className="rounded-[2.5rem] p-10 border-none bg-white max-w-sm shadow-2xl">
+          <DialogHeader className="space-y-4">
+            <div className="bg-primary/10 h-16 w-16 rounded-2xl flex items-center justify-center text-primary mx-auto">
+              <KeyRound className="h-8 w-8" />
+            </div>
+            <DialogTitle className="text-xl font-black text-slate-900 uppercase italic tracking-tighter text-center">Reset Node Access</DialogTitle>
+            <DialogDescription className="text-center text-slate-500 font-medium text-xs leading-relaxed">
+              Enter the authorized node email to transmit a passkey reset protocol.
+            </DialogDescription>
+          </DialogHeader>
+          <form onSubmit={handleResetPassword} className="space-y-6 mt-4">
+            <div className="space-y-2">
+              <Label className="text-[9px] font-black uppercase tracking-widest text-slate-400 ml-1">Recovery Email</Label>
+              <Input 
+                type="email" 
+                placeholder="branch@node.com" 
+                className="h-14 bg-slate-50 border-none rounded-xl font-bold text-slate-900" 
+                required 
+                value={resetEmail}
+                onChange={(e) => setResetEmail(e.target.value)}
+              />
+            </div>
+            <DialogFooter className="flex-col gap-3 sm:flex-col">
+              <Button type="submit" className="w-full h-14 bg-primary text-white font-black rounded-xl uppercase tracking-widest text-[10px]" disabled={isResetting}>
+                {isResetting ? <Loader2 className="h-4 w-4 animate-spin" /> : "Transmit Protocol"}
+              </Button>
+              <Button type="button" variant="ghost" className="w-full h-12 text-slate-400 font-black uppercase tracking-widest text-[9px]" onClick={() => setIsResetOpen(false)}>
+                Abort
+              </Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
