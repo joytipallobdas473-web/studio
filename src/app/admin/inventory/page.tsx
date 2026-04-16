@@ -455,7 +455,7 @@ export default function InventoryControl() {
       )}
 
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-        <DialogContent className="sm:max-w-[800px] rounded-[2.5rem] p-10 glass-card border-none shadow-2xl overflow-y-auto max-h-[95vh]">
+        <DialogContent className="sm:max-w-[800px] rounded-[2.5rem] p-10 glass-card border-none shadow-2xl overflow-y-auto max-h-[95vh] bg-white text-slate-900">
           <DialogHeader>
             <DialogTitle className="text-3xl font-black uppercase italic text-primary">
               {editingProduct ? "Modify SKU Node" : "Provision Cluster"}
@@ -465,22 +465,22 @@ export default function InventoryControl() {
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-10 items-start">
                <div className="space-y-6">
                 <div className="space-y-3">
-                  <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Identity Tag</Label>
-                  <Input value={formData.name} onChange={(e) => setFormData({...formData, name: e.target.value})} className="h-14 rounded-2xl bg-white/5 border-none text-white font-bold" />
+                  <Label className="text-[10px] font-black uppercase tracking-widest text-slate-500">Identity Tag</Label>
+                  <Input value={formData.name} onChange={(e) => setFormData({...formData, name: e.target.value})} className="h-14 rounded-2xl bg-slate-50 border border-slate-200 text-slate-900 font-bold" />
                 </div>
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-3">
-                    <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Registry SKU</Label>
-                    <Input value={formData.sku} onChange={(e) => setFormData({...formData, sku: e.target.value})} className="h-14 rounded-2xl font-mono uppercase font-bold bg-white/5 border-none text-white" />
+                    <Label className="text-[10px] font-black uppercase tracking-widest text-slate-500">Registry SKU</Label>
+                    <Input value={formData.sku} onChange={(e) => setFormData({...formData, sku: e.target.value})} className="h-14 rounded-2xl font-mono uppercase font-bold bg-slate-50 border border-slate-200 text-slate-900" />
                   </div>
                   <div className="space-y-3">
-                    <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Distributor</Label>
-                    <Input value={formData.distributorName} onChange={(e) => setFormData({...formData, distributorName: e.target.value})} placeholder="Supplier Node" className="h-14 rounded-2xl font-bold bg-white/5 border-none text-white" />
+                    <Label className="text-[10px] font-black uppercase tracking-widest text-slate-500">Distributor</Label>
+                    <Input value={formData.distributorName} onChange={(e) => setFormData({...formData, distributorName: e.target.value})} placeholder="Supplier Node" className="h-14 rounded-2xl font-bold bg-slate-50 border border-slate-200 text-slate-900 placeholder:text-slate-400" />
                   </div>
                 </div>
                 <div className="space-y-3">
                   <div className="flex items-center justify-between">
-                    <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Logistics Description</Label>
+                    <Label className="text-[10px] font-black uppercase tracking-widest text-slate-500">Logistics Description</Label>
                     <Button 
                       variant="ghost" 
                       size="sm" 
@@ -496,11 +496,11 @@ export default function InventoryControl() {
                     value={formData.description} 
                     onChange={(e) => setFormData({...formData, description: e.target.value})}
                     placeholder="Technical specifications and retail value..."
-                    className="min-h-[100px] rounded-2xl bg-white/5 border-none text-white font-medium text-xs leading-relaxed"
+                    className="min-h-[100px] rounded-2xl bg-slate-50 border border-slate-200 text-slate-900 font-medium text-xs leading-relaxed placeholder:text-slate-400"
                   />
                 </div>
                 <div className="space-y-3">
-                  <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Visual Identity Slots (Up to 3)</Label>
+                  <Label className="text-[10px] font-black uppercase tracking-widest text-slate-500">Visual Identity Slots (Up to 3)</Label>
                   <div className="grid grid-cols-3 gap-4">
                     {formData.imageUrls.map((url, idx) => (
                       <button 
@@ -508,13 +508,13 @@ export default function InventoryControl() {
                         onClick={() => setActiveImageIndex(idx)}
                         className={cn(
                           "relative aspect-square rounded-2xl overflow-hidden border-2 transition-all group",
-                          activeImageIndex === idx ? "border-primary scale-105 shadow-[0_0_15px_rgba(245,158,11,0.3)]" : "border-white/10 opacity-60 grayscale hover:opacity-100 hover:grayscale-0"
+                          activeImageIndex === idx ? "border-primary scale-105 shadow-[0_0_15px_rgba(245,158,11,0.3)]" : "border-slate-200 opacity-60 grayscale hover:opacity-100 hover:grayscale-0"
                         )}
                       >
                         {url ? (
                           <Image src={url} alt={`Slot ${idx+1}`} fill className="object-cover" data-ai-hint="product angle" />
                         ) : (
-                          <div className="w-full h-full flex items-center justify-center bg-white/5 text-[10px] font-black text-muted-foreground uppercase italic">
+                          <div className="w-full h-full flex items-center justify-center bg-slate-50 text-[10px] font-black text-slate-400 uppercase italic">
                             Slot {idx + 1}
                           </div>
                         )}
@@ -533,10 +533,10 @@ export default function InventoryControl() {
                </div>
                
                <div className="space-y-3">
-                 <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground text-center block">
+                 <Label className="text-[10px] font-black uppercase tracking-widest text-slate-500 text-center block">
                    Visual ID Capture: Slot {activeImageIndex + 1}
                  </Label>
-                 <div className="aspect-video relative rounded-[1.5rem] bg-black overflow-hidden flex items-center justify-center border border-white/10">
+                 <div className="aspect-video relative rounded-[1.5rem] bg-black overflow-hidden flex items-center justify-center border border-slate-200">
                    {isCameraActive ? (
                      <video ref={videoRef} className="w-full h-full object-cover" autoPlay muted playsInline />
                    ) : formData.imageUrls[activeImageIndex] ? (
@@ -544,7 +544,7 @@ export default function InventoryControl() {
                    ) : (
                      <div className="flex flex-col items-center gap-4">
                         <ImageIcon className="h-10 w-10 text-white/10" />
-                        <p className="text-[10px] text-muted-foreground font-bold uppercase italic">Awaiting Visual Signature: Slot {activeImageIndex + 1}</p>
+                        <p className="text-[10px] text-slate-400 font-bold uppercase italic">Awaiting Visual Signature: Slot {activeImageIndex + 1}</p>
                      </div>
                    )}
                  </div>
@@ -555,7 +555,7 @@ export default function InventoryControl() {
                         <Button variant="secondary" className="flex-1 h-12 bg-primary text-background rounded-xl font-black uppercase text-[10px] tracking-widest" onClick={startCamera}>
                           <Camera className="h-4 w-4 mr-2" /> Start Lens
                         </Button>
-                        <Button variant="outline" className="flex-1 h-12 bg-white/5 border-white/10 text-white rounded-xl font-black uppercase text-[10px] tracking-widest" onClick={() => fileInputRef.current?.click()}>
+                        <Button variant="outline" className="flex-1 h-12 bg-slate-50 border-slate-200 text-slate-900 rounded-xl font-black uppercase text-[10px] tracking-widest" onClick={() => fileInputRef.current?.click()}>
                           <Upload className="h-4 w-4 mr-2" /> Upload Photo
                         </Button>
                         <input 
@@ -582,28 +582,28 @@ export default function InventoryControl() {
             
             <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
               <div className="space-y-3">
-                <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Sector Cluster</Label>
+                <Label className="text-[10px] font-black uppercase tracking-widest text-slate-500">Sector Cluster</Label>
                 <Select value={formData.category} onValueChange={(val) => setFormData({...formData, category: val})}>
-                  <SelectTrigger className="h-14 rounded-2xl bg-white/5 border-none text-white font-bold"><SelectValue /></SelectTrigger>
-                  <SelectContent className="glass-card text-white">{CATEGORIES.map(c => <SelectItem key={c} value={c}>{c}</SelectItem>)}</SelectContent>
+                  <SelectTrigger className="h-14 rounded-2xl bg-slate-50 border border-slate-200 text-slate-900 font-bold"><SelectValue /></SelectTrigger>
+                  <SelectContent className="bg-white text-slate-900">{CATEGORIES.map(c => <SelectItem key={c} value={c}>{c}</SelectItem>)}</SelectContent>
                 </Select>
               </div>
               <div className="space-y-3">
-                <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground text-rose-400">MRP (₹)</Label>
-                <Input type="number" value={formData.mrp} onChange={(e) => setFormData({...formData, mrp: e.target.value})} className="h-14 rounded-2xl bg-white/5 border-none font-mono text-white" />
+                <Label className="text-[10px] font-black uppercase tracking-widest text-rose-500">MRP (₹)</Label>
+                <Input type="number" value={formData.mrp} onChange={(e) => setFormData({...formData, mrp: e.target.value})} className="h-14 rounded-2xl bg-slate-50 border border-slate-200 font-mono text-slate-900" />
               </div>
               <div className="space-y-3">
-                <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground text-emerald-400">Offer (₹)</Label>
-                <Input type="number" value={formData.price} onChange={(e) => setFormData({...formData, price: e.target.value})} className="h-14 rounded-2xl bg-white/5 border-none font-mono text-white" />
+                <Label className="text-[10px] font-black uppercase tracking-widest text-emerald-600">Offer (₹)</Label>
+                <Input type="number" value={formData.price} onChange={(e) => setFormData({...formData, price: e.target.value})} className="h-14 rounded-2xl bg-slate-50 border border-slate-200 font-mono text-slate-900" />
               </div>
               <div className="space-y-3">
-                <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Stock Density</Label>
-                <Input type="number" value={formData.stockQuantity} onChange={(e) => setFormData({...formData, stockQuantity: e.target.value})} className="h-14 rounded-2xl bg-white/5 border-none font-mono text-white" />
+                <Label className="text-[10px] font-black uppercase tracking-widest text-slate-500">Stock Density</Label>
+                <Input type="number" value={formData.stockQuantity} onChange={(e) => setFormData({...formData, stockQuantity: e.target.value})} className="h-14 rounded-2xl bg-slate-50 border border-slate-200 font-mono text-slate-900" />
               </div>
             </div>
           </div>
           <DialogFooter className="gap-4">
-            <Button variant="ghost" onClick={() => setIsDialogOpen(false)} className="h-14 px-8 rounded-2xl uppercase tracking-widest font-bold text-muted-foreground hover:text-white">Abort</Button>
+            <Button variant="ghost" onClick={() => setIsDialogOpen(false)} className="h-14 px-8 rounded-2xl uppercase tracking-widest font-bold text-slate-500 hover:text-slate-900">Abort</Button>
             <Button onClick={handleSave} className="bg-primary text-background h-14 px-10 rounded-2xl font-black uppercase tracking-widest shadow-lg">
               <CheckCircle2 className="mr-3 h-6 w-6" /> Commit SKU
             </Button>
