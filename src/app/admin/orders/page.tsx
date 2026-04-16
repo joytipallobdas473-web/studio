@@ -9,11 +9,12 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Download, Search, FileText, Filter, Loader2, Phone, MapPin, Mail, Globe, CheckCircle2, Truck } from "lucide-react";
+import { Download, Search, FileText, Filter, Loader2, Phone, MapPin, Mail, Globe, CheckCircle2, Truck, Printer, X } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
 import { format } from "date-fns";
 import { updateDocumentNonBlocking } from "@/firebase";
 import { cn } from "@/lib/utils";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 
 const MASTER_ADMIN_UID = "j96izCkggNcL002AHiJjzGb18Bf2";
 
@@ -35,6 +36,7 @@ export default function AdminOrdersPage() {
   const [statusFilter, setStatusFilter] = useState("all");
   const [searchQuery, setSearchQuery] = useState("");
   const [isClient, setIsClient] = useState(false);
+  const [selectedInvoice, setSelectedInvoice] = useState<any>(null);
 
   useEffect(() => {
     setIsClient(true);
@@ -132,6 +134,10 @@ export default function AdminOrdersPage() {
     });
   };
 
+  const handlePrint = () => {
+    window.print();
+  };
+
   if (loading) {
     return (
       <div className="flex h-[70vh] items-center justify-center">
@@ -154,7 +160,115 @@ export default function AdminOrdersPage() {
 
   return (
     <div className="space-y-8 md:space-y-12 animate-in fade-in duration-700">
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-6 md:gap-8">
+      {/* Printable Invoice Overlay */}
+      {selectedInvoice && (
+        <Dialog open={!!selectedInvoice} onOpenChange={() => setSelectedInvoice(null)}>
+          <DialogContent className="sm:max-w-[800px] p-0 border-none bg-white overflow-hidden">
+             <div id="printable-invoice" className="bg-white text-slate-900 p-12 space-y-8 font-sans">
+                <div className="flex justify-between items-start border-b-2 border-slate-900 pb-8">
+                   <div className="space-y-1">
+                      <h2 className="text-3xl font-black italic tracking-tighter uppercase leading-none">Aether Network</h2>
+                      <p className="text-[10px] font-bold uppercase tracking-widest text-slate-500">Regional Logistics Hub // North East Grid</p>
+                   </div>
+                   <div className="text-right space-y-1">
+                      <h3 className="text-xl font-black uppercase italic">Invoice</h3>
+                      <p className="text-[10px] font-mono font-bold text-slate-400">ID: {selectedInvoice.id.toUpperCase()}</p>
+                   </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-12">
+                   <div className="space-y-4">
+                      <h4 className="text-[10px] font-black uppercase tracking-widest text-slate-400 border-b border-slate-100 pb-1">Destination Node</h4>
+                      <div className="space-y-1">
+                         <p className="font-black uppercase italic text-lg">{selectedInvoice.storeName}</p>
+                         <p className="text-xs font-medium text-slate-600 leading-relaxed max-w-[250px]">{selectedInvoice.deliveryAddress}</p>
+                         <p className="text-xs font-bold text-slate-900 mt-2">Node Comms: {selectedInvoice.phoneNumber}</p>
+                      </div>
+                   </div>
+                   <div className="space-y-4">
+                      <h4 className="text-[10px] font-black uppercase tracking-widest text-slate-400 border-b border-slate-100 pb-1">Protocol Details</h4>
+                      <div className="space-y-1">
+                         <div className="flex justify-between text-xs">
+                            <span className="text-slate-400 font-bold uppercase">Date:</span>
+                            <span className="font-bold">{selectedInvoice.createdAt?.seconds ? format(selectedInvoice.createdAt.seconds * 1000, 'dd MMM yyyy') : 'PENDING'}</span>
+                         </div>
+                         <div className="flex justify-between text-xs">
+                            <span className="text-slate-400 font-bold uppercase">Method:</span>
+                            <span className="font-bold uppercase">{selectedInvoice.paymentMethod || 'CASH'}</span>
+                         </div>
+                         <div className="flex justify-between text-xs">
+                            <span className="text-slate-400 font-bold uppercase">Status:</span>
+                            <span className="font-bold uppercase text-emerald-600">{selectedInvoice.status}</span>
+                         </div>
+                      </div>
+                   </div>
+                </div>
+
+                <div className="space-y-4 pt-4">
+                   <table className="w-full text-left">
+                      <thead>
+                         <tr className="border-b-2 border-slate-900 h-10">
+                            <th className="text-[10px] font-black uppercase tracking-widest">SKU Identity / Description</th>
+                            <th className="text-[10px] font-black uppercase tracking-widest text-right">Quantity</th>
+                            <th className="text-[10px] font-black uppercase tracking-widest text-right">Total (₹)</th>
+                         </tr>
+                      </thead>
+                      <tbody>
+                         <tr className="border-b border-slate-100 h-16">
+                            <td className="py-4">
+                               <p className="font-bold text-sm leading-snug">{selectedInvoice.items}</p>
+                               <p className="text-[9px] text-slate-400 font-bold uppercase tracking-tighter mt-1">Consolidated Logistics Packet</p>
+                            </td>
+                            <td className="text-right font-mono font-bold text-sm">{selectedInvoice.quantity || 1}</td>
+                            <td className="text-right font-mono font-black text-sm">{(selectedInvoice.total || 0).toFixed(2)}</td>
+                         </tr>
+                      </tbody>
+                   </table>
+                </div>
+
+                <div className="flex justify-end pt-4">
+                   <div className="w-64 space-y-3">
+                      <div className="flex justify-between items-center text-xs">
+                         <span className="text-slate-400 font-bold uppercase">Subtotal:</span>
+                         <span className="font-bold">₹{(selectedInvoice.total || 0).toFixed(2)}</span>
+                      </div>
+                      <div className="flex justify-between items-center text-xs">
+                         <span className="text-slate-400 font-bold uppercase">Logistics Fee:</span>
+                         <span className="font-bold">₹0.00</span>
+                      </div>
+                      <div className="border-t-2 border-slate-900 pt-3 flex justify-between items-center">
+                         <span className="text-sm font-black uppercase italic">Grand Total:</span>
+                         <span className="text-xl font-black font-mono tracking-tighter">₹{(selectedInvoice.total || 0).toFixed(2)}</span>
+                      </div>
+                   </div>
+                </div>
+
+                <div className="pt-20 grid grid-cols-2 gap-24">
+                   <div className="border-t border-slate-300 pt-3 space-y-1">
+                      <p className="text-[9px] font-black uppercase tracking-widest text-slate-400">Regional Controller Signature</p>
+                      <p className="text-[10px] font-bold text-slate-900 uppercase">Aether Authority Node</p>
+                   </div>
+                   <div className="border-t border-slate-300 pt-3 space-y-1">
+                      <p className="text-[9px] font-black uppercase tracking-widest text-slate-400">Node Manager Signature</p>
+                      <p className="text-[10px] font-bold text-slate-900 uppercase">{selectedInvoice.storeName}</p>
+                   </div>
+                </div>
+
+                <div className="pt-12 text-center">
+                   <p className="text-[8px] font-black uppercase tracking-[0.4em] text-slate-300">This document is a certified regional manifest of the Aether Network // End of Line</p>
+                </div>
+             </div>
+             <div className="p-6 bg-slate-50 border-t flex justify-end gap-3 print:hidden">
+                <Button variant="outline" onClick={() => setSelectedInvoice(null)} className="h-12 px-6 rounded-xl font-bold uppercase text-[10px]">Close Node</Button>
+                <Button onClick={handlePrint} className="h-12 px-8 rounded-xl bg-slate-900 text-white font-black uppercase tracking-widest text-[10px]">
+                   <Printer className="mr-2 h-4 w-4" /> Print Hardcopy
+                </Button>
+             </div>
+          </DialogContent>
+        </Dialog>
+      )}
+
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-6 md:gap-8 print:hidden">
         <div className="space-y-3">
           <div className="flex items-center gap-3">
              <div className="h-2 w-2 rounded-full bg-primary" />
@@ -168,7 +282,7 @@ export default function AdminOrdersPage() {
         </Button>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4 md:gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-4 md:gap-6 print:hidden">
         <div className="md:col-span-2 relative">
           <Search className="absolute left-6 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
           <Input 
@@ -207,7 +321,7 @@ export default function AdminOrdersPage() {
         </Select>
       </div>
 
-      <Card className="hidden md:block border-none glass-card rounded-[2.5rem] overflow-hidden">
+      <Card className="hidden md:block border-none glass-card rounded-[2.5rem] overflow-hidden print:hidden">
         <CardContent className="p-0">
           <Table>
             <TableHeader className="bg-white/5">
@@ -301,14 +415,24 @@ export default function AdminOrdersPage() {
                       </Select>
                     </TableCell>
                     <TableCell className="text-right pr-10">
-                      <Button 
-                        size="sm" 
-                        variant="ghost" 
-                        className="text-muted-foreground hover:text-primary h-11 rounded-2xl px-6 hover:bg-white/5 font-bold uppercase tracking-widest text-[10px]"
-                        onClick={() => downloadPO(order.id)}
-                      >
-                        <FileText className="h-4 w-4 mr-3" /> Packet PO
-                      </Button>
+                      <div className="flex flex-col items-end gap-2">
+                         <Button 
+                           size="sm" 
+                           variant="ghost" 
+                           className="text-muted-foreground hover:text-primary h-11 rounded-2xl px-6 hover:bg-white/5 font-bold uppercase tracking-widest text-[10px]"
+                           onClick={() => setSelectedInvoice(order)}
+                         >
+                           <Printer className="h-4 w-4 mr-3" /> Invoice
+                         </Button>
+                         <Button 
+                           size="sm" 
+                           variant="ghost" 
+                           className="text-muted-foreground hover:text-white h-8 rounded-xl px-4 hover:bg-white/5 font-bold uppercase tracking-widest text-[8px]"
+                           onClick={() => downloadPO(order.id)}
+                         >
+                           <Download className="h-3 w-3 mr-2" /> Data PO
+                         </Button>
+                      </div>
                     </TableCell>
                   </TableRow>
                 ))
@@ -325,7 +449,7 @@ export default function AdminOrdersPage() {
         </CardContent>
       </Card>
 
-      <div className="md:hidden space-y-4">
+      <div className="md:hidden space-y-4 print:hidden">
         {filteredOrders.length ? filteredOrders.map((order) => (
           <Card key={order.id} className="border-none glass-card rounded-3xl p-6 space-y-6">
             <div className="flex justify-between items-start">
@@ -391,13 +515,42 @@ export default function AdminOrdersPage() {
                   <p className="text-xs font-black text-primary font-mono">₹{(order.total || 0).toFixed(2)}</p>
                   <p className="text-[9px] text-muted-foreground font-mono truncate max-w-[150px]">{order.items || 'Payload'}</p>
                </div>
-               <Button size="sm" variant="outline" className="h-10 rounded-xl glass-card border-white/10 text-white font-black text-[9px] uppercase tracking-widest" onClick={() => downloadPO(order.id)}>
-                 <Download className="h-3 w-3 mr-2" /> PO
-               </Button>
+               <div className="flex gap-2">
+                  <Button size="sm" variant="outline" className="h-10 rounded-xl glass-card border-white/10 text-white font-black text-[9px] uppercase tracking-widest" onClick={() => setSelectedInvoice(order)}>
+                    <Printer className="h-3 w-3 mr-2" /> Invoice
+                  </Button>
+                  <Button size="sm" variant="outline" className="h-10 rounded-xl glass-card border-white/10 text-white font-black text-[9px] uppercase tracking-widest" onClick={() => downloadPO(order.id)}>
+                    <Download className="h-3 w-3 mr-2" /> PO
+                  </Button>
+               </div>
             </div>
           </Card>
         )) : null}
       </div>
+
+      <style jsx global>{`
+        @media print {
+          body * {
+            visibility: hidden;
+          }
+          #printable-invoice, #printable-invoice * {
+            visibility: visible;
+          }
+          #printable-invoice {
+            position: absolute;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            margin: 0;
+            padding: 20px;
+          }
+          .dark-admin {
+             background-color: white !important;
+             color: black !important;
+          }
+        }
+      `}</style>
     </div>
   );
 }
