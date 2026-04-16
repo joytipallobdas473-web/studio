@@ -320,7 +320,7 @@ export default function NewOrderPage() {
                                 onClick={() => updateQuantity(item.id, -1)} 
                                 className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-slate-50 text-slate-400 transition-colors"
                               >
-                                <膨胀 className="h-3.5 w-3.5" />
+                                <Minus className="h-3.5 w-3.5" />
                               </button>
                               <span className="w-10 text-center font-black text-sm text-slate-900">{item.quantity}</span>
                               <button 
