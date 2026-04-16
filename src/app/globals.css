@@ -73,13 +73,13 @@
 }
 
 .dark-admin .glass-card {
-  @apply bg-black/60 backdrop-blur-lg border border-primary/20 shadow-[0_0_20px_rgba(0,255,255,0.05)];
+  @apply bg-black/60 backdrop-blur-md border border-primary/20 shadow-[0_0_20px_rgba(0,255,255,0.05)];
 }
 
 .admin-grid {
   background-image: 
-    radial-gradient(at 0% 0%, hsla(180, 100% , 50%, 0.03) 0, transparent 50%),
-    radial-gradient(at 100% 100%, hsla(142, 71%, 45%, 0.03) 0, transparent 50%),
+    radial-gradient(at 0% 0%, hsla(180, 100% , 50%, 0.02) 0, transparent 50%),
+    radial-gradient(at 100% 100%, hsla(142, 71%, 45% , 0.02) 0, transparent 50%),
     linear-gradient(to right, rgba(0, 255, 255, 0.01) 1px, transparent 1px),
     linear-gradient(to bottom, rgba(0, 255, 255, 0.01) 1px, transparent 1px);
   background-size: 100% 100%, 100% 100%, 30px 30px, 30px 30px;
@@ -97,7 +97,7 @@
 }
 
 @keyframes pulse-cyan {
-  0% { box-shadow: 0 0 0 0 rgba(0, 255, 255, 0.2); }
+  0% { box-shadow: 0 0 0 0 rgba(0, 255, 255, 0.1); }
   70% { box-shadow: 0 0 0 10px rgba(0, 255, 255, 0); }
   100% { box-shadow: 0 0 0 0 rgba(0, 255, 255, 0); }
 }

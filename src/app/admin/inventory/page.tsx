@@ -338,6 +338,7 @@ export default function InventoryControl() {
                               src={product.imageUrl || (product.imageUrls && product.imageUrls[0]) || `https://picsum.photos/seed/${product.sku}/100/100`} 
                               alt={product.name} 
                               fill
+                              sizes="56px"
                               className="object-cover" 
                               data-ai-hint="product photo"
                             />
@@ -401,6 +402,7 @@ export default function InventoryControl() {
                       src={product.imageUrl || (product.imageUrls && product.imageUrls[0]) || `https://picsum.photos/seed/${product.sku}/100/100`} 
                       alt={product.name} 
                       fill
+                      sizes="80px"
                       className="object-cover" 
                       data-ai-hint="product photo"
                     />
@@ -512,7 +514,7 @@ export default function InventoryControl() {
                         )}
                       >
                         {url ? (
-                          <Image src={url} alt={`Slot ${idx+1}`} fill className="object-cover" data-ai-hint="product angle" />
+                          <Image src={url} alt={`Slot ${idx+1}`} fill sizes="100px" className="object-cover" data-ai-hint="product angle" />
                         ) : (
                           <div className="w-full h-full flex items-center justify-center bg-slate-50 text-[10px] font-black text-slate-400 uppercase italic">
                             Slot {idx + 1}
@@ -540,7 +542,7 @@ export default function InventoryControl() {
                    {isCameraActive ? (
                      <video ref={videoRef} className="w-full h-full object-cover" autoPlay muted playsInline />
                    ) : formData.imageUrls[activeImageIndex] ? (
-                     <Image src={formData.imageUrls[activeImageIndex]} alt="Preview" fill className="object-cover" data-ai-hint="product capture" />
+                     <Image src={formData.imageUrls[activeImageIndex]} alt="Preview" fill sizes="400px" className="object-cover" data-ai-hint="product capture" />
                    ) : (
                      <div className="flex flex-col items-center gap-4">
                         <ImageIcon className="h-10 w-10 text-white/10" />

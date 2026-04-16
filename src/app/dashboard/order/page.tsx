@@ -121,12 +121,13 @@ export default function NewOrderPage() {
     if (!products) return [];
     let list = [...products].sort((a, b) => (a.name || "").localeCompare(b.name || ""));
     
+    const queryStr = searchQuery.toLowerCase();
     return list.filter(p => {
       const name = (p.name || "").toLowerCase();
       const sku = (p.sku || "").toLowerCase();
       const pCat = p.category || "";
       
-      const matchesSearch = name.includes(searchQuery.toLowerCase()) || sku.includes(searchQuery.toLowerCase());
+      const matchesSearch = name.includes(queryStr) || sku.includes(queryStr);
       const matchesCategory = selectedCategory === "all" || pCat === selectedCategory;
       
       return matchesSearch && matchesCategory;
@@ -174,10 +175,19 @@ export default function NewOrderPage() {
     toast({ title: "Item Purged", variant: "destructive" });
   };
 
-  const cartTotal = useMemo(() => Object.values(cart).reduce((sum, item) => sum + (item.price * item.quantity), 0), [cart]);
-  const cartMrpTotal = useMemo(() => Object.values(cart).reduce((sum, item) => sum + (item.mrp * item.quantity), 0), [cart]);
-  const cartDiscount = useMemo(() => cartMrpTotal - cartTotal, [cartMrpTotal, cartTotal]);
-  const cartItemCount = useMemo(() => Object.values(cart).reduce((sum, item) => sum + item.quantity, 0), [cart]);
+  const { cartTotal, cartMrpTotal, cartDiscount, cartItemCount } = useMemo(() => {
+    const items = Object.values(cart);
+    const total = items.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+    const mrpTotal = items.reduce((sum, item) => sum + (item.mrp * item.quantity), 0);
+    const count = items.reduce((sum, item) => sum + item.quantity, 0);
+    return {
+      cartTotal: total,
+      cartMrpTotal: mrpTotal,
+      cartDiscount: mrpTotal - total,
+      cartItemCount: count
+    };
+  }, [cart]);
+
   const deliveryFee = cartItemCount > 0 ? 7 : 0;
 
   const handleSubmitOrder = () => {
@@ -335,7 +345,7 @@ export default function NewOrderPage() {
                           <div className="flex gap-6">
                             <div className="flex flex-col items-center gap-3">
                                <div className="relative h-20 w-20 rounded bg-slate-50 border border-slate-100 overflow-hidden shrink-0">
-                                 <Image src={img} alt={item.name} fill className="object-cover" />
+                                 <Image src={img} alt={item.name} fill sizes="80px" className="object-cover" />
                                </div>
                                <Select value={item.quantity.toString()} onValueChange={(val) => updateQuantity(item.id, parseInt(val))}>
                                  <SelectTrigger className="h-9 w-20 bg-white border-slate-200 rounded text-xs font-bold text-slate-800">
@@ -498,7 +508,7 @@ export default function NewOrderPage() {
                           <CarouselContent className="h-full">
                             {validImages.map((url: string, idx: number) => (
                               <CarouselItem key={idx} className="h-full relative">
-                                <Image src={url} alt={`${product.name} angle ${idx+1}`} fill className="object-cover" data-ai-hint="product angle" />
+                                <Image src={url} alt={`${product.name} angle ${idx+1}`} fill sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw" className="object-cover" data-ai-hint="product angle" />
                               </CarouselItem>
                             ))}
                           </CarouselContent>
@@ -510,6 +520,7 @@ export default function NewOrderPage() {
                           src={primaryImage}
                           alt={product.name}
                           fill
+                          sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
                           className="object-cover group-hover:scale-105 transition-transform duration-700"
                           data-ai-hint="product photo"
                         />
