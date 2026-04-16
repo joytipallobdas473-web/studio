@@ -5,7 +5,7 @@ import { useState, useMemo, useEffect } from "react";
 import { useFirestore, useCollection, useMemoFirebase, useUser, useDoc } from "@/firebase";
 import { collection, query, doc } from "firebase/firestore";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Store, Package, ShoppingCart, AlertCircle, Loader2, Cpu, Activity, Zap, Globe, TrendingUp, BarChart3, CheckCircle2 } from "lucide-react";
+import { Store, Package, ShoppingCart, AlertCircle, Loader2, Cpu, Activity, Zap, Globe, TrendingUp, BarChart3, CheckCircle2, ChevronRight, Bell } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { analyzeInventory, type InventoryAnalysisOutput } from "@/ai/flows/inventory-analyst";
@@ -57,6 +57,22 @@ export default function AdminOverview() {
   const { data: orders, isLoading: ordersLoading } = useCollection(allOrdersQuery);
   const { data: products, isLoading: productsLoading } = useCollection(productsQuery);
 
+  const tickerItems = useMemo(() => {
+    if (!orders && !stores) return [];
+    const items = [];
+    if (orders) {
+      orders.slice(0, 5).forEach(o => {
+        items.push({ text: `Packet ${o.id.substring(0, 6)}: Status updated to ${o.status}`, type: "order" });
+      });
+    }
+    if (stores) {
+      stores.filter(s => s.status === 'pending').forEach(s => {
+        items.push({ text: `New Registry: ${s.name} awaiting authorization`, type: "store" });
+      });
+    }
+    return items;
+  }, [orders, stores]);
+
   const stats = useMemo(() => {
     const pendingStoresCount = stores?.filter(s => s.status === 'pending')?.length || 0;
     const activeOrdersCount = orders?.filter(o => !['delivered', 'cancelled', 'returned'].includes(o.status))?.length || 0;
@@ -72,9 +88,7 @@ export default function AdminOverview() {
 
   const chartData = useMemo(() => {
     if (!orders) return [];
-    
     const days = Array.from({ length: 7 }, (_, i) => subDays(new Date(), i)).reverse();
-
     return days.map(day => {
       const dayLabel = format(day, 'eee');
       const dayOrders = orders.filter(order => {
@@ -82,21 +96,8 @@ export default function AdminOverview() {
         const orderDate = new Date(order.createdAt.seconds * 1000);
         return isSameDay(orderDate, day);
       });
-
-      return {
-        name: dayLabel,
-        volume: dayOrders.length,
-      };
+      return { name: dayLabel, volume: dayOrders.length };
     });
-  }, [orders]);
-
-  const sortedOrders = useMemo(() => {
-    if (!orders) return [];
-    return [...orders].sort((a, b) => {
-      const timeA = a.createdAt?.seconds || 0;
-      const timeB = b.createdAt?.seconds || 0;
-      return timeB - timeA;
-    }).slice(0, 6);
   }, [orders]);
 
   const handleRunAIAnalysis = async () => {
@@ -148,6 +149,28 @@ export default function AdminOverview() {
 
   return (
     <div className="space-y-10 animate-in fade-in duration-700">
+      {/* Neural Event Ticker */}
+      <div className="w-full h-12 bg-white/5 border border-white/10 rounded-2xl overflow-hidden flex items-center px-6 gap-6 relative group">
+        <div className="flex items-center gap-2 shrink-0 z-10 bg-black/40 pr-4 border-r border-white/10">
+           <Bell className="h-3 w-3 text-primary animate-pulse" />
+           <span className="text-[9px] font-black uppercase tracking-widest text-primary">Live Neural Feed</span>
+        </div>
+        <div className="flex-1 overflow-hidden">
+          <div className="flex gap-12 whitespace-nowrap animate-marquee group-hover:pause">
+            {tickerItems.length > 0 ? (
+              tickerItems.map((item, idx) => (
+                <div key={idx} className="flex items-center gap-3 text-[10px] font-bold text-white/60">
+                   <div className="h-1 w-1 rounded-full bg-white/20" />
+                   {item.text}
+                </div>
+              ))
+            ) : (
+              <span className="text-[10px] font-black uppercase tracking-widest text-white/20 italic">Awaiting grid events...</span>
+            )}
+          </div>
+        </div>
+      </div>
+
       <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-6">
         <div className="space-y-1">
           <div className="flex items-center gap-3">
@@ -221,14 +244,16 @@ export default function AdminOverview() {
 
           <Card className="glass-card border-none rounded-[2rem] overflow-hidden">
             <CardHeader className="border-b border-white/5 py-8 px-10">
-              <div className="flex items-center gap-3">
-                <Activity className="h-5 w-5 text-primary" />
-                <CardTitle className="text-xl font-black uppercase italic tracking-tighter text-white">Network Traffic Logs</CardTitle>
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <Activity className="h-5 w-5 text-primary" />
+                  <CardTitle className="text-xl font-black uppercase italic tracking-tighter text-white">Network Traffic Logs</CardTitle>
+                </div>
               </div>
             </CardHeader>
             <CardContent className="p-0">
               <div className="divide-y divide-white/5">
-                {sortedOrders.length > 0 ? sortedOrders.map((order, i) => (
+                {orders && orders.length > 0 ? orders.slice(0, 6).map((order, i) => (
                   <div key={i} className="flex items-center justify-between px-10 py-6 hover:bg-white/5 transition-all group">
                     <div className="flex items-center gap-6">
                       <div className={cn(
@@ -274,23 +299,33 @@ export default function AdminOverview() {
                     <p className="text-[11px] leading-relaxed font-bold italic">"{aiAnalysis.summary}"</p>
                   </div>
                   <div className="space-y-3">
-                     {aiAnalysis.recommendations.map((rec, idx) => (
+                     {aiAnalysis.recommendations.slice(0, 3).map((rec, idx) => (
                        <div key={idx} className="flex gap-3 items-start text-[9px] font-black uppercase tracking-wide leading-snug">
                           <CheckCircle2 className="h-3 w-3 shrink-0 mt-0.5" />
                           <span>{rec}</span>
                        </div>
                      ))}
                   </div>
-                  {aiAnalysis.damageAlerts && aiAnalysis.damageAlerts.length > 0 && (
-                    <div className="pt-4 border-t border-background/10">
-                      <p className="text-[9px] font-black uppercase tracking-[0.2em] mb-2 opacity-60">Risk Alerts</p>
-                      {aiAnalysis.damageAlerts.map((alert, i) => (
-                        <p key={i} className="text-[10px] font-bold text-rose-700 flex items-center gap-2">
-                          <AlertCircle className="h-3 w-3" /> {alert}
-                        </p>
-                      ))}
+
+                  {aiAnalysis.clusterScores && (
+                    <div className="space-y-3 pt-4 border-t border-background/10">
+                       <p className="text-[9px] font-black uppercase tracking-widest opacity-60">Cluster Efficiency</p>
+                       <div className="grid grid-cols-2 gap-3">
+                         {aiAnalysis.clusterScores.slice(0, 2).map((score, i) => (
+                           <div key={i} className="bg-background/10 p-3 rounded-xl">
+                             <div className="flex justify-between items-center mb-1">
+                               <span className="text-[8px] font-bold uppercase">{score.category}</span>
+                               <span className="text-[10px] font-black">{score.score}%</span>
+                             </div>
+                             <div className="h-1 w-full bg-background/10 rounded-full overflow-hidden">
+                               <div className="h-full bg-background/60" style={{ width: `${score.score}%` }} />
+                             </div>
+                           </div>
+                         ))}
+                       </div>
                     </div>
                   )}
+
                   <Button variant="secondary" className="w-full h-12 rounded-xl font-black text-[9px] uppercase tracking-widest bg-background text-primary hover:bg-background/90" onClick={handleRunAIAnalysis} disabled={isAnalyzing}>
                     {isAnalyzing ? <Loader2 className="h-4 w-4 animate-spin" /> : "Refresh Intelligence"}
                   </Button>
@@ -325,6 +360,19 @@ export default function AdminOverview() {
           </Card>
         </div>
       </div>
+
+      <style jsx global>{`
+        @keyframes marquee {
+          0% { transform: translateX(0); }
+          100% { transform: translateX(-50%); }
+        }
+        .animate-marquee {
+          animation: marquee 40s linear infinite;
+        }
+        .pause {
+          animation-play-state: paused;
+        }
+      `}</style>
     </div>
   );
 }

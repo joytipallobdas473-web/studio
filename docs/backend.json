@@ -38,15 +38,17 @@
       "properties": {
         "id": { "type": "string" },
         "userId": { "type": "string" },
+        "productId": { "type": "string", "description": "Primary SKU ID for single-item logs or returns." },
         "items": { "type": "string" },
         "quantity": { "type": "number" },
         "total": { "type": "number" },
         "status": { "type": "string", "enum": ["pending", "processing", "shipped", "delivered", "cancelled", "return_pending", "returned"] },
-        "paymentMethod": { "type": "string", "enum": ["cash", "after_delivery"] },
+        "paymentMethod": { "type": "string", "enum": ["cash", "after_delivery", "paid"] },
         "storeName": { "type": "string" },
         "email": { "type": "string", "format": "email" },
         "phoneNumber": { "type": "string" },
         "deliveryAddress": { "type": "string" },
+        "location": { "type": "string", "description": "Regional grid coordinate string." },
         "createdAt": { "type": "string", "format": "date-time" }
       },
       "required": ["id", "userId", "total", "status", "phoneNumber", "deliveryAddress", "paymentMethod"]
@@ -61,6 +63,7 @@
         "managerName": { "type": "string" },
         "location": { "type": "string" },
         "email": { "type": "string", "format": "email" },
+        "phoneNumber": { "type": "string" },
         "status": { "type": "string", "enum": ["pending", "active", "rejected"] },
         "imageUrl": { "type": "string", "description": "Retailer profile or branch photo identity." }
       },

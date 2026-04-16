@@ -1,10 +1,10 @@
 
 'use server';
 /**
- * @fileOverview AI Inventory Analyst Flow v2.1
+ * @fileOverview AI Inventory Analyst Flow v3.0
  * 
- * Analyzes stock levels, order patterns, and damage incidents to provide 
- * strategic logistics recommendations. Now factors in MRP vs Offer price valuation.
+ * Provides deep strategic logistics intelligence.
+ * Analyzes stock density, regional order traffic, and cluster valuation.
  */
 
 import { ai } from '@/ai/genkit';
@@ -30,10 +30,15 @@ const InventoryAnalysisInputSchema = z.object({
 });
 
 const InventoryAnalysisOutputSchema = z.object({
-  summary: z.string().describe("A concise summary of current inventory and logistics health."),
-  recommendations: z.array(z.string()).describe("Actionable steps for the admin, focusing on reordering and risk mitigation."),
-  riskLevel: z.enum(["low", "medium", "high"]).describe("Overall network risk assessment."),
-  damageAlerts: z.array(z.string()).optional().describe("Specific SKUs or clusters flagged for high damage rates."),
+  summary: z.string().describe("A professional executive summary of grid health."),
+  recommendations: z.array(z.string()).describe("Actionable logistics steps."),
+  riskLevel: z.enum(["low", "medium", "high"]).describe("Overall network risk level."),
+  damageAlerts: z.array(z.string()).optional().describe("SKUs flagged for high damage rates."),
+  clusterScores: z.array(z.object({
+    category: z.string(),
+    score: z.number().describe("Logistics efficiency score 1-100."),
+    insight: z.string().describe("Why this category is performing well or poorly.")
+  })).optional().describe("A break down of category performance."),
 });
 
 export type InventoryAnalysisInput = z.infer<typeof InventoryAnalysisInputSchema>;
@@ -43,27 +48,28 @@ const prompt = ai.definePrompt({
   name: 'inventoryAnalystPrompt',
   input: { schema: InventoryAnalysisInputSchema },
   output: { schema: InventoryAnalysisOutputSchema },
-  prompt: `You are a Lead Supply Chain Strategist for a high-density retail network.
+  prompt: `You are the Lead Logistics Strategist for the Aether Grid Infrastructure.
     
-    Review the following network telemetry:
+    Current Grid Telemetry:
     
     PRODUCTS (SKU Catalog):
     {{#each products}}
-    - {{{name}}} | Cluster: {{{category}}} | Density: {{{currentStock}}} | MRP: ₹{{{mrp}}} | Offer: ₹{{{offerPrice}}}
+    - {{{name}}} [{{{category}}}] | Stock: {{{currentStock}}} | MRP: ₹{{{mrp}}} | Offer: ₹{{{offerPrice}}}
     {{/each}}
     
-    TRAFFIC LOGS (Recent Orders & Damage Reports):
+    RECENT TRAFFIC (Orders & Returns):
     {{#each recentOrders}}
-    - Payload: {{{items}}} | Protocol Status: {{{status}}} | Val: ₹{{{total}}}
+    - Manifest: {{{items}}} | Protocol: {{{status}}} | Valuation: ₹{{{total}}}
     {{/each}}
     
-    Strategic Requirements:
-    1. Identify SKUs with critical density (stock < 10).
-    2. Flag "Damage Hotspots" - items frequently appearing in "return_pending" or "DAMAGE REPORT" logs.
-    3. Assess if high-value clusters (based on MRP) are sufficiently stocked for current traffic.
-    4. Note significant price gaps (MRP vs Offer) that might drive high demand for specific SKUs.
+    Analytical Requirements:
+    1. Performance Audit: Which product clusters are seeing the most velocity?
+    2. Vulnerability Check: Flag nodes/SKUs with high damage reports or critically low stock (<10).
+    3. Valuation Analysis: Identify SKUs where the price gap (MRP vs Offer) is significant, as these are likely demand drivers.
+    4. Provide actionable, high-density recommendations for regional optimization.
+    5. Score each product category based on stock availability vs demand velocity.
     
-    Provide professional, concise, data-driven intelligence.`,
+    Style: Professional, analytical, and data-centric. Use technical terminology like 'Velocity', 'Density', and 'Cluster'.`,
 });
 
 export async function analyzeInventory(input: InventoryAnalysisInput): Promise<InventoryAnalysisOutput> {
