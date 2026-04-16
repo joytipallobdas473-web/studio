@@ -10,7 +10,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
-import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetFooter, SheetTrigger } from "@/components/ui/sheet";
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription, SheetFooter, SheetTrigger } from "@/components/ui/sheet";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { 
   Carousel, 
@@ -79,6 +79,7 @@ export default function NewOrderPage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
   const [isClient, setIsClient] = useState(false);
+  const [isCartOpen, setIsCartOpen] = useState(false);
   
   const [cart, setCart] = useState<Record<string, CartItem>>({});
   const [phoneNumber, setPhoneNumber] = useState("");
@@ -267,7 +268,8 @@ export default function NewOrderPage() {
               onChange={(e) => setSearchQuery(e.target.value)}
             />
           </div>
-          <Sheet>
+          
+          <Sheet open={isCartOpen} onOpenChange={setIsCartOpen}>
             <SheetTrigger asChild>
               <Button className="h-14 w-14 md:w-auto md:px-8 rounded-xl bg-slate-900 text-white shadow-lg relative border-none hover:bg-slate-800 transition-all">
                 <ShoppingCart className="h-5 w-5" />
@@ -280,17 +282,20 @@ export default function NewOrderPage() {
               </Button>
             </SheetTrigger>
             <SheetContent className="rounded-l-[3rem] border-none p-0 bg-white max-w-[500px] shadow-[0_0_100px_rgba(0,0,0,0.1)] flex flex-col h-full overflow-hidden">
-              <div className="p-12 pb-6 flex items-center justify-between">
+              <SheetHeader className="p-12 pb-6 space-y-0 text-left">
                 <div className="flex items-center gap-6">
                   <div className="p-3 bg-emerald-50 text-emerald-600 rounded-2xl border border-emerald-100">
                     <ShoppingBasket className="h-7 w-7" />
                   </div>
                   <div className="flex flex-col">
-                    <h2 className="text-3xl font-black text-slate-900 uppercase italic tracking-tighter leading-none">Current</h2>
-                    <h2 className="text-3xl font-black text-slate-900 uppercase italic tracking-tighter leading-none">Orders</h2>
+                    <SheetTitle className="text-3xl font-black text-slate-900 uppercase italic tracking-tighter leading-none">Current</SheetTitle>
+                    <SheetTitle className="text-3xl font-black text-slate-900 uppercase italic tracking-tighter leading-none">Orders</SheetTitle>
                   </div>
                 </div>
-              </div>
+                <SheetDescription className="sr-only">
+                  Review and commit your branch reorder packet.
+                </SheetDescription>
+              </SheetHeader>
               
               <div className="flex-1 overflow-y-auto px-10 py-6 space-y-6 custom-scrollbar">
                 {cartItemCount === 0 ? (
@@ -315,7 +320,7 @@ export default function NewOrderPage() {
                                 onClick={() => updateQuantity(item.id, -1)} 
                                 className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-slate-50 text-slate-400 transition-colors"
                               >
-                                <Minus className="h-3.5 w-3.5" />
+                                <膨胀 className="h-3.5 w-3.5" />
                               </button>
                               <span className="w-10 text-center font-black text-sm text-slate-900">{item.quantity}</span>
                               <button 
@@ -545,14 +550,13 @@ export default function NewOrderPage() {
 
       {cartItemCount > 0 && (
         <div className="fixed bottom-10 left-1/2 -translate-x-1/2 z-50 md:hidden animate-in slide-in-from-bottom-10 duration-500">
-          <Sheet>
-            <SheetTrigger asChild>
-              <Button className="h-16 px-8 rounded-full bg-slate-900 text-white shadow-2xl font-black uppercase tracking-widest text-[10px] flex items-center gap-4 border-none">
-                <ShoppingCart className="h-5 w-5" />
-                <span className="bg-emerald-600 px-3 py-1 rounded-lg">₹{cartTotal.toFixed(0)}</span>
-              </Button>
-            </SheetTrigger>
-          </Sheet>
+           <Button 
+            className="h-16 px-8 rounded-full bg-slate-900 text-white shadow-2xl font-black uppercase tracking-widest text-[10px] flex items-center gap-4 border-none"
+            onClick={() => setIsCartOpen(true)}
+           >
+            <ShoppingCart className="h-5 w-5" />
+            <span className="bg-emerald-600 px-3 py-1 rounded-lg">₹{cartTotal.toFixed(0)}</span>
+          </Button>
         </div>
       )}
     </div>
