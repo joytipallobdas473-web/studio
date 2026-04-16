@@ -50,7 +50,8 @@ import {
   ArrowLeft,
   Info,
   Zap,
-  Bookmark
+  Bookmark,
+  X
 } from "lucide-react";
 import { useFirestore, useCollection, useUser, useMemoFirebase, useDoc } from "@/firebase";
 import { collection, serverTimestamp, query, doc } from "firebase/firestore";
@@ -301,7 +302,6 @@ export default function NewOrderPage() {
               </Button>
             </SheetTrigger>
             <SheetContent className="w-full sm:max-w-[500px] border-none p-0 bg-[#f1f3f6] flex flex-col h-full overflow-hidden shadow-2xl">
-              {/* Header Protocol */}
               <div className="bg-white px-6 py-4 flex items-center gap-4 border-b border-slate-200">
                 <Button variant="ghost" size="icon" onClick={() => setIsCartOpen(false)} className="text-slate-900 h-10 w-10">
                   <ArrowLeft className="h-6 w-6" />
@@ -312,7 +312,6 @@ export default function NewOrderPage() {
                 </SheetHeader>
               </div>
 
-              {/* Delivery Node */}
               <div className="bg-white px-6 py-4 border-b border-slate-200">
                  <div className="flex justify-between items-center mb-3">
                    <div className="text-sm font-medium text-slate-900">
@@ -326,7 +325,6 @@ export default function NewOrderPage() {
                  </div>
               </div>
 
-              {/* Payload Stream */}
               <div className="flex-1 overflow-y-auto custom-scrollbar bg-[#f1f3f6]">
                 {cartItemCount === 0 ? (
                   <div className="h-full flex flex-col items-center justify-center text-center p-10 opacity-30 italic">
@@ -347,18 +345,28 @@ export default function NewOrderPage() {
                                <div className="relative h-20 w-20 rounded bg-slate-50 border border-slate-100 overflow-hidden shrink-0">
                                  <Image src={img} alt={item.name} fill sizes="80px" className="object-cover" />
                                </div>
-                               <Select value={item.quantity.toString()} onValueChange={(val) => updateQuantity(item.id, parseInt(val))}>
-                                 <SelectTrigger className="h-9 w-20 bg-white border-slate-200 rounded text-xs font-bold text-slate-800">
-                                   <div className="flex items-center justify-between w-full">
-                                     <span>Qty: {item.quantity}</span>
-                                   </div>
-                                 </SelectTrigger>
-                                 <SelectContent className="min-w-[80px]">
-                                   {[1, 2, 3, 4, 5, 10, 20, 50].map(n => (
-                                     <SelectItem key={n} value={n.toString()} className="text-xs font-bold">{n}</SelectItem>
-                                   ))}
-                                 </SelectContent>
-                               </Select>
+                               
+                               <div className="flex items-center gap-1 bg-slate-50 border border-slate-200 rounded-lg p-1 h-9">
+                                  <button 
+                                    onClick={() => updateQuantity(item.id, item.quantity - 1)}
+                                    className="w-7 h-7 flex items-center justify-center rounded hover:bg-white text-slate-400 hover:text-emerald-600 transition-all"
+                                  >
+                                    <Minus className="h-3.5 w-3.5" />
+                                  </button>
+                                  <input 
+                                    type="number" 
+                                    min="1"
+                                    value={item.quantity} 
+                                    onChange={(e) => updateQuantity(item.id, parseInt(e.target.value) || 1)}
+                                    className="w-8 bg-transparent border-none outline-none text-xs font-black text-slate-900 text-center [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                                  />
+                                  <button 
+                                    onClick={() => updateQuantity(item.id, item.quantity + 1)}
+                                    className="w-7 h-7 flex items-center justify-center rounded hover:bg-white text-slate-400 hover:text-emerald-600 transition-all"
+                                  >
+                                    <Plus className="h-3.5 w-3.5" />
+                                  </button>
+                               </div>
                             </div>
                             
                             <div className="flex-1 space-y-2 min-w-0">
@@ -396,7 +404,6 @@ export default function NewOrderPage() {
                       );
                     })}
 
-                    {/* Price Analysis Audit */}
                     <Card className="border-none rounded-none bg-white p-6 mt-4">
                        <h4 className="text-sm font-black uppercase tracking-widest text-slate-400 mb-6 border-b border-slate-100 pb-3">Price Details</h4>
                        <div className="space-y-5">
@@ -427,7 +434,6 @@ export default function NewOrderPage() {
                 )}
               </div>
 
-              {/* Commit Footer */}
               <div className="bg-white border-t border-slate-200 p-4 shadow-[0_-10px_20px_rgba(0,0,0,0.02)]">
                 <div className="flex items-center justify-between gap-4 max-w-lg mx-auto">
                   <div className="flex flex-col">
