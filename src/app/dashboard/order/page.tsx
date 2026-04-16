@@ -279,102 +279,137 @@ export default function NewOrderPage() {
                 <span className="hidden md:inline ml-3 font-black uppercase tracking-widest text-[10px]">Curated Packet</span>
               </Button>
             </SheetTrigger>
-            <SheetContent className="rounded-l-[2.5rem] border-none p-0 bg-white max-w-[500px] shadow-2xl flex flex-col h-full overflow-hidden">
-              <SheetHeader className="p-10 pb-4">
-                <SheetTitle className="text-2xl font-black text-slate-900 uppercase italic tracking-tighter flex items-center gap-4">
-                  <ShoppingBasket className="h-6 w-6 text-emerald-600" /> Current orders
-                </SheetTitle>
-              </SheetHeader>
+            <SheetContent className="rounded-l-[3rem] border-none p-0 bg-white max-w-[500px] shadow-[0_0_100px_rgba(0,0,0,0.1)] flex flex-col h-full overflow-hidden">
+              <div className="p-12 pb-6 flex items-center justify-between">
+                <div className="flex items-center gap-6">
+                  <div className="p-3 bg-emerald-50 text-emerald-600 rounded-2xl border border-emerald-100">
+                    <ShoppingBasket className="h-7 w-7" />
+                  </div>
+                  <div className="flex flex-col">
+                    <h2 className="text-3xl font-black text-slate-900 uppercase italic tracking-tighter leading-none">Current</h2>
+                    <h2 className="text-3xl font-black text-slate-900 uppercase italic tracking-tighter leading-none">Orders</h2>
+                  </div>
+                </div>
+              </div>
               
-              <div className="flex-1 overflow-y-auto px-10 py-4 space-y-8 custom-scrollbar">
+              <div className="flex-1 overflow-y-auto px-10 py-6 space-y-6 custom-scrollbar">
                 {cartItemCount === 0 ? (
-                  <div className="h-full flex flex-col items-center justify-center text-center space-y-4 opacity-30 italic">
-                    <Package className="h-16 w-16 text-slate-200" />
-                    <p className="font-black uppercase tracking-[0.4em] text-[10px]">Curation Registry Empty</p>
+                  <div className="h-full flex flex-col items-center justify-center text-center space-y-6 opacity-20 italic">
+                    <Package className="h-24 w-24 text-slate-300" />
+                    <p className="font-black uppercase tracking-[0.5em] text-xs">Registry Empty</p>
                   </div>
                 ) : (
                   <div className="space-y-4">
                     {Object.values(cart).map((item) => (
-                      <div key={item.id} className="flex items-center justify-between p-5 bg-slate-50 rounded-2xl border border-slate-100 group hover:border-emerald-200 transition-all">
-                        <div className="flex-1 min-w-0 pr-4">
-                          <h4 className="font-black text-slate-900 text-[11px] uppercase italic truncate leading-none">{item.name}</h4>
-                          <div className="flex items-center gap-2 mt-1.5">
-                             <span className="text-[10px] font-mono font-black text-emerald-600">₹{(item.price * item.quantity).toFixed(0)}</span>
-                             <span className="text-[8px] text-slate-300 font-bold uppercase tracking-widest">({item.sku})</span>
+                      <div key={item.id} className="relative p-6 bg-[#f8fafc] rounded-[2rem] border border-transparent hover:border-emerald-100 transition-all group overflow-hidden">
+                        <div className="flex justify-between items-start">
+                          <div className="flex-1 min-w-0 pr-4">
+                            <h4 className="font-black text-slate-900 text-sm uppercase italic truncate leading-none mb-2">{item.name}</h4>
+                            <span className="text-[9px] text-slate-400 font-bold uppercase tracking-[0.2em] block mb-4">({item.sku})</span>
+                            <span className="text-lg font-black text-emerald-600 italic font-mono">₹{(item.price * item.quantity).toFixed(0)}</span>
                           </div>
-                        </div>
-                        <div className="flex items-center gap-3">
-                          <div className="flex items-center bg-white rounded-lg border border-slate-200 overflow-hidden h-9 shadow-sm">
-                            <button onClick={() => updateQuantity(item.id, -1)} className="px-2 hover:bg-slate-50 text-slate-400">
-                              <Minus className="h-3 w-3" />
-                            </button>
-                            <span className="w-8 text-center font-black text-xs text-emerald-600">{item.quantity}</span>
-                            <button onClick={() => updateQuantity(item.id, 1)} className="px-2 hover:bg-slate-50 text-slate-400">
-                              <Plus className="h-3 w-3" />
-                            </button>
+                          
+                          <div className="flex flex-col items-end gap-6">
+                            <div className="flex items-center bg-white rounded-full border border-slate-100 p-1.5 shadow-sm h-11">
+                              <button 
+                                onClick={() => updateQuantity(item.id, -1)} 
+                                className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-slate-50 text-slate-400 transition-colors"
+                              >
+                                <Minus className="h-3.5 w-3.5" />
+                              </button>
+                              <span className="w-10 text-center font-black text-sm text-slate-900">{item.quantity}</span>
+                              <button 
+                                onClick={() => updateQuantity(item.id, 1)} 
+                                className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-slate-50 text-slate-400 transition-colors"
+                              >
+                                <Plus className="h-3.5 w-3.5" />
+                              </button>
+                            </div>
+                            
+                            <Button 
+                              variant="ghost" 
+                              size="icon" 
+                              className="h-10 w-10 text-rose-400 hover:text-rose-500 hover:bg-rose-50 rounded-xl transition-all" 
+                              onClick={() => removeFromCart(item.id)}
+                            >
+                              <Trash2 className="h-5 w-5" />
+                            </Button>
                           </div>
-                          <Button variant="ghost" size="icon" className="h-9 w-9 text-rose-500 hover:bg-rose-50 rounded-lg" onClick={() => removeFromCart(item.id)}>
-                            <Trash2 className="h-4 w-4" />
-                          </Button>
                         </div>
                       </div>
                     ))}
                     
-                    <div className="pt-8 space-y-8 border-t border-slate-100">
-                      <div className="space-y-3">
-                        <Label className="text-[10px] font-black uppercase tracking-[0.3em] text-slate-400 ml-1">Payment Strategy</Label>
-                        <Select value={paymentMethod} onValueChange={setPaymentMethod}>
-                          <SelectTrigger className="h-14 rounded-xl bg-slate-50 border-none font-black text-[10px] uppercase tracking-widest text-slate-900">
-                            <SelectValue />
-                          </SelectTrigger>
-                          <SelectContent className="rounded-xl border-none shadow-2xl">
-                            <SelectItem value="cash" className="font-black uppercase text-[10px] tracking-widest"><Banknote className="h-4 w-4 mr-2" /> Cash Settlement</SelectItem>
-                            <SelectItem value="after_delivery" className="font-black uppercase text-[10px] tracking-widest"><CreditCard className="h-4 w-4 mr-2" /> Regional Credit</SelectItem>
-                          </SelectContent>
-                        </Select>
-                      </div>
+                    <div className="pt-10 space-y-8 mt-4">
+                      <div className="space-y-4">
+                        <Label className="text-[10px] font-black uppercase tracking-[0.4em] text-slate-400 ml-4">Deployment Telemetry</Label>
+                        
+                        <div className="grid gap-4">
+                          <div className="bg-slate-50/50 p-4 rounded-3xl border border-slate-100">
+                             <Select value={paymentMethod} onValueChange={setPaymentMethod}>
+                                <SelectTrigger className="h-14 rounded-2xl bg-white border-none font-black text-[11px] uppercase tracking-widest text-slate-900 shadow-sm">
+                                  <div className="flex items-center gap-3">
+                                    {paymentMethod === 'cash' ? <Banknote className="h-4 w-4 text-emerald-600" /> : <CreditCard className="h-4 w-4 text-emerald-600" />}
+                                    <SelectValue />
+                                  </div>
+                                </SelectTrigger>
+                                <SelectContent className="rounded-2xl border-none shadow-2xl">
+                                  <SelectItem value="cash" className="font-black uppercase text-[10px] tracking-widest">Cash Settlement</SelectItem>
+                                  <SelectItem value="after_delivery" className="font-black uppercase text-[10px] tracking-widest">Regional Credit</SelectItem>
+                                </SelectContent>
+                              </Select>
+                          </div>
 
-                      <div className="space-y-3">
-                        <Label className="text-[10px] font-black uppercase tracking-[0.3em] text-slate-400 ml-1">Destination Coordinate</Label>
-                        <Textarea 
-                          value={deliveryAddress} 
-                          onChange={(e) => setDeliveryAddress(e.target.value)}
-                          className="min-h-[100px] rounded-xl bg-slate-50 border-none font-bold text-xs p-4"
-                          placeholder="Final delivery address..."
-                        />
-                      </div>
+                          <div className="bg-slate-50/50 p-4 rounded-3xl border border-slate-100">
+                            <div className="relative">
+                              <MapPin className="absolute left-4 top-4 h-4 w-4 text-emerald-600/40" />
+                              <Textarea 
+                                value={deliveryAddress} 
+                                onChange={(e) => setDeliveryAddress(e.target.value)}
+                                className="min-h-[100px] rounded-2xl bg-white border-none font-bold text-xs p-4 pl-12 shadow-sm placeholder:text-slate-300"
+                                placeholder="Final destination node coordinate..."
+                              />
+                            </div>
+                          </div>
 
-                      <div className="space-y-3">
-                        <Label className="text-[10px] font-black uppercase tracking-[0.3em] text-slate-400 ml-1">Identity Signal (Phone)</Label>
-                        <Input 
-                          value={phoneNumber} 
-                          onChange={(e) => setPhoneNumber(e.target.value)}
-                          className="h-14 rounded-xl bg-slate-50 border-none font-black text-xs p-4"
-                          placeholder="Contact number..."
-                        />
+                          <div className="bg-slate-50/50 p-4 rounded-3xl border border-slate-100">
+                            <div className="relative">
+                              <Phone className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-emerald-600/40" />
+                              <Input 
+                                value={phoneNumber} 
+                                onChange={(e) => setPhoneNumber(e.target.value)}
+                                className="h-14 rounded-2xl bg-white border-none font-black text-xs p-4 pl-12 shadow-sm placeholder:text-slate-300"
+                                placeholder="Identity Comms Signal..."
+                              />
+                            </div>
+                          </div>
+                        </div>
                       </div>
                     </div>
                   </div>
                 )}
               </div>
 
-              <SheetFooter className="p-10 bg-slate-50/50 border-t border-slate-100">
-                <div className="w-full space-y-6">
+              <SheetFooter className="p-12 pt-6 bg-white border-t border-slate-50">
+                <div className="w-full space-y-10">
                   <div className="flex justify-between items-end">
-                    <div className="space-y-0.5">
-                      <span className="text-[10px] font-black uppercase tracking-widest text-slate-400">Total Valuation</span>
-                      <p className="text-[9px] font-bold text-emerald-600 uppercase tracking-widest">Protocol Active</p>
+                    <div className="space-y-1">
+                      <span className="text-[11px] font-black uppercase tracking-[0.3em] text-slate-400">Total Valuation</span>
+                      <p className="text-[10px] font-black text-emerald-600 uppercase tracking-[0.2em] flex items-center gap-2">
+                        <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                        Protocol Active
+                      </p>
                     </div>
-                    <span className="text-3xl font-black text-slate-900 tracking-tighter font-mono italic">₹{cartTotal.toFixed(0)}</span>
+                    <span className="text-5xl font-black text-slate-900 tracking-tighter font-mono italic">₹{cartTotal.toFixed(0)}</span>
                   </div>
+                  
                   <Button 
-                    className="w-full h-16 bg-emerald-600 hover:bg-emerald-700 text-white font-black rounded-xl shadow-xl shadow-emerald-100 uppercase tracking-[0.3em] text-[11px] border-none transition-all hover:scale-[1.01]" 
+                    className="w-full h-20 bg-emerald-600 hover:bg-emerald-700 text-white font-black rounded-[2rem] shadow-[0_20px_50px_rgba(5,150,105,0.2)] uppercase tracking-[0.4em] text-[13px] border-none transition-all hover:scale-[1.02] active:scale-[0.98]" 
                     disabled={cartItemCount === 0 || isSubmitting}
                     onClick={handleSubmitOrder}
                   >
-                    {isSubmitting ? <Loader2 className="h-6 w-6 animate-spin" /> : (
-                      <div className="flex items-center gap-3">
-                        Commit Packet <ArrowRight className="h-4 w-4" />
+                    {isSubmitting ? <Loader2 className="h-8 w-8 animate-spin" /> : (
+                      <div className="flex items-center gap-4">
+                        Commit Packet <ArrowRight className="h-5 w-5" />
                       </div>
                     )}
                   </Button>
