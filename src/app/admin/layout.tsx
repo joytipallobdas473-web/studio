@@ -13,6 +13,7 @@ import { Separator } from "@/components/ui/separator";
 import { signOut } from "firebase/auth";
 import { toast } from "@/hooks/use-toast";
 import { doc } from "firebase/firestore";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 const MASTER_ADMIN_UID = "j96izCkggNcL002AHiJjzGb18Bf2";
 
@@ -92,6 +93,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   const router = useRouter();
   const { user, isUserLoading } = useUser();
   const pathname = usePathname();
+  const isMobile = useIsMobile();
   const [authorized, setAuthorized] = useState<boolean | null>(null);
 
   const roleRef = useMemoFirebase(() => {
@@ -148,11 +150,11 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   }
 
   return (
-    <div className="dark-admin admin-grid">
-      <SidebarProvider defaultOpen={true} className="min-h-screen w-full bg-background text-foreground">
+    <div className="dark-admin admin-grid min-h-screen">
+      <SidebarProvider defaultOpen={!isMobile} className="min-h-screen w-full bg-background text-foreground">
         <AdminSidebar />
         <SidebarInset className="flex flex-col min-w-0 bg-transparent">
-          <header className="sticky top-0 z-30 flex h-24 shrink-0 items-center gap-8 border-b border-primary/10 px-12 bg-black/60 backdrop-blur-xl">
+          <header className="sticky top-0 z-40 flex h-24 shrink-0 items-center gap-8 border-b border-primary/10 px-12 bg-black/60 backdrop-blur-xl">
             <SidebarTrigger className="text-muted-foreground hover:text-primary h-10 w-10 rounded-xl hover:bg-white/5 transition-all" />
             <Separator orientation="vertical" className="h-8 bg-white/10" />
             <div className="flex flex-col">
@@ -177,7 +179,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
             </div>
           </header>
           
-          <main className="flex-1 p-12 overflow-y-auto">
+          <main className="flex-1 p-6 md:p-12 overflow-y-auto">
             <div className="max-w-7xl mx-auto">
               {children}
             </div>
