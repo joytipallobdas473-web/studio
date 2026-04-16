@@ -149,42 +149,40 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 
   return (
     <div className="dark-admin admin-grid">
-      <SidebarProvider defaultOpen={true}>
-        <div className="flex min-h-screen w-full bg-background text-foreground">
-          <AdminSidebar />
-          <SidebarInset className="flex flex-col min-w-0 bg-transparent">
-            <header className="sticky top-0 z-30 flex h-24 shrink-0 items-center gap-8 border-b border-primary/10 px-12 bg-black/60 backdrop-blur-xl">
-              <SidebarTrigger className="text-muted-foreground hover:text-primary h-10 w-10 rounded-xl hover:bg-white/5 transition-all" />
-              <Separator orientation="vertical" className="h-8 bg-white/10" />
-              <div className="flex flex-col">
-                <span className="text-xl font-black text-white uppercase italic tracking-tighter leading-none">Command Terminal</span>
-                <div className="flex items-center gap-3 text-[9px] text-muted-foreground font-black uppercase tracking-[0.3em] mt-2">
-                  <div className="h-1.5 w-1.5 rounded-full bg-primary animate-pulse-cyan" />
-                  Grid Status: Optimal
-                </div>
+      <SidebarProvider defaultOpen={true} className="min-h-screen w-full bg-background text-foreground">
+        <AdminSidebar />
+        <SidebarInset className="flex flex-col min-w-0 bg-transparent">
+          <header className="sticky top-0 z-30 flex h-24 shrink-0 items-center gap-8 border-b border-primary/10 px-12 bg-black/60 backdrop-blur-xl">
+            <SidebarTrigger className="text-muted-foreground hover:text-primary h-10 w-10 rounded-xl hover:bg-white/5 transition-all" />
+            <Separator orientation="vertical" className="h-8 bg-white/10" />
+            <div className="flex flex-col">
+              <span className="text-xl font-black text-white uppercase italic tracking-tighter leading-none">Command Terminal</span>
+              <div className="flex items-center gap-3 text-[9px] text-muted-foreground font-black uppercase tracking-[0.3em] mt-2">
+                <div className="h-1.5 w-1.5 rounded-full bg-primary animate-pulse-cyan" />
+                Grid Status: Optimal
               </div>
-              <div className="ml-auto flex items-center gap-10">
-                <div className="hidden md:flex flex-col items-end opacity-60">
-                  <span className="text-[8px] font-black text-primary uppercase tracking-widest">Regional Controller</span>
-                  <span className="text-[10px] font-bold text-white tracking-tight mt-1 font-mono">{user?.email?.split('@')[0] || "AUTHORITY"}</span>
-                </div>
-                <Button variant="ghost" size="icon" className="h-12 w-12 rounded-xl text-muted-foreground hover:text-rose-500 hover:bg-rose-500/10" onClick={async () => {
-                  await signOut(auth);
-                  router.push("/admin/login");
-                  toast({ title: "Terminal Terminated" });
-                }}>
-                  <LogOut className="h-6 w-6" />
-                </Button>
+            </div>
+            <div className="ml-auto flex items-center gap-10">
+              <div className="hidden md:flex flex-col items-end opacity-60">
+                <span className="text-[8px] font-black text-primary uppercase tracking-widest">Regional Controller</span>
+                <span className="text-[10px] font-bold text-white tracking-tight mt-1 font-mono">{user?.email?.split('@')[0] || "AUTHORITY"}</span>
               </div>
-            </header>
-            
-            <main className="flex-1 p-12 overflow-y-auto">
-              <div className="max-w-7xl mx-auto">
-                {children}
-              </div>
-            </main>
-          </SidebarInset>
-        </div>
+              <Button variant="ghost" size="icon" className="h-12 w-12 rounded-xl text-muted-foreground hover:text-rose-500 hover:bg-rose-500/10" onClick={async () => {
+                await signOut(auth);
+                router.push("/admin/login");
+                toast({ title: "Terminal Terminated" });
+              }}>
+                <LogOut className="h-6 w-6" />
+              </Button>
+            </div>
+          </header>
+          
+          <main className="flex-1 p-12 overflow-y-auto">
+            <div className="max-w-7xl mx-auto">
+              {children}
+            </div>
+          </main>
+        </SidebarInset>
       </SidebarProvider>
     </div>
   );
