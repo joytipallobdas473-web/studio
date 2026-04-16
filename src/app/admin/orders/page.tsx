@@ -14,7 +14,7 @@ import { toast } from "@/hooks/use-toast";
 import { format } from "date-fns";
 import { updateDocumentNonBlocking } from "@/firebase";
 import { cn } from "@/lib/utils";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 
 const MASTER_ADMIN_UID = "j96izCkggNcL002AHiJjzGb18Bf2";
 
@@ -164,6 +164,10 @@ export default function AdminOrdersPage() {
       {selectedInvoice && (
         <Dialog open={!!selectedInvoice} onOpenChange={() => setSelectedInvoice(null)}>
           <DialogContent className="sm:max-w-[800px] p-0 border-none bg-white overflow-hidden">
+             <DialogHeader className="sr-only">
+               <DialogTitle>Order Invoice Preview</DialogTitle>
+               <DialogDescription>Detailed hardcopy manifest for order {selectedInvoice.id}</DialogDescription>
+             </DialogHeader>
              <div id="printable-invoice" className="bg-white text-slate-900 p-12 space-y-8 font-sans">
                 <div className="flex justify-between items-start border-b-2 border-slate-900 pb-8">
                    <div className="space-y-1">
