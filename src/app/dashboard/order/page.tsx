@@ -136,19 +136,31 @@ export default function NewOrderPage() {
     });
   }, [products, searchQuery, selectedCategory]);
 
-  const getLocalQty = (id: string) => localQuantities[id] || 1;
+  const getLocalQty = (id: string) => {
+    const val = localQuantities[id];
+    return val !== undefined ? val : 0;
+  };
 
   const updateLocalQty = (id: string, val: number) => {
     setLocalQuantities(prev => ({
       ...prev,
-      [id]: Math.max(1, val)
+      [id]: Math.max(0, val)
     }));
   };
 
   const addToCart = (product: any, quantity: number) => {
+    if (quantity <= 0) {
+      toast({ 
+        title: "Quantity Required", 
+        description: "Please specify unit density before committing.", 
+        variant: "destructive" 
+      });
+      return;
+    }
+
     setCart(prev => {
       const existing = prev[product.id];
-      const qtyToAdd = quantity || 1;
+      const qtyToAdd = quantity;
       if (existing) {
         return {
           ...prev,
@@ -169,7 +181,7 @@ export default function NewOrderPage() {
     });
     toast({ title: "Item Curated", description: `${product.name} (x${quantity}) added to reorder.` });
     // Reset local qty after adding
-    setLocalQuantities(prev => ({ ...prev, [product.id]: 1 }));
+    setLocalQuantities(prev => ({ ...prev, [product.id]: 0 }));
   };
 
   const updateCartQuantity = (id: string, newQty: number) => {
@@ -573,7 +585,7 @@ export default function NewOrderPage() {
                       </div>
                     </CardContent>
                     <CardFooter className="p-6 pt-0 flex flex-col gap-4">
-                      {/* Quantity Stepper for ordering many units */}
+                      {/* Batch Quantity Stepper initialized to 0 */}
                       <div className="flex items-center justify-between w-full bg-slate-50 rounded-xl p-1.5 border border-slate-100">
                         <span className="text-[8px] font-black uppercase tracking-widest text-slate-400 ml-3">Batch Quantity</span>
                         <div className="flex items-center gap-2">
@@ -586,7 +598,7 @@ export default function NewOrderPage() {
                           <input 
                             type="number"
                             value={localQty}
-                            onChange={(e) => updateLocalQty(product.id, parseInt(e.target.value) || 1)}
+                            onChange={(e) => updateLocalQty(product.id, parseInt(e.target.value) || 0)}
                             className="w-10 bg-transparent border-none outline-none text-xs font-black text-slate-900 text-center [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                           />
                           <button 
