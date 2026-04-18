@@ -89,6 +89,7 @@ export default function NewOrderPage() {
   const [isCartOpen, setIsCartOpen] = useState(false);
   
   const [cart, setCart] = useState<Record<string, CartItem>>({});
+  const [localQuantities, setLocalQuantities] = useState<Record<string, number>>({});
   const [phoneNumber, setPhoneNumber] = useState("");
   const [deliveryAddress, setDeliveryAddress] = useState("");
   const [paymentMethod, setPaymentMethod] = useState("cash");
@@ -135,13 +136,23 @@ export default function NewOrderPage() {
     });
   }, [products, searchQuery, selectedCategory]);
 
-  const addToCart = (product: any) => {
+  const getLocalQty = (id: string) => localQuantities[id] || 1;
+
+  const updateLocalQty = (id: string, val: number) => {
+    setLocalQuantities(prev => ({
+      ...prev,
+      [id]: Math.max(1, val)
+    }));
+  };
+
+  const addToCart = (product: any, quantity: number) => {
     setCart(prev => {
       const existing = prev[product.id];
+      const qtyToAdd = quantity || 1;
       if (existing) {
         return {
           ...prev,
-          [product.id]: { ...existing, quantity: existing.quantity + 1 }
+          [product.id]: { ...existing, quantity: existing.quantity + qtyToAdd }
         };
       }
       return {
@@ -152,14 +163,16 @@ export default function NewOrderPage() {
           price: product.price,
           mrp: product.mrp || product.price,
           sku: product.sku,
-          quantity: 1
+          quantity: qtyToAdd
         }
       };
     });
-    toast({ title: "Item Curated", description: `${product.name} added to reorder.` });
+    toast({ title: "Item Curated", description: `${product.name} (x${quantity}) added to reorder.` });
+    // Reset local qty after adding
+    setLocalQuantities(prev => ({ ...prev, [product.id]: 1 }));
   };
 
-  const updateQuantity = (id: string, newQty: number) => {
+  const updateCartQuantity = (id: string, newQty: number) => {
     setCart(prev => {
       const item = prev[id];
       if (!item) return prev;
@@ -348,7 +361,7 @@ export default function NewOrderPage() {
                                
                                <div className="flex items-center gap-1 bg-slate-50 border border-slate-200 rounded-lg p-1 h-9">
                                   <button 
-                                    onClick={() => updateQuantity(item.id, item.quantity - 1)}
+                                    onClick={() => updateCartQuantity(item.id, item.quantity - 1)}
                                     className="w-7 h-7 flex items-center justify-center rounded hover:bg-white text-slate-400 hover:text-emerald-600 transition-all"
                                   >
                                     <Minus className="h-3.5 w-3.5" />
@@ -357,11 +370,11 @@ export default function NewOrderPage() {
                                     type="number" 
                                     min="1"
                                     value={item.quantity} 
-                                    onChange={(e) => updateQuantity(item.id, parseInt(e.target.value) || 1)}
+                                    onChange={(e) => updateCartQuantity(item.id, parseInt(e.target.value) || 1)}
                                     className="w-8 bg-transparent border-none outline-none text-xs font-black text-slate-900 text-center [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                                   />
                                   <button 
-                                    onClick={() => updateQuantity(item.id, item.quantity + 1)}
+                                    onClick={() => updateCartQuantity(item.id, item.quantity + 1)}
                                     className="w-7 h-7 flex items-center justify-center rounded hover:bg-white text-slate-400 hover:text-emerald-600 transition-all"
                                   >
                                     <Plus className="h-3.5 w-3.5" />
@@ -505,6 +518,7 @@ export default function NewOrderPage() {
                 const mrp = product.mrp || product.price || 0;
                 const price = product.price || 0;
                 const savings = mrp > price ? Math.round(((mrp - price) / mrp) * 100) : 0;
+                const localQty = getLocalQty(product.id);
 
                 return (
                   <Card key={product.id} className="group overflow-hidden border border-slate-200/60 shadow-sm hover:shadow-lg transition-all duration-500 flex flex-col bg-white rounded-[2rem] relative">
@@ -558,13 +572,38 @@ export default function NewOrderPage() {
                         </p>
                       </div>
                     </CardContent>
-                    <CardFooter className="p-6 pt-0">
+                    <CardFooter className="p-6 pt-0 flex flex-col gap-4">
+                      {/* Quantity Stepper for ordering many units */}
+                      <div className="flex items-center justify-between w-full bg-slate-50 rounded-xl p-1.5 border border-slate-100">
+                        <span className="text-[8px] font-black uppercase tracking-widest text-slate-400 ml-3">Batch Quantity</span>
+                        <div className="flex items-center gap-2">
+                          <button 
+                            onClick={() => updateLocalQty(product.id, localQty - 1)}
+                            className="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-white text-slate-400 hover:text-emerald-600 transition-all border border-transparent hover:border-slate-100"
+                          >
+                            <Minus className="h-3.5 w-3.5" />
+                          </button>
+                          <input 
+                            type="number"
+                            value={localQty}
+                            onChange={(e) => updateLocalQty(product.id, parseInt(e.target.value) || 1)}
+                            className="w-10 bg-transparent border-none outline-none text-xs font-black text-slate-900 text-center [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                          />
+                          <button 
+                            onClick={() => updateLocalQty(product.id, localQty + 1)}
+                            className="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-white text-slate-400 hover:text-emerald-600 transition-all border border-transparent hover:border-slate-100"
+                          >
+                            <Plus className="h-3.5 w-3.5" />
+                          </button>
+                        </div>
+                      </div>
+
                       <Button 
-                        className="w-full h-12 bg-slate-50 text-slate-900 hover:bg-emerald-600 hover:text-white font-black rounded-xl shadow-none transition-all text-[10px] uppercase tracking-widest border border-slate-100" 
-                        onClick={() => addToCart(product)} 
+                        className="w-full h-12 bg-slate-900 text-white hover:bg-emerald-600 font-black rounded-xl shadow-none transition-all text-[10px] uppercase tracking-widest border border-slate-100" 
+                        onClick={() => addToCart(product, localQty)} 
                         disabled={!product.stockQuantity || product.stockQuantity <= 0}
                       >
-                        {!product.stockQuantity || product.stockQuantity <= 0 ? "Depleted" : "Add to cart 🛒"}
+                        {!product.stockQuantity || product.stockQuantity <= 0 ? "Depleted" : "Commit to Packet 🛒"}
                       </Button>
                     </CardFooter>
                   </Card>
