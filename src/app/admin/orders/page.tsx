@@ -303,7 +303,7 @@ export default function AdminOrdersPage() {
                          <tr className="border-b-2 border-slate-900 h-10">
                             <th className="text-[10px] font-black uppercase tracking-widest">SKU Identity / Description</th>
                             <th className="text-[10px] font-black uppercase tracking-widest text-right">Quantity</th>
-                            <th className="text-[10px) font-black uppercase tracking-widest text-right">Total (₹)</th>
+                            <th className="text-[10px] font-black uppercase tracking-widest text-right">Total (₹)</th>
                          </tr>
                       </thead>
                       <tbody>
