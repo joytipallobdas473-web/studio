@@ -9,12 +9,14 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Download, Search, FileText, Filter, Loader2, Phone, MapPin, Mail, Globe, CheckCircle2, Truck, Printer, X } from "lucide-react";
+import { Download, Search, FileText, Filter, Loader2, Phone, MapPin, Mail, Globe, CheckCircle2, Truck, Printer, X, Edit2, ShieldAlert, Save } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
 import { format } from "date-fns";
 import { updateDocumentNonBlocking } from "@/firebase";
 import { cn } from "@/lib/utils";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
 
 const MASTER_ADMIN_UID = "j96izCkggNcL002AHiJjzGb18Bf2";
 
@@ -37,6 +39,14 @@ export default function AdminOrdersPage() {
   const [searchQuery, setSearchQuery] = useState("");
   const [isClient, setIsClient] = useState(false);
   const [selectedInvoice, setSelectedInvoice] = useState<any>(null);
+  
+  // Edit State
+  const [editingOrder, setEditingOrder] = useState<any>(null);
+  const [editForm, setEditForm] = useState({
+    items: "",
+    total: "0",
+    quantity: "0"
+  });
 
   useEffect(() => {
     setIsClient(true);
@@ -81,6 +91,29 @@ export default function AdminOrdersPage() {
     const orderRef = doc(db, "orders", orderId);
     updateDocumentNonBlocking(orderRef, { paymentMethod: newPaymentMethod });
     toast({ title: "Payment Protocol Synchronized", description: `Packet ${orderId.substring(0, 6)} updated.` });
+  };
+
+  const handleOpenEdit = (order: any) => {
+    setEditingOrder(order);
+    setEditForm({
+      items: order.items || "",
+      total: (order.total || 0).toString(),
+      quantity: (order.quantity || 0).toString()
+    });
+  };
+
+  const handleCommitOverride = () => {
+    if (!db || !editingOrder) return;
+    const orderRef = doc(db, "orders", editingOrder.id);
+    
+    updateDocumentNonBlocking(orderRef, {
+      items: editForm.items,
+      total: parseFloat(editForm.total) || 0,
+      quantity: parseInt(editForm.quantity) || 0
+    });
+
+    toast({ title: "Manifest Overridden", description: "Packet payload updated by authority." });
+    setEditingOrder(null);
   };
 
   const filteredOrders = useMemo(() => {
@@ -160,6 +193,62 @@ export default function AdminOrdersPage() {
 
   return (
     <div className="space-y-8 md:space-y-12 animate-in fade-in duration-700">
+      {/* Manifest Edit Overlay */}
+      <Dialog open={!!editingOrder} onOpenChange={() => setEditingOrder(null)}>
+        <DialogContent className="sm:max-w-[550px] rounded-[2.5rem] p-10 glass-card border-none shadow-2xl bg-black text-white">
+           <DialogHeader>
+              <div className="flex items-center gap-3 mb-2">
+                 <ShieldAlert className="h-5 w-5 text-primary" />
+                 <span className="text-[10px] font-black uppercase tracking-[0.4em] text-primary">Override Protocol</span>
+              </div>
+              <DialogTitle className="text-2xl font-black uppercase italic tracking-tighter text-white">Modify Manifest</DialogTitle>
+              <DialogDescription className="text-[10px] text-muted-foreground uppercase font-bold tracking-widest mt-1">
+                 Adjust item payload, valuation, and unit density for packet {editingOrder?.id.substring(0, 8)}
+              </DialogDescription>
+           </DialogHeader>
+
+           <div className="space-y-6 py-6">
+              <div className="space-y-3">
+                 <Label className="text-[9px] font-black uppercase tracking-widest text-muted-foreground ml-1">Payload Manifest (Items)</Label>
+                 <Textarea 
+                    value={editForm.items}
+                    onChange={(e) => setEditForm({...editForm, items: e.target.value})}
+                    placeholder="SKU-1 (x5), SKU-2 (x2)..."
+                    className="min-h-[120px] bg-white/5 border-white/10 rounded-2xl text-white font-bold text-xs leading-relaxed focus:ring-primary"
+                 />
+              </div>
+
+              <div className="grid grid-cols-2 gap-6">
+                 <div className="space-y-3">
+                    <Label className="text-[9px] font-black uppercase tracking-widest text-muted-foreground ml-1">Commit Valuation (₹)</Label>
+                    <Input 
+                       type="number"
+                       value={editForm.total}
+                       onChange={(e) => setEditForm({...editForm, total: e.target.value})}
+                       className="h-14 bg-white/5 border-white/10 rounded-2xl text-white font-mono font-black"
+                    />
+                 </div>
+                 <div className="space-y-3">
+                    <Label className="text-[9px] font-black uppercase tracking-widest text-muted-foreground ml-1">Unit Density (Qty)</Label>
+                    <Input 
+                       type="number"
+                       value={editForm.quantity}
+                       onChange={(e) => setEditForm({...editForm, quantity: e.target.value})}
+                       className="h-14 bg-white/5 border-white/10 rounded-2xl text-white font-mono font-black"
+                    />
+                 </div>
+              </div>
+           </div>
+
+           <DialogFooter className="gap-4">
+              <Button variant="ghost" onClick={() => setEditingOrder(null)} className="h-14 px-8 rounded-2xl uppercase tracking-widest font-black text-muted-foreground hover:text-white">Abort</Button>
+              <Button onClick={handleCommitOverride} className="bg-primary text-background h-14 px-10 rounded-2xl font-black uppercase tracking-widest shadow-lg">
+                 <Save className="mr-3 h-5 w-5" /> Commit Override
+              </Button>
+           </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
       {/* Printable Invoice Overlay */}
       {selectedInvoice && (
         <Dialog open={!!selectedInvoice} onOpenChange={() => setSelectedInvoice(null)}>
@@ -420,14 +509,24 @@ export default function AdminOrdersPage() {
                     </TableCell>
                     <TableCell className="text-right pr-10">
                       <div className="flex flex-col items-end gap-2">
-                         <Button 
-                           size="sm" 
-                           variant="ghost" 
-                           className="text-muted-foreground hover:text-primary h-11 rounded-2xl px-6 hover:bg-white/5 font-bold uppercase tracking-widest text-[10px]"
-                           onClick={() => setSelectedInvoice(order)}
-                         >
-                           <Printer className="h-4 w-4 mr-3" /> Invoice
-                         </Button>
+                         <div className="flex gap-2">
+                            <Button 
+                              size="icon" 
+                              variant="ghost" 
+                              className="h-11 w-11 rounded-2xl text-muted-foreground hover:text-primary hover:bg-primary/10"
+                              onClick={() => handleOpenEdit(order)}
+                            >
+                               <Edit2 className="h-5 w-5" />
+                            </Button>
+                            <Button 
+                              size="sm" 
+                              variant="ghost" 
+                              className="text-muted-foreground hover:text-primary h-11 rounded-2xl px-6 hover:bg-white/5 font-bold uppercase tracking-widest text-[10px]"
+                              onClick={() => setSelectedInvoice(order)}
+                            >
+                              <Printer className="h-4 w-4 mr-3" /> Invoice
+                            </Button>
+                         </div>
                          <Button 
                            size="sm" 
                            variant="ghost" 
@@ -463,26 +562,36 @@ export default function AdminOrdersPage() {
                     <h3 className="font-black text-white text-sm uppercase italic truncate">{order.storeName || 'Branch Node'}</h3>
                  </div>
                </div>
-               <Select 
-                  value={order.status} 
-                  onValueChange={(val) => handleStatusUpdate(order.id, val)}
-                >
-                  <SelectTrigger className={cn(
-                    "h-8 w-[110px] text-[8px] font-black uppercase tracking-widest rounded-xl border-none bg-white/5 shrink-0",
-                    getStatusBadgeColor(order.status)
-                  )}>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent className="glass-card border-white/10 text-white rounded-2xl">
-                    <SelectItem value="pending" className="text-[10px] font-black tracking-widest uppercase">PENDING</SelectItem>
-                    <SelectItem value="processing" className="text-[10px] font-black tracking-widest uppercase">PROCESSING</SelectItem>
-                    <SelectItem value="shipped" className="text-[10px] font-black tracking-widest uppercase">SHIPPED</SelectItem>
-                    <SelectItem value="delivered" className="text-[10px] font-black tracking-widest uppercase text-emerald-500">DELIVERED</SelectItem>
-                    <SelectItem value="cancelled" className="text-[10px] font-black tracking-widest uppercase text-rose-500">CANCELLED</SelectItem>
-                    <SelectItem value="return_pending" className="text-[10px] font-black tracking-widest uppercase text-orange-500">DAMAGE REPT</SelectItem>
-                    <SelectItem value="returned" className="text-[10px] font-black tracking-widest uppercase text-slate-400">DMG RESOLVED</SelectItem>
-                  </SelectContent>
-                </Select>
+               <div className="flex flex-col items-end gap-2">
+                  <Select 
+                    value={order.status} 
+                    onValueChange={(val) => handleStatusUpdate(order.id, val)}
+                  >
+                    <SelectTrigger className={cn(
+                      "h-8 w-[110px] text-[8px] font-black uppercase tracking-widest rounded-xl border-none bg-white/5 shrink-0",
+                      getStatusBadgeColor(order.status)
+                    )}>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent className="glass-card border-white/10 text-white rounded-2xl">
+                      <SelectItem value="pending" className="text-[10px] font-black tracking-widest uppercase">PENDING</SelectItem>
+                      <SelectItem value="processing" className="text-[10px] font-black tracking-widest uppercase">PROCESSING</SelectItem>
+                      <SelectItem value="shipped" className="text-[10px] font-black tracking-widest uppercase">SHIPPED</SelectItem>
+                      <SelectItem value="delivered" className="text-[10px] font-black tracking-widest uppercase text-emerald-500">DELIVERED</SelectItem>
+                      <SelectItem value="cancelled" className="text-[10px] font-black tracking-widest uppercase text-rose-500">CANCELLED</SelectItem>
+                      <SelectItem value="return_pending" className="text-[10px] font-black tracking-widest uppercase text-orange-500">DAMAGE REPT</SelectItem>
+                      <SelectItem value="returned" className="text-[10px] font-black tracking-widest uppercase text-slate-400">DMG RESOLVED</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <Button 
+                    size="sm" 
+                    variant="outline" 
+                    className="h-8 rounded-xl border-white/10 bg-white/5 text-primary font-black text-[8px] uppercase tracking-widest"
+                    onClick={() => handleOpenEdit(order)}
+                  >
+                     <Edit2 className="h-3 w-3 mr-2" /> Override
+                  </Button>
+               </div>
             </div>
             
             <div className="space-y-3 bg-white/5 p-4 rounded-2xl border border-white/5">
