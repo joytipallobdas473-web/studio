@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState, useMemo, useEffect } from "react";
@@ -593,7 +592,7 @@ export default function NewOrderPage() {
                             onClick={() => updateLocalQty(product.id, localQty - 1)}
                             className="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-white text-slate-400 hover:text-emerald-600 transition-all border border-transparent hover:border-slate-100"
                           >
-                            <偏旁 className="h-3.5 w-3.5" />
+                            <Minus className="h-3.5 w-3.5" />
                           </button>
                           <input 
                             type="number"
