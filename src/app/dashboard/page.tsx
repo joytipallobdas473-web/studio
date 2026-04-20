@@ -30,12 +30,15 @@ import {
   Sparkles,
   Minus,
   Plus,
-  ArrowUpRight
+  ArrowUpRight,
+  Camera,
+  CameraOff,
+  ImageIcon
 } from "lucide-react";
 import Link from "next/link";
 import { Badge } from "@/components/ui/badge";
 import { format, subDays, isSameDay } from "date-fns";
-import { useMemo, useState, useEffect } from "react";
+import { useMemo, useState, useEffect, useRef } from "react";
 import { cn } from "@/lib/utils";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from "@/components/ui/dialog";
 import { addDocumentNonBlocking } from "@/firebase";
@@ -46,10 +49,17 @@ import { Bar, BarChart, ResponsiveContainer, XAxis, Tooltip as RechartsTooltip, 
 export default function DashboardPage() {
   const db = useFirestore();
   const { user, isUserLoading: authLoading } = useUser();
+  const videoRef = useRef<HTMLVideoElement>(null);
+  
   const [isClient, setIsClient] = useState(false);
   const [isReturnDialogOpen, setIsReturnDialogOpen] = useState(false);
   const [isSubmittingReturn, setIsSubmittingReturn] = useState(false);
   const [damageReportQuantities, setDamageReportQuantities] = useState<Record<string, number>>({});
+  
+  // Camera State for Damage Proof
+  const [isCameraActive, setIsCameraActive] = useState(false);
+  const [damageProofUrl, setDamageProofUrl] = useState<Record<string, string>>({});
+  const [reportingItem, setReportingItem] = useState<any>(null);
 
   useEffect(() => {
     setIsClient(true);
@@ -141,6 +151,46 @@ export default function DashboardPage() {
     }));
   };
 
+  const startCamera = async (item: any) => {
+    setReportingItem(item);
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" } });
+      setIsCameraActive(true);
+      setTimeout(() => {
+        if (videoRef.current) {
+          videoRef.current.srcObject = stream;
+        }
+      }, 100);
+    } catch (error) {
+      toast({ title: "Lens Failure", description: "Camera access required for damage proof.", variant: "destructive" });
+    }
+  };
+
+  const stopCamera = () => {
+    if (videoRef.current && videoRef.current.srcObject) {
+      const stream = videoRef.current.srcObject as MediaStream;
+      stream.getTracks().forEach(track => track.stop());
+      videoRef.current.srcObject = null;
+    }
+    setIsCameraActive(false);
+  };
+
+  const captureDamageProof = () => {
+    if (videoRef.current && reportingItem) {
+      const canvas = document.createElement('canvas');
+      canvas.width = videoRef.current.videoWidth;
+      canvas.height = videoRef.current.videoHeight;
+      const ctx = canvas.getContext('2d');
+      if (ctx) {
+        ctx.drawImage(videoRef.current, 0, 0, canvas.width, canvas.height);
+        const dataUri = canvas.toDataURL('image/jpeg', 0.7);
+        setDamageProofUrl(prev => ({ ...prev, [reportingItem.name]: dataUri }));
+        stopCamera();
+        toast({ title: "Proof Synchronized", description: "Damage visual signature captured." });
+      }
+    }
+  };
+
   const productsList = useMemo(() => {
     if (!rawProducts) return [];
     return [...rawProducts].sort((a, b) => (a.name || "").localeCompare(b.name || "")).slice(0, 8);
@@ -167,7 +217,14 @@ export default function DashboardPage() {
   const handleInitiateReturn = (item: any) => {
     if (!db || !user) return;
     const qty = damageReportQuantities[item.name] || 0;
+    const proof = damageProofUrl[item.name];
+
     if (qty === 0) return;
+    if (!proof) {
+      toast({ title: "Proof Required", description: "Visual evidence is mandatory for damage logs.", variant: "destructive" });
+      return;
+    }
+
     setIsSubmittingReturn(true);
     const returnData = {
       items: `DAMAGE REPORT: ${item.name}`,
@@ -180,14 +237,21 @@ export default function DashboardPage() {
       paymentMethod: "cash", 
       email: store?.email || user.email || "",
       status: "return_pending",
+      damageImageUrl: proof,
       storeName: store?.name || "Retailer Node",
       createdAt: serverTimestamp()
     };
+    
     addDocumentNonBlocking(collection(db, "orders"), returnData)
       .then(() => {
         setIsSubmittingReturn(false);
-        setIsReturnDialogOpen(false);
         toast({ title: "Damage Log Recorded", description: `${qty} units flagged for audit.` });
+        // Clean up proof
+        setDamageProofUrl(prev => {
+          const next = {...prev};
+          delete next[item.name];
+          return next;
+        });
       })
       .catch(() => {
         setIsSubmittingReturn(false);
@@ -347,32 +411,77 @@ export default function DashboardPage() {
         </Card>
       </div>
 
-      <Dialog open={isReturnDialogOpen} onOpenChange={setIsReturnDialogOpen}>
-        <DialogContent className="rounded-[2.5rem] border-none p-8 bg-white max-w-xl shadow-2xl">
+      <Dialog open={isReturnDialogOpen} onOpenChange={(open) => {
+        if (!open) stopCamera();
+        setIsReturnDialogOpen(open);
+      }}>
+        <DialogContent className="rounded-[2.5rem] border-none p-8 bg-white max-w-2xl shadow-2xl overflow-y-auto max-h-[90vh]">
           <DialogHeader className="space-y-2">
             <DialogTitle className="text-xl font-black text-emerald-600 uppercase italic tracking-tighter flex items-center gap-3"><Undo2 className="h-5 w-5" /> Damage Audit Registry</DialogTitle>
-            <DialogDescription className="font-medium text-slate-500 text-xs">Archive damaged SKU data for regional credit verification.</DialogDescription>
+            <DialogDescription className="font-medium text-slate-500 text-xs">Capture visual proof and log damaged SKU data for regional audit.</DialogDescription>
           </DialogHeader>
-          <div className="py-6">
+          <div className="py-6 space-y-6">
             {returnableProducts.length > 0 ? (
-              <div className="space-y-3 max-h-[40vh] overflow-y-auto pr-2 custom-scrollbar">
+              <div className="space-y-4">
                 {returnableProducts.map((item, idx) => (
-                  <div key={idx} className="flex items-center justify-between p-4 bg-slate-50 rounded-xl border border-slate-100 hover:border-emerald-200 transition-all">
-                    <div className="space-y-0.5">
-                      <h4 className="font-black text-slate-900 uppercase italic text-xs leading-none">{item.name}</h4>
-                      <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest">Density: {item.totalQuantity} Units</p>
-                    </div>
-                    <div className="flex items-center gap-3">
+                  <Card key={idx} className="overflow-hidden border border-slate-100 bg-slate-50 rounded-2xl">
+                    <div className="p-4 flex items-center justify-between border-b border-white">
+                      <div className="space-y-0.5">
+                        <h4 className="font-black text-slate-900 uppercase italic text-xs leading-none">{item.name}</h4>
+                        <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest">Available Density: {item.totalQuantity} Units</p>
+                      </div>
                       <div className="flex items-center bg-white rounded-lg border border-slate-200 overflow-hidden h-8 shadow-sm">
                         <button onClick={() => updateDamageQty(item.name, -1, item.totalQuantity)} className="px-2 hover:bg-slate-50 text-slate-400"><Minus className="h-3 w-3" /></button>
                         <span className="w-8 text-center font-black text-xs text-emerald-600">{damageReportQuantities[item.name] || 0}</span>
                         <button onClick={() => updateDamageQty(item.name, 1, item.totalQuantity)} className="px-2 hover:bg-slate-50 text-slate-400"><Plus className="h-3 w-3" /></button>
                       </div>
-                      <Button size="sm" onClick={() => handleInitiateReturn(item)} disabled={isSubmittingReturn || (damageReportQuantities[item.name] || 0) === 0} className="h-8 px-4 rounded-lg bg-slate-900 text-white font-black uppercase text-[8px] tracking-widest hover:bg-emerald-600 transition-all">
-                        {isSubmittingReturn ? <Loader2 className="h-3 w-3 animate-spin" /> : "Log Entry"}
-                      </Button>
                     </div>
-                  </div>
+                    
+                    <div className="p-4 flex flex-col sm:flex-row gap-6 items-center">
+                       <div className="w-full sm:w-48 aspect-video bg-black rounded-xl overflow-hidden relative border border-slate-200 flex items-center justify-center">
+                          {isCameraActive && reportingItem?.name === item.name ? (
+                            <video ref={videoRef} className="w-full h-full object-cover" autoPlay muted playsInline />
+                          ) : damageProofUrl[item.name] ? (
+                            <Image src={damageProofUrl[item.name]} alt="Proof" fill className="object-cover" />
+                          ) : (
+                            <div className="flex flex-col items-center gap-2 opacity-20">
+                               <ImageIcon className="h-6 w-6 text-white" />
+                               <span className="text-[8px] font-black uppercase text-white">No Visual Proof</span>
+                            </div>
+                          )}
+                       </div>
+                       
+                       <div className="flex-1 flex flex-col gap-3 w-full">
+                          {!isCameraActive || reportingItem?.name !== item.name ? (
+                            <Button 
+                              variant="outline" 
+                              size="sm" 
+                              onClick={() => startCamera(item)}
+                              className="h-10 rounded-xl border-slate-200 font-black uppercase text-[8px] tracking-widest text-slate-500 hover:text-emerald-600"
+                            >
+                              <Camera className="h-3.5 w-3.5 mr-2" /> {damageProofUrl[item.name] ? "Retake Proof" : "Start Audit Lens"}
+                            </Button>
+                          ) : (
+                            <Button 
+                              size="sm" 
+                              onClick={captureDamageProof}
+                              className="h-10 rounded-xl bg-emerald-500 hover:bg-emerald-600 text-white font-black uppercase text-[8px] tracking-widest shadow-md"
+                            >
+                              <Sparkles className="h-3.5 w-3.5 mr-2" /> Capture Frame
+                            </Button>
+                          )}
+                          
+                          <Button 
+                            size="sm" 
+                            onClick={() => handleInitiateReturn(item)} 
+                            disabled={isSubmittingReturn || (damageReportQuantities[item.name] || 0) === 0 || !damageProofUrl[item.name]} 
+                            className="h-10 rounded-xl bg-slate-900 text-white font-black uppercase text-[9px] tracking-widest hover:bg-emerald-600 transition-all"
+                          >
+                            {isSubmittingReturn ? <Loader2 className="h-3 w-3 animate-spin" /> : "Commit Damage Log"}
+                          </Button>
+                       </div>
+                    </div>
+                  </Card>
                 ))}
               </div>
             ) : (

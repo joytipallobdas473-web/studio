@@ -5,7 +5,7 @@ import { useState, useMemo, useEffect } from "react";
 import { useFirestore, useCollection, useMemoFirebase, useUser, useDoc } from "@/firebase";
 import { collection, query, doc } from "firebase/firestore";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Store, Package, ShoppingCart, AlertCircle, Loader2, Cpu, Activity, Zap, Globe, TrendingUp, BarChart3, CheckCircle2, ChevronRight, Bell } from "lucide-react";
+import { Store, Package, ShoppingCart, AlertCircle, Loader2, Cpu, Activity, Zap, Globe, TrendingUp, BarChart3, CheckCircle2, ChevronRight, Bell, ShieldAlert, Boxes } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { analyzeInventory, type InventoryAnalysisOutput } from "@/ai/flows/inventory-analyst";
@@ -13,6 +13,7 @@ import { cn } from "@/lib/utils";
 import { toast } from "@/hooks/use-toast";
 import { Bar, BarChart, ResponsiveContainer, XAxis, Tooltip, Cell } from "recharts";
 import { format, subDays, isSameDay } from "date-fns";
+import Image from "next/image";
 
 const MASTER_ADMIN_UID = "j96izCkggNcL002AHiJjzGb18Bf2";
 
@@ -85,6 +86,11 @@ export default function AdminOverview() {
       { label: "Inventory Risk", value: lowStockCount.toString(), icon: AlertCircle, color: "text-rose-500", bg: "bg-rose-500/10" },
     ];
   }, [stores, orders, products]);
+
+  const criticalStockProducts = useMemo(() => {
+    if (!products) return [];
+    return products.filter(p => (p.stockQuantity || 0) < 10).slice(0, 6);
+  }, [products]);
 
   const chartData = useMemo(() => {
     if (!orders) return [];
@@ -242,48 +248,65 @@ export default function AdminOverview() {
             </CardContent>
           </Card>
 
-          <Card className="glass-card border-none rounded-[2rem] overflow-hidden">
-            <CardHeader className="border-b border-white/5 py-8 px-10">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <Activity className="h-5 w-5 text-primary" />
-                  <CardTitle className="text-xl font-black uppercase italic tracking-tighter text-white">Network Traffic Logs</CardTitle>
-                </div>
-              </div>
-            </CardHeader>
-            <CardContent className="p-0">
-              <div className="divide-y divide-white/5">
-                {orders && orders.length > 0 ? orders.slice(0, 6).map((order, i) => (
-                  <div key={i} className="flex items-center justify-between px-10 py-6 hover:bg-white/5 transition-all group">
-                    <div className="flex items-center gap-6">
-                      <div className={cn(
-                        "h-2 w-2 rounded-full",
-                        order.status === 'delivered' ? 'bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)]' : 
-                        order.status === 'cancelled' ? 'bg-rose-500' : 
-                        order.status === 'return_pending' ? 'bg-orange-500 shadow-[0_0_8px_rgba(249,115,22,0.5)]' : 'bg-primary'
-                      )} />
-                      <div>
-                        <p className="text-sm font-black text-white uppercase italic tracking-tight">{order.storeName || 'Unknown Node'}</p>
-                        <p className="text-[10px] text-muted-foreground font-bold uppercase tracking-widest mt-1">
-                          {order.items || 'Standard Payload'}
-                        </p>
-                      </div>
-                    </div>
-                    <div className="text-right">
-                      <p className="text-sm font-black text-primary font-mono">₹{(order.total || 0).toFixed(2)}</p>
-                      <span className={cn(
-                        "text-[9px] font-black uppercase tracking-widest mt-1 block",
-                        order.status === 'delivered' ? 'text-emerald-500' : 
-                        order.status === 'return_pending' ? 'text-orange-500' : 'text-muted-foreground'
-                      )}>{order.status === 'return_pending' ? 'Damage Reported' : order.status}</span>
-                    </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+             <Card className="glass-card border-none rounded-[2rem] overflow-hidden">
+                <CardHeader className="border-b border-white/5 py-6 px-8">
+                  <div className="flex items-center gap-3">
+                    <ShieldAlert className="h-5 w-5 text-rose-500 animate-pulse" />
+                    <CardTitle className="text-lg font-black uppercase italic tracking-tighter text-white">Critical Stock Nodes</CardTitle>
                   </div>
-                )) : (
-                  <div className="py-24 text-center text-muted-foreground font-black uppercase text-[10px] tracking-[0.4em] italic">Awaiting grid sync...</div>
-                )}
-              </div>
-            </CardContent>
-          </Card>
+                </CardHeader>
+                <CardContent className="p-0">
+                  <div className="divide-y divide-white/5">
+                    {criticalStockProducts.length > 0 ? criticalStockProducts.map((product, i) => (
+                      <div key={i} className="flex items-center justify-between px-8 py-4 hover:bg-white/5 transition-all">
+                        <div className="flex items-center gap-4">
+                           <div className="relative h-10 w-10 rounded-lg overflow-hidden border border-white/10 bg-white/5">
+                              <Image src={product.imageUrl || `https://picsum.photos/seed/${product.id}/50`} alt={product.name} fill className="object-cover" />
+                           </div>
+                           <div>
+                              <p className="text-[11px] font-black text-white uppercase italic">{product.name}</p>
+                              <p className="text-[8px] text-muted-foreground uppercase font-mono tracking-widest">{product.sku}</p>
+                           </div>
+                        </div>
+                        <Badge variant="destructive" className="bg-rose-500/20 text-rose-500 border-none font-black text-[9px] uppercase tracking-widest px-3">
+                           Qty: {product.stockQuantity}
+                        </Badge>
+                      </div>
+                    )) : (
+                      <div className="py-12 text-center text-muted-foreground font-bold uppercase text-[9px] italic">No safety threshold violations detected.</div>
+                    )}
+                  </div>
+                </CardContent>
+             </Card>
+
+             <Card className="glass-card border-none rounded-[2rem] overflow-hidden">
+                <CardHeader className="border-b border-white/5 py-6 px-8">
+                  <div className="flex items-center gap-3">
+                    <Activity className="h-5 w-5 text-primary" />
+                    <CardTitle className="text-lg font-black uppercase italic tracking-tighter text-white">Recent Log Registry</CardTitle>
+                  </div>
+                </CardHeader>
+                <CardContent className="p-0">
+                  <div className="divide-y divide-white/5">
+                    {orders && orders.length > 0 ? orders.slice(0, 4).map((order, i) => (
+                      <div key={i} className="flex flex-col gap-1 px-8 py-5 hover:bg-white/5 transition-all group">
+                         <div className="flex items-center justify-between">
+                            <p className="text-xs font-black text-white uppercase italic truncate max-w-[150px]">{order.storeName || 'Node'}</p>
+                            <span className="text-[9px] font-black text-primary tracking-widest">₹{(order.total || 0).toFixed(0)}</span>
+                         </div>
+                         <div className="flex items-center justify-between mt-1">
+                            <span className="text-[8px] text-muted-foreground uppercase font-bold tracking-widest">{order.status === 'return_pending' ? 'Damage Reported' : order.status}</span>
+                            <span className="text-[8px] text-white/20 font-mono">{order.createdAt?.seconds ? format(order.createdAt.seconds * 1000, 'HH:mm') : 'SYNC'}</span>
+                         </div>
+                      </div>
+                    )) : (
+                      <div className="py-12 text-center text-muted-foreground font-bold uppercase text-[9px] italic">Awaiting grid synchronization...</div>
+                    )}
+                  </div>
+                </CardContent>
+             </Card>
+          </div>
         </div>
 
         <div className="space-y-8">
@@ -355,6 +378,10 @@ export default function AdminOverview() {
               <div className="flex justify-between items-center text-[10px] font-black uppercase">
                 <span className="text-muted-foreground">Grid Uptime</span>
                 <span className="text-primary">99.98%</span>
+              </div>
+              <div className="flex justify-between items-center text-[10px] font-black uppercase">
+                <span className="text-muted-foreground">Sync Latency</span>
+                <span className="text-primary">12ms</span>
               </div>
             </div>
           </Card>

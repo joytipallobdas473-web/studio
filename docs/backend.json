@@ -49,6 +49,7 @@
         "phoneNumber": { "type": "string" },
         "deliveryAddress": { "type": "string" },
         "location": { "type": "string", "description": "Regional grid coordinate string." },
+        "damageImageUrl": { "type": "string", "description": "Visual proof signature for damage audits." },
         "createdAt": { "type": "string", "format": "date-time" }
       },
       "required": ["id", "userId", "total", "status", "phoneNumber", "deliveryAddress", "paymentMethod"]
