@@ -193,15 +193,15 @@ export default function AdminOrdersPage() {
 
   return (
     <div className="space-y-8 md:space-y-12 animate-in fade-in duration-700">
-      {/* Manifest Edit Overlay */}
+      {/* Manifest Edit Overlay (Red Alert Theme) */}
       <Dialog open={!!editingOrder} onOpenChange={() => setEditingOrder(null)}>
         <DialogContent className="sm:max-w-[550px] rounded-[2.5rem] p-10 glass-card border-none shadow-2xl bg-black text-white">
            <DialogHeader>
               <div className="flex items-center gap-3 mb-2">
-                 <ShieldAlert className="h-5 w-5 text-primary" />
-                 <span className="text-[10px] font-black uppercase tracking-[0.4em] text-primary">Override Protocol</span>
+                 <ShieldAlert className="h-5 w-5 text-rose-500" />
+                 <span className="text-[10px] font-black uppercase tracking-[0.4em] text-rose-500">Override Protocol</span>
               </div>
-              <DialogTitle className="text-2xl font-black uppercase italic tracking-tighter text-white">Modify Manifest</DialogTitle>
+              <DialogTitle className="text-2xl font-black uppercase italic tracking-tighter text-rose-500">Modify Manifest</DialogTitle>
               <DialogDescription className="text-[10px] text-muted-foreground uppercase font-bold tracking-widest mt-1">
                  Adjust item payload, valuation, and unit density for packet {editingOrder?.id.substring(0, 8)}
               </DialogDescription>
@@ -214,7 +214,7 @@ export default function AdminOrdersPage() {
                     value={editForm.items}
                     onChange={(e) => setEditForm({...editForm, items: e.target.value})}
                     placeholder="SKU-1 (x5), SKU-2 (x2)..."
-                    className="min-h-[120px] bg-white/5 border-white/10 rounded-2xl text-white font-bold text-xs leading-relaxed focus:ring-primary"
+                    className="min-h-[120px] bg-white/5 border-white/10 rounded-2xl text-white font-bold text-xs leading-relaxed focus:ring-rose-500"
                  />
               </div>
 
@@ -242,7 +242,7 @@ export default function AdminOrdersPage() {
 
            <DialogFooter className="gap-4">
               <Button variant="ghost" onClick={() => setEditingOrder(null)} className="h-14 px-8 rounded-2xl uppercase tracking-widest font-black text-muted-foreground hover:text-white">Abort</Button>
-              <Button onClick={handleCommitOverride} className="bg-primary text-background h-14 px-10 rounded-2xl font-black uppercase tracking-widest shadow-lg">
+              <Button onClick={handleCommitOverride} className="bg-rose-500 text-white h-14 px-10 rounded-2xl font-black uppercase tracking-widest shadow-lg hover:bg-rose-600 transition-all">
                  <Save className="mr-3 h-5 w-5" /> Commit Override
               </Button>
            </DialogFooter>
@@ -253,10 +253,10 @@ export default function AdminOrdersPage() {
       {selectedInvoice && (
         <Dialog open={!!selectedInvoice} onOpenChange={() => setSelectedInvoice(null)}>
           <DialogContent className="sm:max-w-[800px] p-0 border-none bg-white overflow-hidden">
-             <DialogHeader className="sr-only">
+             <div className="sr-only">
                <DialogTitle>Order Invoice Preview</DialogTitle>
                <DialogDescription>Detailed hardcopy manifest for order {selectedInvoice.id}</DialogDescription>
-             </DialogHeader>
+             </div>
              <div id="printable-invoice" className="bg-white text-slate-900 p-12 space-y-8 font-sans">
                 <div className="flex justify-between items-start border-b-2 border-slate-900 pb-8">
                    <div className="space-y-1">
@@ -303,7 +303,7 @@ export default function AdminOrdersPage() {
                          <tr className="border-b-2 border-slate-900 h-10">
                             <th className="text-[10px] font-black uppercase tracking-widest">SKU Identity / Description</th>
                             <th className="text-[10px] font-black uppercase tracking-widest text-right">Quantity</th>
-                            <th className="text-[10px] font-black uppercase tracking-widest text-right">Total (₹)</th>
+                            <th className="text-[10px) font-black uppercase tracking-widest text-right">Total (₹)</th>
                          </tr>
                       </thead>
                       <tbody>
@@ -513,7 +513,7 @@ export default function AdminOrdersPage() {
                             <Button 
                               size="icon" 
                               variant="ghost" 
-                              className="h-11 w-11 rounded-2xl text-muted-foreground hover:text-primary hover:bg-primary/10"
+                              className="h-11 w-11 rounded-2xl text-muted-foreground hover:text-rose-500 hover:bg-rose-500/10"
                               onClick={() => handleOpenEdit(order)}
                             >
                                <Edit2 className="h-5 w-5" />
@@ -586,7 +586,7 @@ export default function AdminOrdersPage() {
                   <Button 
                     size="sm" 
                     variant="outline" 
-                    className="h-8 rounded-xl border-white/10 bg-white/5 text-primary font-black text-[8px] uppercase tracking-widest"
+                    className="h-8 rounded-xl border-white/10 bg-white/5 text-rose-500 font-black text-[8px] uppercase tracking-widest"
                     onClick={() => handleOpenEdit(order)}
                   >
                      <Edit2 className="h-3 w-3 mr-2" /> Override
