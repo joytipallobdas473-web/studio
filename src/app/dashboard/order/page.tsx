@@ -148,22 +148,14 @@ export default function NewOrderPage() {
   };
 
   const addToCart = (product: any, quantity: number) => {
-    if (quantity <= 0) {
-      toast({ 
-        title: "Quantity Required", 
-        description: "Please specify unit density before committing.", 
-        variant: "destructive" 
-      });
-      return;
-    }
+    const qtyToApply = quantity <= 0 ? 1 : quantity;
 
     setCart(prev => {
       const existing = prev[product.id];
-      const qtyToAdd = quantity;
       if (existing) {
         return {
           ...prev,
-          [product.id]: { ...existing, quantity: existing.quantity + qtyToAdd }
+          [product.id]: { ...existing, quantity: existing.quantity + qtyToApply }
         };
       }
       return {
@@ -174,12 +166,11 @@ export default function NewOrderPage() {
           price: product.price,
           mrp: product.mrp || product.price,
           sku: product.sku,
-          quantity: qtyToAdd
+          quantity: qtyToApply
         }
       };
     });
-    toast({ title: "Item Curated", description: `${product.name} (x${quantity}) added to reorder.` });
-    // Reset local qty after adding
+    toast({ title: "Item Curated", description: `${product.name} (x${qtyToApply}) added to reorder.` });
     setLocalQuantities(prev => ({ ...prev, [product.id]: 0 }));
   };
 
@@ -521,76 +512,90 @@ export default function NewOrderPage() {
               <p className="text-[9px] font-black uppercase tracking-[0.5em] text-slate-300">Syncing Catalog Registry...</p>
             </div>
           ) : filteredProducts.length > 0 ? (
-            <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-8">
               {filteredProducts.map((product) => {
                 const validImages = (product.imageUrls || []).filter((u: string) => !!u);
                 const primaryImage = validImages[0] || product.imageUrl || `https://picsum.photos/seed/${product.id}/600/400`;
                 
                 const mrp = product.mrp || product.price || 0;
                 const price = product.price || 0;
-                const savings = mrp > price ? Math.round(((mrp - price) / mrp) * 100) : 0;
                 const localQty = getLocalQty(product.id);
+                const marginAmount = mrp - price;
+                const marginPercent = mrp > 0 ? ((marginAmount / mrp) * 100).toFixed(1) : 0;
 
                 return (
-                  <Card key={product.id} className="group overflow-hidden border border-slate-200/60 shadow-sm hover:shadow-lg transition-all duration-500 flex flex-col bg-white rounded-[2rem] relative">
-                    <div className="relative h-48 w-full bg-slate-50 overflow-hidden">
-                      {validImages.length > 1 ? (
-                        <Carousel className="w-full h-full">
-                          <CarouselContent className="h-full">
-                            {validImages.map((url: string, idx: number) => (
-                              <CarouselItem key={idx} className="h-full relative">
-                                <Image src={url} alt={`${product.name} angle ${idx+1}`} fill sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw" className="object-cover" data-ai-hint="product angle" />
-                              </CarouselItem>
-                            ))}
-                          </CarouselContent>
-                          <CarouselPrevious className="left-2 h-7 w-7 bg-white/80 border-none hover:bg-white text-emerald-600" />
-                          <CarouselNext className="right-2 h-7 w-7 bg-white/80 border-none hover:bg-white text-emerald-600" />
-                        </Carousel>
-                      ) : (
-                        <Image 
-                          src={primaryImage}
-                          alt={product.name}
-                          fill
-                          sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
-                          className="object-cover group-hover:scale-105 transition-transform duration-700"
-                          data-ai-hint="product photo"
-                        />
-                      )}
-                      
-                      <div className="absolute top-4 left-4 flex flex-col gap-2 z-10">
-                        <Badge className="bg-white/95 text-emerald-600 border-none text-[8px] font-black uppercase tracking-widest px-3 py-1 rounded-lg shadow-sm">
-                          {product.category}
-                        </Badge>
-                        {savings > 0 && (
-                          <Badge className="bg-emerald-600 text-white border-none text-[8px] font-black uppercase tracking-widest px-3 py-1 rounded-lg flex items-center gap-1.5 shadow-md">
-                            <TrendingDown className="h-2.5 w-2.5" /> {savings}% SAVING
-                          </Badge>
+                  <Card key={product.id} className="group overflow-hidden border border-slate-200 shadow-sm hover:shadow-md transition-all duration-500 flex flex-col bg-white rounded-3xl relative">
+                    {/* Image Section with Floating Add Button */}
+                    <div className="relative h-52 w-full bg-white p-4">
+                      <div className="relative h-full w-full rounded-2xl overflow-hidden bg-slate-50/50">
+                        {validImages.length > 1 ? (
+                          <Carousel className="w-full h-full">
+                            <CarouselContent className="h-full">
+                              {validImages.map((url: string, idx: number) => (
+                                <CarouselItem key={idx} className="h-full relative">
+                                  <Image src={url} alt={`${product.name} angle ${idx+1}`} fill sizes="400px" className="object-contain p-2" data-ai-hint="product angle" />
+                                </CarouselItem>
+                              ))}
+                            </CarouselContent>
+                            <CarouselPrevious className="left-2 h-7 w-7 bg-white/80 border-none hover:bg-white text-emerald-600" />
+                            <CarouselNext className="right-2 h-7 w-7 bg-white/80 border-none hover:bg-white text-emerald-600" />
+                          </Carousel>
+                        ) : (
+                          <Image 
+                            src={primaryImage}
+                            alt={product.name}
+                            fill
+                            sizes="400px"
+                            className="object-contain p-2 group-hover:scale-105 transition-transform duration-700"
+                            data-ai-hint="product photo"
+                          />
                         )}
                       </div>
+
+                      {/* Floating Add Button Node */}
+                      <div className="absolute bottom-2 right-4 z-20">
+                          <button 
+                            onClick={() => addToCart(product, localQty || 1)}
+                            className="bg-[#eefcf4] border border-slate-800 rounded-xl px-4 py-2.5 flex items-center gap-2 shadow-sm hover:bg-emerald-100 transition-all active:scale-95 group/btn"
+                          >
+                            <Plus className="h-4 w-4 text-slate-800 group-hover/btn:rotate-90 transition-transform" />
+                            <span className="font-black text-slate-800 uppercase tracking-tighter text-xs">Add</span>
+                          </button>
+                      </div>
                     </div>
-                    <CardContent className="p-6 flex-1 space-y-4">
+
+                    <CardContent className="px-6 pb-6 pt-2 flex-1 flex flex-col space-y-4">
+                      {/* Margin Identity Pill */}
+                      <div className="inline-flex items-center gap-2 bg-[#001da4] text-white px-4 py-1.5 rounded-full shadow-inner overflow-hidden relative w-fit">
+                         <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/5 to-transparent" />
+                         <span className="text-[10px] font-black relative z-10 whitespace-nowrap uppercase tracking-tight">
+                           ₹{marginAmount.toFixed(2)} ({marginPercent}%) Margin
+                         </span>
+                      </div>
+
                       <div className="space-y-1">
-                        <h3 className="font-black text-sm text-slate-900 leading-tight group-hover:text-emerald-600 transition-colors italic uppercase tracking-tight">{product.name}</h3>
-                        <p className="text-[9px] text-slate-400 font-mono font-bold tracking-widest uppercase">{product.sku}</p>
+                        <h3 className="font-bold text-sm text-slate-900 leading-tight line-clamp-2 uppercase tracking-tight">{product.name}</h3>
+                        <p className="text-[9px] text-slate-400 font-mono font-bold uppercase tracking-widest">{product.sku}</p>
                       </div>
-                      <div className="flex flex-col">
-                        <div className="flex items-center gap-2">
-                           <span className="text-[10px] text-slate-300 font-bold line-through">₹{mrp.toFixed(0)}</span>
-                           <span className="text-2xl font-black text-slate-900 tracking-tighter font-mono italic">₹{price.toFixed(0)}</span>
-                        </div>
-                        <p className="text-[8px] text-emerald-600 font-black uppercase tracking-[0.2em] mt-1 italic">
-                          Boutique Rate Active
-                        </p>
+                      
+                      {/* Split-Surface Price Footer */}
+                      <div className="flex items-center w-full rounded-2xl overflow-hidden border border-[#b8f3d0] h-14 mt-auto">
+                         <div className="bg-[#ccf5d6] h-full flex items-center px-4 min-w-[50%] border-r border-[#b8f3d0]">
+                            <span className="text-xl font-black text-slate-900 tracking-tighter italic">₹{price.toFixed(0)}</span>
+                         </div>
+                         <div className="bg-white h-full flex-1 flex items-center justify-center px-4 gap-2">
+                            <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest">MRP</span>
+                            <span className="text-xs font-bold text-slate-300 line-through">₹{mrp.toFixed(0)}</span>
+                         </div>
                       </div>
-                    </CardContent>
-                    <CardFooter className="p-6 pt-0 flex flex-col gap-4">
-                      {/* Batch Quantity Stepper initialized to 0 */}
-                      <div className="flex items-center justify-between w-full bg-slate-50 rounded-xl p-1.5 border border-slate-100">
-                        <span className="text-[8px] font-black uppercase tracking-widest text-slate-400 ml-3">Batch Quantity</span>
-                        <div className="flex items-center gap-2">
+
+                      {/* Quantity Orchestrator */}
+                      <div className="flex items-center justify-between w-full bg-slate-50 rounded-xl p-1 border border-slate-100">
+                        <span className="text-[9px] font-black uppercase tracking-widest text-slate-400 ml-3">Batch Qty</span>
+                        <div className="flex items-center gap-1">
                           <button 
                             onClick={() => updateLocalQty(product.id, localQty - 1)}
-                            className="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-white text-slate-400 hover:text-emerald-600 transition-all border border-transparent hover:border-slate-100"
+                            className="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-white text-slate-400 hover:text-emerald-600 transition-all"
                           >
                             <Minus className="h-3.5 w-3.5" />
                           </button>
@@ -602,21 +607,13 @@ export default function NewOrderPage() {
                           />
                           <button 
                             onClick={() => updateLocalQty(product.id, localQty + 1)}
-                            className="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-white text-slate-400 hover:text-emerald-600 transition-all border border-transparent hover:border-slate-100"
+                            className="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-white text-slate-400 hover:text-emerald-600 transition-all"
                           >
                             <Plus className="h-3.5 w-3.5" />
                           </button>
                         </div>
                       </div>
-
-                      <Button 
-                        className="w-full h-12 bg-slate-900 text-white hover:bg-emerald-600 font-black rounded-xl shadow-none transition-all text-[10px] uppercase tracking-widest border border-slate-100" 
-                        onClick={() => addToCart(product, localQty)} 
-                        disabled={!product.stockQuantity || product.stockQuantity <= 0}
-                      >
-                        {!product.stockQuantity || product.stockQuantity <= 0 ? "Depleted" : "Commit to Packet 🛒"}
-                      </Button>
-                    </CardFooter>
+                    </CardContent>
                   </Card>
                 );
               })}
