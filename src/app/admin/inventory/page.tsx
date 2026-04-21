@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState, useMemo, useRef, useEffect } from "react";
@@ -10,9 +9,9 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { Plus, Search, Edit2, Trash2, Loader2, Filter, CheckCircle2, ImageIcon, Camera, CameraOff, Sparkles, Globe, X, Box, Upload, Wand2, Truck } from "lucide-react";
+import { Plus, Search, Edit2, Trash2, Loader2, Filter, CheckCircle2, ImageIcon, Camera, CameraOff, Sparkles, Globe, X, Box, Upload, Wand2, Truck, Printer, FileText } from "lucide-react";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "@/hooks/use-toast";
 import { addDocumentNonBlocking, updateDocumentNonBlocking, deleteDocumentNonBlocking } from "@/firebase";
@@ -31,6 +30,7 @@ export default function InventoryControl() {
   const [isCameraActive, setIsCameraActive] = useState(false);
   const [activeImageIndex, setActiveImageIndex] = useState(0);
   const [isDescribing, setIsDescribing] = useState(false);
+  const [selectedLabelProduct, setSelectedLabelProduct] = useState<any>(null);
   
   const isAdmin = useMemo(() => {
     return user?.email?.toLowerCase().includes("admin") || user?.uid === MASTER_ADMIN_UID;
@@ -230,6 +230,10 @@ export default function InventoryControl() {
     toast({ title: "Node Purged", variant: "destructive" });
   };
 
+  const handlePrintLabel = () => {
+     window.print();
+  };
+
   const filteredProducts = useMemo(() => {
     if (!products) return [];
     let list = [...products].sort((a, b) => (a.name || "").localeCompare(b.name || ""));
@@ -258,7 +262,53 @@ export default function InventoryControl() {
 
   return (
     <div className="space-y-8 animate-in fade-in duration-700">
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-6">
+      {/* Label Print Overlay */}
+      <Dialog open={!!selectedLabelProduct} onOpenChange={() => setSelectedLabelProduct(null)}>
+        <DialogContent className="sm:max-w-[450px] p-0 border-none bg-white overflow-hidden rounded-[2rem]">
+           <div className="sr-only"><DialogTitle>SKU Label Preview</DialogTitle></div>
+           <div id="printable-label" className="p-12 space-y-8 text-slate-900 bg-white min-h-[400px] flex flex-col justify-center border-2 border-slate-900 m-4 rounded-xl">
+              <div className="space-y-1 text-center border-b-2 border-slate-900 pb-4">
+                 <h2 className="text-2xl font-black uppercase italic tracking-tighter">Aether Network</h2>
+                 <p className="text-[8px] font-black uppercase tracking-[0.5em] text-slate-500">Registry Certified SKU</p>
+              </div>
+              <div className="space-y-6 flex-1 flex flex-col justify-center items-center">
+                 <div className="text-center space-y-1">
+                    <p className="text-[9px] font-black uppercase tracking-widest text-slate-400">SKU Identity</p>
+                    <h3 className="text-3xl font-black uppercase italic tracking-tight">{selectedLabelProduct?.name}</h3>
+                    <p className="font-mono text-xs font-bold text-slate-900">{selectedLabelProduct?.sku}</p>
+                 </div>
+                 <div className="grid grid-cols-2 gap-8 w-full border-t border-b border-slate-100 py-4">
+                    <div className="text-center">
+                       <p className="text-[8px] font-black uppercase tracking-widest text-slate-400">Cluster</p>
+                       <p className="text-xs font-bold uppercase">{selectedLabelProduct?.category}</p>
+                    </div>
+                    <div className="text-center">
+                       <p className="text-[8px] font-black uppercase tracking-widest text-slate-400">Unit Price</p>
+                       <p className="text-sm font-black">₹{selectedLabelProduct?.price.toFixed(2)}</p>
+                    </div>
+                 </div>
+                 <div className="w-full h-12 bg-slate-900 flex items-center justify-center rounded">
+                    <div className="h-10 w-[90%] bg-white flex items-center justify-around px-2">
+                       {Array.from({length: 30}).map((_, i) => (
+                         <div key={i} className="h-full bg-slate-900" style={{width: `${Math.random() * 4 + 1}px`}} />
+                       ))}
+                    </div>
+                 </div>
+              </div>
+              <div className="pt-4 text-center">
+                 <p className="text-[7px] font-black uppercase tracking-[0.3em] text-slate-300">Generated via Regional Controller Node // {new Date().toLocaleDateString()}</p>
+              </div>
+           </div>
+           <div className="p-6 bg-slate-50 border-t flex justify-end gap-3 print:hidden">
+              <Button variant="ghost" onClick={() => setSelectedLabelProduct(null)} className="h-12 px-6 rounded-xl font-bold uppercase text-[10px] text-slate-500">Close Node</Button>
+              <Button onClick={handlePrintLabel} className="h-12 px-8 rounded-xl bg-slate-900 text-white font-black uppercase tracking-widest text-[10px]">
+                 <Printer className="mr-2 h-4 w-4" /> Print Label
+              </Button>
+           </div>
+        </DialogContent>
+      </Dialog>
+
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-6 print:hidden">
         <div className="space-y-3">
           <div className="flex items-center gap-3">
              <div className="h-2 w-2 rounded-full bg-primary" />
@@ -272,7 +322,7 @@ export default function InventoryControl() {
         </Button>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-6 gap-4 md:gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-6 gap-4 md:gap-6 print:hidden">
         <div className="md:col-span-2 relative">
           <Search className={cn("absolute left-6 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground transition-all", searchQuery && "text-primary animate-pulse")} />
           <Input 
@@ -315,7 +365,7 @@ export default function InventoryControl() {
 
       {filteredProducts.length > 0 ? (
         <>
-          <Card className="hidden md:block border-none glass-card rounded-[2.5rem] overflow-hidden">
+          <Card className="hidden md:block border-none glass-card rounded-[2.5rem] overflow-hidden print:hidden">
             <CardContent className="p-0">
               <Table>
                 <TableHeader className="bg-white/5">
@@ -378,6 +428,9 @@ export default function InventoryControl() {
                       </TableCell>
                       <TableCell className="text-right pr-10">
                         <div className="flex justify-end gap-3 opacity-0 group-hover:opacity-100 transition-all">
+                          <Button size="icon" variant="ghost" className="h-11 w-11 rounded-2xl text-muted-foreground hover:text-emerald-500" onClick={() => setSelectedLabelProduct(product)}>
+                            <Printer className="h-5 w-5" />
+                          </Button>
                           <Button size="icon" variant="ghost" className="h-11 w-11 rounded-2xl text-muted-foreground hover:text-primary hover:bg-primary/10" onClick={() => handleOpenDialog(product)}>
                             <Edit2 className="h-5 w-5" />
                           </Button>
@@ -393,7 +446,7 @@ export default function InventoryControl() {
             </CardContent>
           </Card>
 
-          <div className="md:hidden grid grid-cols-1 gap-4">
+          <div className="md:hidden grid grid-cols-1 gap-4 print:hidden">
             {filteredProducts.map((product) => (
               <Card key={product.id} className="border-none glass-card rounded-3xl overflow-hidden p-6 relative group">
                 <div className="flex gap-6 items-start">
@@ -434,9 +487,12 @@ export default function InventoryControl() {
                        </div>
                     </div>
 
-                    <div className="flex gap-3 pt-2">
+                    <div className="flex gap-2 pt-2">
                       <Button variant="outline" className="flex-1 h-10 rounded-xl bg-white/5 border-white/10 text-white font-black uppercase tracking-widest text-[9px]" onClick={() => handleOpenDialog(product)}>
                         <Edit2 className="h-3.5 w-3.5 mr-2 text-primary" /> Modify
+                      </Button>
+                      <Button variant="outline" className="h-10 w-10 rounded-xl bg-white/5 border-white/10 text-white flex items-center justify-center p-0" onClick={() => setSelectedLabelProduct(product)}>
+                        <Printer className="h-4 w-4" />
                       </Button>
                       <Button variant="outline" className="h-10 w-10 rounded-xl bg-white/5 border-white/10 text-rose-500 flex items-center justify-center p-0" onClick={() => handleDelete(product)}>
                         <Trash2 className="h-4 w-4" />
@@ -449,7 +505,7 @@ export default function InventoryControl() {
           </div>
         </>
       ) : (
-        <div className="text-center py-32 glass-card rounded-[2.5rem] border border-dashed border-white/10">
+        <div className="text-center py-32 glass-card rounded-[2.5rem] border border-dashed border-white/10 print:hidden">
            <Globe className="h-20 w-20 mx-auto mb-6 text-primary animate-spin-slow opacity-20" />
            <p className="text-white font-black uppercase italic tracking-tighter text-sm">No SKU Nodes Detected</p>
            <p className="text-[10px] text-muted-foreground font-bold uppercase tracking-widest mt-2">Adjust your cluster filters or query signature.</p>
@@ -612,6 +668,27 @@ export default function InventoryControl() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      <style jsx global>{`
+        @media print {
+          body * {
+            visibility: hidden;
+          }
+          #printable-label, #printable-label * {
+            visibility: visible;
+          }
+          #printable-label {
+            position: absolute;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: auto;
+            margin: 0;
+            padding: 40px;
+            border: 4px solid black !important;
+          }
+        }
+      `}</style>
     </div>
   );
 }

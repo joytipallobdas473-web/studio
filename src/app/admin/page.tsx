@@ -1,14 +1,14 @@
-
 "use client";
 
-import { useState, useMemo, useEffect } from "react";
+import { useState, useMemo, useEffect, useRef } from "react";
 import { useFirestore, useCollection, useMemoFirebase, useUser, useDoc } from "@/firebase";
 import { collection, query, doc } from "firebase/firestore";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Store, Package, ShoppingCart, AlertCircle, Loader2, Cpu, Activity, Zap, Globe, TrendingUp, BarChart3, CheckCircle2, ChevronRight, Bell, ShieldAlert, Boxes } from "lucide-react";
+import { Store, Package, ShoppingCart, AlertCircle, Loader2, Cpu, Activity, Zap, Globe, TrendingUp, BarChart3, CheckCircle2, ChevronRight, Bell, ShieldAlert, Boxes, Volume2, Mic, MapPin } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { analyzeInventory, type InventoryAnalysisOutput } from "@/ai/flows/inventory-analyst";
+import { synthesizeAnalysis } from "@/ai/flows/audio-summary";
 import { cn } from "@/lib/utils";
 import { toast } from "@/hooks/use-toast";
 import { Bar, BarChart, ResponsiveContainer, XAxis, Tooltip, Cell } from "recharts";
@@ -17,11 +17,63 @@ import Image from "next/image";
 
 const MASTER_ADMIN_UID = "j96izCkggNcL002AHiJjzGb18Bf2";
 
+const RegionalNodeMap = () => {
+  return (
+    <div className="relative aspect-square w-full bg-black/40 rounded-[2rem] border border-white/5 overflow-hidden flex items-center justify-center group">
+      <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(0,255,255,0.05)_0%,transparent_70%)]" />
+      {/* Stylized Grid Radar */}
+      <div className="absolute inset-0 flex items-center justify-center opacity-20">
+         <div className="w-4/5 h-4/5 border border-primary/20 rounded-full animate-ping duration-[4s]" />
+         <div className="absolute w-3/5 h-3/5 border border-primary/20 rounded-full" />
+         <div className="absolute w-2/5 h-2/5 border border-primary/20 rounded-full" />
+         <div className="absolute h-full w-[1px] bg-primary/10 rotate-45" />
+         <div className="absolute h-full w-[1px] bg-primary/10 -rotate-45" />
+      </div>
+      
+      {/* Simulated Regional Nodes (NE India Stylized) */}
+      <div className="relative z-10 w-full h-full p-12 flex flex-col justify-between">
+         <div className="flex justify-end pr-8">
+            <div className="relative">
+               <div className="h-3 w-3 bg-primary rounded-full animate-pulse" />
+               <div className="absolute top-4 left-0 whitespace-nowrap text-[8px] font-black uppercase text-primary tracking-widest bg-black/80 px-2 py-0.5 rounded border border-primary/20">Kamrup Node [HQ]</div>
+            </div>
+         </div>
+         <div className="flex justify-start pl-12 mt-10">
+            <div className="relative">
+               <div className="h-2 w-2 bg-emerald-500 rounded-full" />
+               <div className="absolute top-3 left-0 whitespace-nowrap text-[7px] font-black uppercase text-emerald-500 tracking-widest">Shillong Node</div>
+            </div>
+         </div>
+         <div className="flex justify-center ml-20">
+            <div className="relative">
+               <div className="h-2 w-2 bg-emerald-500 rounded-full" />
+               <div className="absolute top-3 left-0 whitespace-nowrap text-[7px] font-black uppercase text-emerald-500 tracking-widest">Dimapur Node</div>
+            </div>
+         </div>
+         <div className="flex justify-end mr-12 mb-10">
+            <div className="relative">
+               <div className="h-2 w-2 bg-rose-500 rounded-full animate-pulse" />
+               <div className="absolute top-3 right-0 whitespace-nowrap text-[7px] font-black uppercase text-rose-500 tracking-widest text-right">Agartala [Alert]</div>
+            </div>
+         </div>
+      </div>
+
+      <div className="absolute bottom-6 left-6 flex items-center gap-2">
+         <div className="h-1.5 w-1.5 rounded-full bg-primary animate-pulse" />
+         <span className="text-[9px] font-black text-white/40 uppercase tracking-[0.3em]">Grid Radar Active</span>
+      </div>
+    </div>
+  );
+};
+
 export default function AdminOverview() {
   const db = useFirestore();
   const { user } = useUser();
+  const audioRef = useRef<HTMLAudioElement>(null);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
+  const [isSynthesizing, setIsSynthesizing] = useState(false);
   const [aiAnalysis, setAiAnalysis] = useState<InventoryAnalysisOutput | null>(null);
+  const [audioUrl, setAudioUrl] = useState<string | null>(null);
   const [isClient, setIsClient] = useState(false);
 
   useEffect(() => {
@@ -80,7 +132,7 @@ export default function AdminOverview() {
     const lowStockCount = products?.filter(p => (p.stockQuantity || 0) < 10)?.length || 0;
 
     return [
-      { label: "New store Request", value: pendingStoresCount.toString(), icon: Store, color: "text-blue-500", bg: "bg-blue-500/10" },
+      { label: "New Store Request", value: pendingStoresCount.toString(), icon: Store, color: "text-blue-500", bg: "bg-blue-500/10" },
       { label: "Active SKUs", value: (products?.length || 0).toString(), icon: Package, color: "text-primary", bg: "bg-primary/10" },
       { label: "Order Traffic", value: activeOrdersCount.toString(), icon: ShoppingCart, color: "text-emerald-500", bg: "bg-emerald-500/10" },
       { label: "Inventory Risk", value: lowStockCount.toString(), icon: AlertCircle, color: "text-rose-500", bg: "bg-rose-500/10" },
@@ -113,6 +165,7 @@ export default function AdminOverview() {
     }
 
     setIsAnalyzing(true);
+    setAudioUrl(null);
     try {
       const input = {
         products: products.map(p => ({
@@ -139,6 +192,28 @@ export default function AdminOverview() {
     }
   };
 
+  const handlePlayAnalysis = async () => {
+    if (!aiAnalysis) return;
+    
+    setIsSynthesizing(true);
+    try {
+      const textToRead = `${aiAnalysis.summary}. recommendations: ${aiAnalysis.recommendations.join('. ')}`;
+      const result = await synthesizeAnalysis(textToRead);
+      setAudioUrl(result.media);
+      toast({ title: "Neural Link Established", description: "Streaming audio synthesis..." });
+    } catch (error) {
+      toast({ title: "Audio Failure", description: "Could not establish neural voice link.", variant: "destructive" });
+    } finally {
+      setIsSynthesizing(false);
+    }
+  };
+
+  useEffect(() => {
+    if (audioUrl && audioRef.current) {
+      audioRef.current.play();
+    }
+  }, [audioUrl]);
+
   if (!isClient || !isAdmin) return null;
 
   const anyLoading = storesLoading || ordersLoading || productsLoading;
@@ -155,6 +230,9 @@ export default function AdminOverview() {
 
   return (
     <div className="space-y-10 animate-in fade-in duration-700">
+      {/* Hidden Audio Node */}
+      {audioUrl && <audio ref={audioRef} src={audioUrl} className="hidden" onEnded={() => setAudioUrl(null)} />}
+
       {/* Neural Event Ticker */}
       <div className="w-full h-12 bg-white/5 border border-white/10 rounded-2xl overflow-hidden flex items-center px-6 gap-6 relative group">
         <div className="flex items-center gap-2 shrink-0 z-10 bg-black/40 pr-4 border-r border-white/10">
@@ -283,27 +361,12 @@ export default function AdminOverview() {
              <Card className="glass-card border-none rounded-[2rem] overflow-hidden">
                 <CardHeader className="border-b border-white/5 py-6 px-8">
                   <div className="flex items-center gap-3">
-                    <Activity className="h-5 w-5 text-primary" />
-                    <CardTitle className="text-lg font-black uppercase italic tracking-tighter text-white">Recent Log Registry</CardTitle>
+                    <MapPin className="h-5 w-5 text-primary" />
+                    <CardTitle className="text-lg font-black uppercase italic tracking-tighter text-white">Regional Grid Map</CardTitle>
                   </div>
                 </CardHeader>
-                <CardContent className="p-0">
-                  <div className="divide-y divide-white/5">
-                    {orders && orders.length > 0 ? orders.slice(0, 4).map((order, i) => (
-                      <div key={i} className="flex flex-col gap-1 px-8 py-5 hover:bg-white/5 transition-all group">
-                         <div className="flex items-center justify-between">
-                            <p className="text-xs font-black text-white uppercase italic truncate max-w-[150px]">{order.storeName || 'Node'}</p>
-                            <span className="text-[9px] font-black text-primary tracking-widest">₹{(order.total || 0).toFixed(0)}</span>
-                         </div>
-                         <div className="flex items-center justify-between mt-1">
-                            <span className="text-[8px] text-muted-foreground uppercase font-bold tracking-widest">{order.status === 'return_pending' ? 'Damage Reported' : order.status}</span>
-                            <span className="text-[8px] text-white/20 font-mono">{order.createdAt?.seconds ? format(order.createdAt.seconds * 1000, 'HH:mm') : 'SYNC'}</span>
-                         </div>
-                      </div>
-                    )) : (
-                      <div className="py-12 text-center text-muted-foreground font-bold uppercase text-[9px] italic">Awaiting grid synchronization...</div>
-                    )}
-                  </div>
+                <CardContent className="p-6 pt-2">
+                   <RegionalNodeMap />
                 </CardContent>
              </Card>
           </div>
@@ -312,9 +375,22 @@ export default function AdminOverview() {
         <div className="space-y-8">
           <Card className="command-gradient text-background border-none shadow-xl rounded-[2.5rem] p-10 relative overflow-hidden">
             <div className="relative z-10 space-y-8">
-              <div className="flex items-center gap-4">
-                <Cpu className="h-7 w-7" />
-                <CardTitle className="text-2xl font-black uppercase italic tracking-tighter">AI Synthesis</CardTitle>
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-4">
+                  <Cpu className="h-7 w-7" />
+                  <CardTitle className="text-2xl font-black uppercase italic tracking-tighter">AI Synthesis</CardTitle>
+                </div>
+                {aiAnalysis && (
+                  <Button 
+                    variant="ghost" 
+                    size="icon" 
+                    className="h-10 w-10 rounded-full bg-background/20 hover:bg-background/40 text-background"
+                    onClick={handlePlayAnalysis}
+                    disabled={isSynthesizing}
+                  >
+                    {isSynthesizing ? <Loader2 className="h-5 w-5 animate-spin" /> : <Volume2 className="h-5 w-5" />}
+                  </Button>
+                )}
               </div>
               {aiAnalysis ? (
                 <div className="space-y-6 animate-in slide-in-from-bottom-2 duration-500">
