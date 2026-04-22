@@ -23,6 +23,7 @@
         "sku": { "type": "string" },
         "price": { "type": "number", "description": "The actual offer price the retailer pays." },
         "mrp": { "type": "number", "description": "The maximum retail price for comparison." },
+        "costPrice": { "type": "number", "description": "The internal acquisition cost/rate value for the admin." },
         "stockQuantity": { "type": "number" },
         "category": { "type": "string" },
         "distributorName": { "type": "string", "description": "The name of the distributor who supplied the stock." },

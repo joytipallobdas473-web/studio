@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, useMemo, useRef, useEffect } from "react";
@@ -9,7 +10,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { Plus, Search, Edit2, Trash2, Loader2, Filter, CheckCircle2, ImageIcon, Camera, CameraOff, Sparkles, Globe, X, Box, Upload, Wand2, Truck, Printer, FileText } from "lucide-react";
+import { Plus, Search, Edit2, Trash2, Loader2, Filter, CheckCircle2, ImageIcon, Camera, CameraOff, Sparkles, Globe, X, Box, Upload, Wand2, Truck, Printer, FileText, TrendingUp, DollarSign } from "lucide-react";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -54,6 +55,7 @@ export default function InventoryControl() {
     sku: "",
     price: "",
     mrp: "",
+    costPrice: "",
     stockQuantity: "0",
     category: "Electronics",
     distributorName: "",
@@ -85,6 +87,7 @@ export default function InventoryControl() {
         sku: product.sku || "",
         price: (product.price || 0).toString(),
         mrp: (product.mrp || product.price || 0).toString(),
+        costPrice: (product.costPrice || 0).toString(),
         stockQuantity: (product.stockQuantity || 0).toString(),
         category: product.category || "Electronics",
         distributorName: product.distributorName || "",
@@ -186,6 +189,7 @@ export default function InventoryControl() {
 
     const priceNum = parseFloat(formData.price);
     const mrpNum = parseFloat(formData.mrp) || priceNum;
+    const costNum = parseFloat(formData.costPrice) || 0;
     const stockNum = parseInt(formData.stockQuantity);
 
     if (!formData.name.trim() || isNaN(priceNum) || isNaN(stockNum)) {
@@ -201,6 +205,7 @@ export default function InventoryControl() {
       sku: formData.sku.trim().toUpperCase(),
       price: priceNum,
       mrp: mrpNum,
+      costPrice: costNum,
       stockQuantity: stockNum,
       category: formData.category,
       distributorName: formData.distributorName.trim(),
@@ -372,14 +377,16 @@ export default function InventoryControl() {
                   <TableRow className="h-20 border-white/5">
                     <TableHead className="pl-10 uppercase text-[10px] font-black tracking-widest text-muted-foreground">Identity Package</TableHead>
                     <TableHead className="uppercase text-[10px] font-black tracking-widest text-muted-foreground">Cluster</TableHead>
-                    <TableHead className="uppercase text-[10px] font-black tracking-widest text-muted-foreground">Distributor</TableHead>
-                    <TableHead className="uppercase text-[10px] font-black tracking-widest text-muted-foreground">Valuation (MRP/Offer)</TableHead>
+                    <TableHead className="uppercase text-[10px] font-black tracking-widest text-muted-foreground">Valuation (Rate/Offer)</TableHead>
+                    <TableHead className="uppercase text-[10px] font-black tracking-widest text-muted-foreground">Est. Profit</TableHead>
                     <TableHead className="uppercase text-[10px] font-black tracking-widest text-muted-foreground">Density</TableHead>
                     <TableHead className="text-right pr-10 uppercase text-[10px] font-black tracking-widest text-muted-foreground">Protocol</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {filteredProducts.map((product) => (
+                  {filteredProducts.map((product) => {
+                    const unitProfit = (product.price || 0) - (product.costPrice || 0);
+                    return (
                     <TableRow key={product.id} className="h-24 hover:bg-white/5 transition-all group border-white/5">
                       <TableCell className="pl-10">
                         <div className="flex items-center gap-6">
@@ -405,15 +412,23 @@ export default function InventoryControl() {
                         </Badge>
                       </TableCell>
                       <TableCell>
-                        <div className="flex items-center gap-2 text-muted-foreground">
-                          <Truck className="h-3 w-3 opacity-50" />
-                          <span className="text-[10px] font-bold uppercase tracking-widest">{product.distributorName || "Internal"}</span>
-                        </div>
+                         <div className="flex flex-col">
+                            <div className="flex items-center gap-1 text-[10px] text-muted-foreground">
+                               <span className="font-bold">Rate:</span>
+                               <span className="font-mono">₹{(product.costPrice || 0).toFixed(2)}</span>
+                            </div>
+                            <div className="flex items-center gap-1">
+                               <span className="text-[10px] font-bold text-primary">Offer:</span>
+                               <span className="font-mono text-sm text-primary font-black">₹{(product.price || 0).toFixed(2)}</span>
+                            </div>
+                         </div>
                       </TableCell>
                       <TableCell>
-                         <div className="flex flex-col">
-                            <span className="text-[10px] text-muted-foreground line-through decoration-rose-500/50">₹{(product.mrp || product.price || 0).toFixed(2)}</span>
-                            <span className="font-mono text-sm text-primary font-black">₹{(product.price || 0).toFixed(2)}</span>
+                         <div className="flex items-center gap-2">
+                            <TrendingUp className={cn("h-3 w-3", unitProfit > 0 ? "text-emerald-500" : "text-rose-500")} />
+                            <span className={cn("text-xs font-black font-mono", unitProfit > 0 ? "text-emerald-500" : "text-rose-500")}>
+                               ₹{unitProfit.toFixed(2)}
+                            </span>
                          </div>
                       </TableCell>
                       <TableCell>
@@ -440,14 +455,16 @@ export default function InventoryControl() {
                         </div>
                       </TableCell>
                     </TableRow>
-                  ))}
+                  )})}
                 </TableBody>
               </Table>
             </CardContent>
           </Card>
 
           <div className="md:hidden grid grid-cols-1 gap-4 print:hidden">
-            {filteredProducts.map((product) => (
+            {filteredProducts.map((product) => {
+              const unitProfit = (product.price || 0) - (product.costPrice || 0);
+              return (
               <Card key={product.id} className="border-none glass-card rounded-3xl overflow-hidden p-6 relative group">
                 <div className="flex gap-6 items-start">
                   <div className="relative h-20 w-20 rounded-2xl overflow-hidden bg-white/5 border border-white/10 shrink-0">
@@ -473,8 +490,12 @@ export default function InventoryControl() {
                     
                     <div className="flex items-center justify-between">
                        <div className="flex flex-col">
-                          <span className="text-[9px] text-muted-foreground line-through decoration-rose-500/30">₹{(product.mrp || product.price || 0).toFixed(2)}</span>
-                          <span className="font-mono text-sm text-primary font-black">₹{(product.price || 0).toFixed(2)}</span>
+                          <span className="text-[9px] text-muted-foreground">Rate: ₹{(product.costPrice || 0).toFixed(2)}</span>
+                          <span className="font-mono text-sm text-primary font-black">Offer: ₹{(product.price || 0).toFixed(2)}</span>
+                          <div className="flex items-center gap-1 text-[9px] mt-1">
+                             <TrendingUp className={cn("h-3 w-3", unitProfit > 0 ? "text-emerald-500" : "text-rose-500")} />
+                             <span className={unitProfit > 0 ? "text-emerald-500" : "text-rose-500"}>Profit: ₹{unitProfit.toFixed(2)}</span>
+                          </div>
                        </div>
                        <div className="flex flex-col items-end">
                          <div className="flex items-center gap-2">
@@ -501,7 +522,7 @@ export default function InventoryControl() {
                   </div>
                 </div>
               </Card>
-            ))}
+            )})}
           </div>
         </>
       ) : (
@@ -638,7 +659,7 @@ export default function InventoryControl() {
                </div>
             </div>
             
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
               <div className="space-y-3">
                 <Label className="text-[10px] font-black uppercase tracking-widest text-slate-500">Sector Cluster</Label>
                 <Select value={formData.category} onValueChange={(val) => setFormData({...formData, category: val})}>
@@ -653,6 +674,10 @@ export default function InventoryControl() {
               <div className="space-y-3">
                 <Label className="text-[10px] font-black uppercase tracking-widest text-emerald-600">Offer (₹)</Label>
                 <Input type="number" value={formData.price} onChange={(e) => setFormData({...formData, price: e.target.value})} className="h-14 rounded-2xl bg-slate-50 border border-slate-200 font-mono text-slate-900" />
+              </div>
+              <div className="space-y-3">
+                <Label className="text-[10px] font-black uppercase tracking-widest text-indigo-500">Rate Value (₹)</Label>
+                <Input type="number" value={formData.costPrice} onChange={(e) => setFormData({...formData, costPrice: e.target.value})} className="h-14 rounded-2xl bg-slate-50 border border-slate-200 font-mono text-slate-900" />
               </div>
               <div className="space-y-3">
                 <Label className="text-[10px] font-black uppercase tracking-widest text-slate-500">Stock Density</Label>
