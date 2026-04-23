@@ -1,61 +1,60 @@
-
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
 @layer base {
   :root {
-    /* Branch Portal: Emerald Frost High-Efficiency */
-    --background: 210 40% 98%; /* Clean Frost Blue */
+    /* Branch Portal: Sapphire Frost Professional */
+    --background: 210 40% 98%; 
     --foreground: 222 47% 11%;
     --card: 0 0% 100%;
     --card-foreground: 222 47% 11%;
     --popover: 0 0% 100%;
     --popover-foreground: 222 47% 11%;
-    --primary: 161 94% 30%; /* Emerald Green */
+    --primary: 221 83% 53%; /* Sapphire Blue */
     --primary-foreground: 0 0% 100%;
     --secondary: 210 40% 96%;
-    --secondary-foreground: 161 94% 20%;
+    --secondary-foreground: 221 83% 20%;
     --muted: 210 40% 90%;
     --muted-foreground: 215 16% 47%;
-    --accent: 173 80% 40%; /* Teal Accent */
+    --accent: 199 89% 48%; /* Sky Accent */
     --accent-foreground: 0 0% 100%;
     --destructive: 0 84.2% 60.2%;
     --destructive-foreground: 0 0% 100%;
     --border: 214 32% 91%;
     --input: 214 32% 91%;
-    --ring: 161 94% 30%;
+    --ring: 221 83% 53%;
     --radius: 1.25rem;
   }
 
   .dark-admin {
-    /* Admin Command: Neon Cyan & Obsidian */
-    --background: 222 47% 2%; /* Deep Obsidian */
-    --foreground: 180 100% 95%;
-    --card: 222 47% 4%;
-    --card-foreground: 180 100% 95%;
-    --popover: 222 47% 4%;
-    --popover-foreground: 180 100% 95%;
-    --primary: 180 100% 50%; /* Neon Cyan */
-    --primary-foreground: 222 47% 2%;
-    --secondary: 222 47% 8%;
-    --secondary-foreground: 180 100% 50%;
-    --muted: 222 47% 10%;
-    --muted-foreground: 180 20% 60%;
-    --accent: 142 71% 45%; /* Emerald Success */
-    --accent-foreground: 222 47% 2%;
-    --border: 180 100% 20%;
-    --input: 180 100% 10%;
-    --ring: 180 100% 50%;
+    /* Admin Command: Eclipse Gold & Obsidian */
+    --background: 240 10% 2%; /* Deep Onyx */
+    --foreground: 45 93% 90%;
+    --card: 240 10% 4%;
+    --card-foreground: 45 93% 90%;
+    --popover: 240 10% 4%;
+    --popover-foreground: 45 93% 90%;
+    --primary: 45 93% 47%; /* Solar Gold */
+    --primary-foreground: 240 10% 2%;
+    --secondary: 240 10% 8%;
+    --secondary-foreground: 45 93% 47%;
+    --muted: 240 10% 10%;
+    --muted-foreground: 45 20% 60%;
+    --accent: 38 92% 50%; /* Amber Accent */
+    --accent-foreground: 240 10% 2%;
+    --border: 45 93% 15%;
+    --input: 45 93% 10%;
+    --ring: 45 93% 47%;
     
-    --sidebar-background: 222 47% 1%;
-    --sidebar-foreground: 180 100% 95%;
-    --sidebar-primary: 180 100% 50%;
-    --sidebar-primary-foreground: 222 47% 1%;
-    --sidebar-accent: 180 100% 10%;
-    --sidebar-accent-foreground: 180 100% 50%;
-    --sidebar-border: 180 100% 15%;
-    --sidebar-ring: 180 100% 50%;
+    --sidebar-background: 240 10% 1%;
+    --sidebar-foreground: 45 93% 90%;
+    --sidebar-primary: 45 93% 47%;
+    --sidebar-primary-foreground: 240 10% 2%;
+    --sidebar-accent: 45 93% 10%;
+    --sidebar-accent-foreground: 45 93% 47%;
+    --sidebar-border: 45 93% 10%;
+    --sidebar-ring: 45 93% 47%;
   }
 }
 
@@ -73,37 +72,37 @@
 }
 
 .dark-admin .glass-card {
-  @apply bg-black/60 backdrop-blur-md border border-primary/20 shadow-[0_0_20px_rgba(0,255,255,0.05)];
+  @apply bg-black/60 backdrop-blur-md border border-primary/20 shadow-[0_0_30px_rgba(245,158,11,0.05)];
 }
 
 .admin-grid {
   background-image: 
-    radial-gradient(at 0% 0%, hsla(180, 100% , 50%, 0.02) 0, transparent 50%),
-    radial-gradient(at 100% 100%, hsla(142, 71%, 45% , 0.02) 0, transparent 50%),
-    linear-gradient(to right, rgba(0, 255, 255, 0.01) 1px, transparent 1px),
-    linear-gradient(to bottom, rgba(0, 255, 255, 0.01) 1px, transparent 1px);
+    radial-gradient(at 0% 0%, hsla(45, 93% , 47%, 0.03) 0, transparent 50%),
+    radial-gradient(at 100% 100%, hsla(38, 92%, 50% , 0.03) 0, transparent 50%),
+    linear-gradient(to right, rgba(245, 158, 11, 0.01) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(245, 158, 11, 0.01) 1px, transparent 1px);
   background-size: 100% 100%, 100% 100%, 30px 30px, 30px 30px;
 }
 
 .portal-surface {
   background-color: #f8fafc;
   background-image: 
-    radial-gradient(at 100% 0%, hsla(161, 94%, 30%, 0.01) 0, transparent 50%),
-    radial-gradient(at 0% 100%, hsla(161, 94%, 30%, 0.005) 0, transparent 50%);
+    radial-gradient(at 100% 0%, hsla(221, 83%, 53%, 0.02) 0, transparent 50%),
+    radial-gradient(at 0% 100%, hsla(221, 83%, 53%, 0.01) 0, transparent 50%);
 }
 
 .command-gradient {
-  background: linear-gradient(135deg, hsl(var(--primary)) 0%, #059669 100%);
+  background: linear-gradient(135deg, hsl(var(--primary)) 0%, #b45309 100%);
 }
 
-@keyframes pulse-cyan {
-  0% { box-shadow: 0 0 0 0 rgba(0, 255, 255, 0.1); }
-  70% { box-shadow: 0 0 0 10px rgba(0, 255, 255, 0); }
-  100% { box-shadow: 0 0 0 0 rgba(0, 255, 255, 0); }
+@keyframes pulse-gold {
+  0% { box-shadow: 0 0 0 0 rgba(245, 158, 11, 0.2); }
+  70% { box-shadow: 0 0 0 10px rgba(245, 158, 11, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(245, 158, 11, 0); }
 }
 
-.animate-pulse-cyan {
-  animation: pulse-cyan 3s infinite;
+.animate-pulse-gold {
+  animation: pulse-gold 3s infinite;
 }
 
 .text-stroke {

@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useEffect, useState, useMemo } from "react";
@@ -32,12 +31,12 @@ function AdminSidebar() {
     <Sidebar className="bg-black border-r border-primary/10">
       <SidebarHeader className="h-28 flex items-center px-8">
         <Link href="/admin" className="flex items-center gap-4 group">
-          <div className="bg-primary/10 p-3 rounded-xl border border-primary/20 group-hover:scale-110 transition-all shadow-[0_0_20px_rgba(0,255,255,0.1)]">
+          <div className="bg-primary/10 p-3 rounded-xl border border-primary/20 group-hover:scale-110 transition-all shadow-[0_0_20px_rgba(245,158,11,0.1)]">
             <Cpu className="h-6 w-6 text-primary" />
           </div>
           <div className="flex flex-col">
             <span className="font-black text-xl leading-none uppercase tracking-tighter text-white italic">AETHER</span>
-            <span className="text-[8px] font-black text-primary uppercase tracking-[0.4em] mt-1.5 animate-pulse">COMMAND_V4</span>
+            <span className="text-[8px] font-black text-primary uppercase tracking-[0.4em] mt-1.5 animate-pulse">COMMAND_V7</span>
           </div>
         </Link>
       </SidebarHeader>
@@ -55,7 +54,7 @@ function AdminSidebar() {
                     className={cn(
                       "h-12 rounded-xl transition-all",
                       pathname === item.href 
-                        ? "bg-primary text-black font-black shadow-[0_0_20px_rgba(0,255,255,0.3)]" 
+                        ? "bg-primary text-black font-black shadow-[0_0_20px_rgba(245,158,11,0.3)]" 
                         : "text-muted-foreground hover:bg-white/5 hover:text-white"
                     )}
                   >
@@ -73,7 +72,7 @@ function AdminSidebar() {
 
       <SidebarFooter className="p-8">
         <div className="p-6 bg-primary/5 rounded-2xl border border-primary/10 relative overflow-hidden group">
-          <div className="absolute top-0 right-0 h-full w-1 bg-primary/40 shadow-[0_0_15px_rgba(0,255,255,0.5)] animate-pulse" />
+          <div className="absolute top-0 right-0 h-full w-1 bg-primary/40 shadow-[0_0_15px_rgba(245,158,11,0.5)] animate-pulse" />
           <div className="flex items-center justify-between">
              <div className="flex flex-col">
                 <span className="text-[8px] font-black text-muted-foreground uppercase tracking-widest">Protocol</span>
@@ -160,7 +159,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
             <div className="flex flex-col">
               <span className="text-xl font-black text-white uppercase italic tracking-tighter leading-none">Command Terminal</span>
               <div className="flex items-center gap-3 text-[9px] text-muted-foreground font-black uppercase tracking-[0.3em] mt-2">
-                <div className="h-1.5 w-1.5 rounded-full bg-primary animate-pulse-cyan" />
+                <div className="h-1.5 w-1.5 rounded-full bg-primary animate-pulse-gold" />
                 Grid Status: Optimal
               </div>
             </div>
