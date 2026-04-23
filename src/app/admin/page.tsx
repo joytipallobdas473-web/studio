@@ -1,70 +1,22 @@
+
 "use client";
 
 import { useState, useMemo, useEffect, useRef } from "react";
 import { useFirestore, useCollection, useMemoFirebase, useUser, useDoc } from "@/firebase";
 import { collection, query, doc } from "firebase/firestore";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Store, Package, ShoppingCart, AlertCircle, Loader2, Cpu, Activity, Zap, Globe, TrendingUp, BarChart3, CheckCircle2, ChevronRight, Bell, ShieldAlert, Boxes, Volume2, Mic, MapPin } from "lucide-react";
+import { Store, Package, ShoppingCart, AlertCircle, Loader2, Cpu, Activity, Zap, Globe, TrendingUp, BarChart3, CheckCircle2, Bell, ShieldAlert, Volume2, MapPin } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { analyzeInventory, type InventoryAnalysisOutput } from "@/ai/flows/inventory-analyst";
 import { synthesizeAnalysis } from "@/ai/flows/audio-summary";
 import { cn } from "@/lib/utils";
 import { toast } from "@/hooks/use-toast";
-import { Bar, BarChart, ResponsiveContainer, XAxis, Tooltip, Cell } from "recharts";
+import { Bar, BarChart, ResponsiveContainer, XAxis, Tooltip, Cell, YAxis } from "recharts";
 import { format, subDays, isSameDay } from "date-fns";
 import Image from "next/image";
 
 const MASTER_ADMIN_UID = "j96izCkggNcL002AHiJjzGb18Bf2";
-
-const RegionalNodeMap = () => {
-  return (
-    <div className="relative aspect-square w-full bg-black/40 rounded-[2rem] border border-white/5 overflow-hidden flex items-center justify-center group">
-      <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(0,255,255,0.05)_0%,transparent_70%)]" />
-      {/* Stylized Grid Radar */}
-      <div className="absolute inset-0 flex items-center justify-center opacity-20">
-         <div className="w-4/5 h-4/5 border border-primary/20 rounded-full animate-ping duration-[4s]" />
-         <div className="absolute w-3/5 h-3/5 border border-primary/20 rounded-full" />
-         <div className="absolute w-2/5 h-2/5 border border-primary/20 rounded-full" />
-         <div className="absolute h-full w-[1px] bg-primary/10 rotate-45" />
-         <div className="absolute h-full w-[1px] bg-primary/10 -rotate-45" />
-      </div>
-      
-      {/* Simulated Regional Nodes (NE India Stylized) */}
-      <div className="relative z-10 w-full h-full p-12 flex flex-col justify-between">
-         <div className="flex justify-end pr-8">
-            <div className="relative">
-               <div className="h-3 w-3 bg-primary rounded-full animate-pulse" />
-               <div className="absolute top-4 left-0 whitespace-nowrap text-[8px] font-black uppercase text-primary tracking-widest bg-black/80 px-2 py-0.5 rounded border border-primary/20">Kamrup Node [HQ]</div>
-            </div>
-         </div>
-         <div className="flex justify-start pl-12 mt-10">
-            <div className="relative">
-               <div className="h-2 w-2 bg-emerald-500 rounded-full" />
-               <div className="absolute top-3 left-0 whitespace-nowrap text-[7px] font-black uppercase text-emerald-500 tracking-widest">Shillong Node</div>
-            </div>
-         </div>
-         <div className="flex justify-center ml-20">
-            <div className="relative">
-               <div className="h-2 w-2 bg-emerald-500 rounded-full" />
-               <div className="absolute top-3 left-0 whitespace-nowrap text-[7px] font-black uppercase text-emerald-500 tracking-widest">Dimapur Node</div>
-            </div>
-         </div>
-         <div className="flex justify-end mr-12 mb-10">
-            <div className="relative">
-               <div className="h-2 w-2 bg-rose-500 rounded-full animate-pulse" />
-               <div className="absolute top-3 right-0 whitespace-nowrap text-[7px] font-black uppercase text-rose-500 tracking-widest text-right">Agartala [Alert]</div>
-            </div>
-         </div>
-      </div>
-
-      <div className="absolute bottom-6 left-6 flex items-center gap-2">
-         <div className="h-1.5 w-1.5 rounded-full bg-primary animate-pulse" />
-         <span className="text-[9px] font-black text-white/40 uppercase tracking-[0.3em]">Grid Radar Active</span>
-      </div>
-    </div>
-  );
-};
 
 export default function AdminOverview() {
   const db = useFirestore();
@@ -76,9 +28,7 @@ export default function AdminOverview() {
   const [audioUrl, setAudioUrl] = useState<string | null>(null);
   const [isClient, setIsClient] = useState(false);
 
-  useEffect(() => {
-    setIsClient(true);
-  }, []);
+  useEffect(() => { setIsClient(true); }, []);
 
   const adminRoleRef = useMemoFirebase(() => {
     if (!db || !user) return null;
@@ -86,396 +36,105 @@ export default function AdminOverview() {
   }, [db, user?.uid]);
 
   const { data: adminRole } = useDoc(adminRoleRef);
+  const isAdmin = useMemo(() => user?.email?.toLowerCase().includes("admin") || user?.uid === MASTER_ADMIN_UID || !!adminRole, [user, adminRole]);
 
-  const isAdmin = useMemo(() => {
-    return user?.email?.toLowerCase().includes("admin") || user?.uid === MASTER_ADMIN_UID || !!adminRole;
-  }, [user, adminRole]);
+  const storesQuery = useMemoFirebase(() => (!db || !isAdmin) ? null : query(collection(db, "stores")), [db, isAdmin]);
+  const allOrdersQuery = useMemoFirebase(() => (!db || !isAdmin) ? null : query(collection(db, "orders")), [db, isAdmin]);
+  const productsQuery = useMemoFirebase(() => (!db || !isAdmin) ? null : collection(db, "products"), [db, isAdmin]);
 
-  const storesQuery = useMemoFirebase(() => {
-    if (!db || !user || !isAdmin) return null;
-    return query(collection(db, "stores"));
-  }, [db, user, isAdmin]);
-
-  const allOrdersQuery = useMemoFirebase(() => {
-    if (!db || !user || !isAdmin) return null;
-    return query(collection(db, "orders"));
-  }, [db, user, isAdmin]);
-
-  const productsQuery = useMemoFirebase(() => {
-    if (!db || !user || !isAdmin) return null;
-    return collection(db, "products");
-  }, [db, user, isAdmin]);
-
-  const { data: stores, isLoading: storesLoading } = useCollection(storesQuery);
-  const { data: orders, isLoading: ordersLoading } = useCollection(allOrdersQuery);
-  const { data: products, isLoading: productsLoading } = useCollection(productsQuery);
-
-  const tickerItems = useMemo(() => {
-    if (!orders && !stores) return [];
-    const items = [];
-    if (orders) {
-      orders.slice(0, 5).forEach(o => {
-        items.push({ text: `Packet ${o.id.substring(0, 6)}: Status updated to ${o.status}`, type: "order" });
-      });
-    }
-    if (stores) {
-      stores.filter(s => s.status === 'pending').forEach(s => {
-        items.push({ text: `New Registry: ${s.name} awaiting authorization`, type: "store" });
-      });
-    }
-    return items;
-  }, [orders, stores]);
-
-  const stats = useMemo(() => {
-    const pendingStoresCount = stores?.filter(s => s.status === 'pending')?.length || 0;
-    const activeOrdersCount = orders?.filter(o => !['delivered', 'cancelled', 'returned'].includes(o.status))?.length || 0;
-    const lowStockCount = products?.filter(p => (p.stockQuantity || 0) < 10)?.length || 0;
-
-    return [
-      { label: "New Store Request", value: pendingStoresCount.toString(), icon: Store, color: "text-blue-500", bg: "bg-blue-500/10" },
-      { label: "Active SKUs", value: (products?.length || 0).toString(), icon: Package, color: "text-primary", bg: "bg-primary/10" },
-      { label: "Order Traffic", value: activeOrdersCount.toString(), icon: ShoppingCart, color: "text-emerald-500", bg: "bg-emerald-500/10" },
-      { label: "Inventory Risk", value: lowStockCount.toString(), icon: AlertCircle, color: "text-rose-500", bg: "bg-rose-500/10" },
-    ];
-  }, [stores, orders, products]);
-
-  const criticalStockProducts = useMemo(() => {
-    if (!products) return [];
-    return products.filter(p => (p.stockQuantity || 0) < 10).slice(0, 6);
-  }, [products]);
+  const { data: stores } = useCollection(storesQuery);
+  const { data: orders } = useCollection(allOrdersQuery);
+  const { data: products } = useCollection(productsQuery);
 
   const chartData = useMemo(() => {
     if (!orders) return [];
     const days = Array.from({ length: 7 }, (_, i) => subDays(new Date(), i)).reverse();
     return days.map(day => {
       const dayLabel = format(day, 'eee');
-      const dayOrders = orders.filter(order => {
-        if (!order.createdAt?.seconds) return false;
-        const orderDate = new Date(order.createdAt.seconds * 1000);
-        return isSameDay(orderDate, day);
-      });
-      return { name: dayLabel, volume: dayOrders.length };
+      const dayOrders = orders.filter(o => o.createdAt?.seconds && isSameDay(new Date(o.createdAt.seconds * 1000), day));
+      const dayProfit = dayOrders.reduce((sum, o) => sum + (o.profit || 0), 0);
+      return { name: dayLabel, volume: dayOrders.length, profit: dayProfit };
     });
   }, [orders]);
 
   const handleRunAIAnalysis = async () => {
-    if (!products || !orders) {
-      toast({ title: "Insufficient Data", description: "Telemetry sync incomplete.", variant: "destructive" });
-      return;
-    }
-
+    if (!products || !orders) return;
     setIsAnalyzing(true);
-    setAudioUrl(null);
     try {
-      const input = {
-        products: products.map(p => ({
-          name: p.name || "Unknown",
-          currentStock: p.stockQuantity || 0,
-          category: p.category || "General",
-          mrp: p.mrp || p.price || 0,
-          offerPrice: p.price || 0
-        })),
-        recentOrders: orders.slice(0, 20).map(o => ({
-          items: o.items || "Unspecified",
-          status: o.status || "pending",
-          total: o.total || 0
-        }))
-      };
-
-      const result = await analyzeInventory(input);
+      const result = await analyzeInventory({
+        products: products.map(p => ({ name: p.name, currentStock: p.stockQuantity, category: p.category, mrp: p.mrp || p.price, offerPrice: p.price })),
+        recentOrders: orders.slice(0, 20).map(o => ({ items: o.items, status: o.status, total: o.total }))
+      });
       setAiAnalysis(result);
-      toast({ title: "Analysis Complete", description: "Grid health synthesized." });
-    } catch (error) {
-      toast({ title: "AI Sync Failure", description: "Neural link timeout.", variant: "destructive" });
-    } finally {
-      setIsAnalyzing(false);
-    }
+      toast({ title: "Grid Analysis Synthesized" });
+    } catch (e) { toast({ title: "Neural Link Timeout", variant: "destructive" }); }
+    finally { setIsAnalyzing(false); }
   };
 
   const handlePlayAnalysis = async () => {
     if (!aiAnalysis) return;
-    
     setIsSynthesizing(true);
     try {
-      const textToRead = `${aiAnalysis.summary}. recommendations: ${aiAnalysis.recommendations.join('. ')}`;
-      const result = await synthesizeAnalysis(textToRead);
+      const result = await synthesizeAnalysis(`${aiAnalysis.summary}. recommendations: ${aiAnalysis.recommendations.join('. ')}`);
       setAudioUrl(result.media);
-      toast({ title: "Neural Link Established", description: "Streaming audio synthesis..." });
-    } catch (error) {
-      toast({ title: "Audio Failure", description: "Could not establish neural voice link.", variant: "destructive" });
-    } finally {
-      setIsSynthesizing(false);
-    }
+    } catch (e) { toast({ title: "Audio Sync Failed", variant: "destructive" }); }
+    finally { setIsSynthesizing(false); }
   };
-
-  useEffect(() => {
-    if (audioUrl && audioRef.current) {
-      audioRef.current.play();
-    }
-  }, [audioUrl]);
 
   if (!isClient || !isAdmin) return null;
 
-  const anyLoading = storesLoading || ordersLoading || productsLoading;
-  if (anyLoading && (!stores && !orders && !products)) {
-    return (
-      <div className="flex h-[60vh] items-center justify-center">
-        <div className="flex flex-col items-center gap-4">
-          <Loader2 className="h-10 w-10 animate-spin text-primary opacity-30" />
-          <p className="text-[10px] font-black uppercase tracking-[0.5em] text-primary/40">Syncing Grid Intelligence</p>
-        </div>
-      </div>
-    );
-  }
-
   return (
     <div className="space-y-10 animate-in fade-in duration-700">
-      {/* Hidden Audio Node */}
-      {audioUrl && <audio ref={audioRef} src={audioUrl} className="hidden" onEnded={() => setAudioUrl(null)} />}
-
-      {/* Neural Event Ticker */}
-      <div className="w-full h-12 bg-white/5 border border-white/10 rounded-2xl overflow-hidden flex items-center px-6 gap-6 relative group">
-        <div className="flex items-center gap-2 shrink-0 z-10 bg-black/40 pr-4 border-r border-white/10">
-           <Bell className="h-3 w-3 text-primary animate-pulse" />
-           <span className="text-[9px] font-black uppercase tracking-widest text-primary">Live Neural Feed</span>
-        </div>
-        <div className="flex-1 overflow-hidden">
-          <div className="flex gap-12 whitespace-nowrap animate-marquee group-hover:pause">
-            {tickerItems.length > 0 ? (
-              tickerItems.map((item, idx) => (
-                <div key={idx} className="flex items-center gap-3 text-[10px] font-bold text-white/60">
-                   <div className="h-1 w-1 rounded-full bg-white/20" />
-                   {item.text}
-                </div>
-              ))
-            ) : (
-              <span className="text-[10px] font-black uppercase tracking-widest text-white/20 italic">Awaiting grid events...</span>
-            )}
-          </div>
-        </div>
-      </div>
-
+      {audioUrl && <audio ref={audioRef} src={audioUrl} className="hidden" onEnded={() => setAudioUrl(null)} autoPlay />}
+      
       <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-6">
         <div className="space-y-1">
-          <div className="flex items-center gap-3">
-             <div className="h-1.5 w-1.5 rounded-full bg-primary animate-pulse" />
-             <span className="text-[10px] font-black tracking-[0.4em] text-primary uppercase">Regional Grid Console</span>
-          </div>
-          <h1 className="text-4xl font-black text-white tracking-tighter uppercase italic leading-none">Command Center</h1>
-          <p className="text-muted-foreground text-sm font-medium">Synchronizing {stores?.length || 0} regional branch nodes.</p>
+          <div className="flex items-center gap-3"><div className="h-1.5 w-1.5 rounded-full bg-primary animate-pulse" /><span className="text-[10px] font-black tracking-[0.4em] text-primary uppercase">Regional Command v6.0</span></div>
+          <h1 className="text-4xl font-black text-white uppercase italic">Command Center</h1>
         </div>
-        <div className="flex gap-4 w-full lg:w-auto">
-          <Button variant="outline" className="flex-1 lg:flex-none h-12 px-6 rounded-xl font-black border-white/10 bg-white/5 hover:bg-white/10 text-[10px] uppercase tracking-widest text-white" onClick={() => window.location.reload()}>
-            <Zap className="mr-2 h-4 w-4 text-primary" /> Force Refresh
-          </Button>
-          <Button className="flex-1 lg:flex-none h-12 px-8 rounded-xl font-black bg-primary text-background text-[10px] uppercase tracking-widest shadow-lg shadow-primary/20">
-            <Globe className="mr-2 h-4 w-4" /> Global Status
-          </Button>
-        </div>
-      </div>
-      
-      <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
-        {stats.map((stat, i) => (
-          <Card key={i} className="glass-card border-none rounded-2xl overflow-hidden group hover:translate-y-[-4px] transition-all duration-300">
-            <CardContent className="p-8">
-              <div className="flex items-center justify-between mb-4">
-                <span className="text-[9px] font-black uppercase tracking-widest text-muted-foreground">{stat.label}</span>
-                <div className={cn(stat.bg, stat.color, "p-2 rounded-xl")}>
-                  <stat.icon className="h-4 w-4" />
-                </div>
-              </div>
-              <div className="text-3xl font-black text-white tracking-tighter italic">{stat.value}</div>
-              <div className="flex items-center gap-1.5 mt-4 text-[9px] font-black text-emerald-500 uppercase tracking-widest">
-                <TrendingUp className="h-3 w-3" /> Grid Stable
-              </div>
-            </CardContent>
-          </Card>
-        ))}
+        <div className="flex gap-4"><Button variant="outline" className="h-12 px-6 rounded-xl font-black border-white/10 bg-white/5 text-[10px] uppercase text-white" onClick={() => window.location.reload()}><Zap className="mr-2 h-4 w-4" /> Refresh Grid</Button></div>
       </div>
 
-      <div className="grid grid-cols-1 xl:grid-cols-3 gap-8">
-        <div className="xl:col-span-2 space-y-8">
-          <Card className="glass-card border-none rounded-[2rem] overflow-hidden">
-            <CardHeader className="border-b border-white/5 py-8 px-10">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <BarChart3 className="h-5 w-5 text-primary" />
-                  <CardTitle className="text-xl font-black uppercase italic tracking-tighter text-white">Traffic Telemetry</CardTitle>
-                </div>
-                <Badge className="text-[9px] font-black uppercase tracking-widest bg-primary/10 text-primary border-none px-4 py-1.5 rounded-lg">Last 7 Cycles</Badge>
-              </div>
-            </CardHeader>
-            <CardContent className="p-10">
-              <div className="h-[250px] w-full">
-                <ResponsiveContainer width="100%" height="100%">
-                  <BarChart data={chartData}>
-                    <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{fill: '#64748b', fontSize: 10, fontWeight: 800}} dy={10} />
-                    <Tooltip 
-                      cursor={{fill: 'rgba(255,255,255,0.05)'}}
-                      contentStyle={{backgroundColor: '#020617', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '12px'}}
-                      labelStyle={{color: '#f8fafc', fontWeight: 800, textTransform: 'uppercase', fontSize: '10px'}}
-                    />
-                    <Bar dataKey="volume" radius={[4, 4, 0, 0]}>
-                      {chartData.map((entry, index) => (
-                        <Cell key={`cell-${index}`} fill={index === chartData.length - 1 ? '#f59e0b' : '#334155'} />
-                      ))}
-                    </Bar>
-                  </BarChart>
-                </ResponsiveContainer>
-              </div>
-            </CardContent>
-          </Card>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-             <Card className="glass-card border-none rounded-[2rem] overflow-hidden">
-                <CardHeader className="border-b border-white/5 py-6 px-8">
-                  <div className="flex items-center gap-3">
-                    <ShieldAlert className="h-5 w-5 text-rose-500 animate-pulse" />
-                    <CardTitle className="text-lg font-black uppercase italic tracking-tighter text-white">Critical Stock Nodes</CardTitle>
-                  </div>
-                </CardHeader>
-                <CardContent className="p-0">
-                  <div className="divide-y divide-white/5">
-                    {criticalStockProducts.length > 0 ? criticalStockProducts.map((product, i) => (
-                      <div key={i} className="flex items-center justify-between px-8 py-4 hover:bg-white/5 transition-all">
-                        <div className="flex items-center gap-4">
-                           <div className="relative h-10 w-10 rounded-lg overflow-hidden border border-white/10 bg-white/5">
-                              <Image src={product.imageUrl || `https://picsum.photos/seed/${product.id}/50`} alt={product.name} fill className="object-cover" />
-                           </div>
-                           <div>
-                              <p className="text-[11px] font-black text-white uppercase italic">{product.name}</p>
-                              <p className="text-[8px] text-muted-foreground uppercase font-mono tracking-widest">{product.sku}</p>
-                           </div>
-                        </div>
-                        <Badge variant="destructive" className="bg-rose-500/20 text-rose-500 border-none font-black text-[9px] uppercase tracking-widest px-3">
-                           Qty: {product.stockQuantity}
-                        </Badge>
-                      </div>
-                    )) : (
-                      <div className="py-12 text-center text-muted-foreground font-bold uppercase text-[9px] italic">No safety threshold violations detected.</div>
-                    )}
-                  </div>
-                </CardContent>
-             </Card>
-
-             <Card className="glass-card border-none rounded-[2rem] overflow-hidden">
-                <CardHeader className="border-b border-white/5 py-6 px-8">
-                  <div className="flex items-center gap-3">
-                    <MapPin className="h-5 w-5 text-primary" />
-                    <CardTitle className="text-lg font-black uppercase italic tracking-tighter text-white">Regional Grid Map</CardTitle>
-                  </div>
-                </CardHeader>
-                <CardContent className="p-6 pt-2">
-                   <RegionalNodeMap />
-                </CardContent>
-             </Card>
-          </div>
-        </div>
-
-        <div className="space-y-8">
-          <Card className="command-gradient text-background border-none shadow-xl rounded-[2.5rem] p-10 relative overflow-hidden">
-            <div className="relative z-10 space-y-8">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-4">
-                  <Cpu className="h-7 w-7" />
-                  <CardTitle className="text-2xl font-black uppercase italic tracking-tighter">AI Synthesis</CardTitle>
-                </div>
-                {aiAnalysis && (
-                  <Button 
-                    variant="ghost" 
-                    size="icon" 
-                    className="h-10 w-10 rounded-full bg-background/20 hover:bg-background/40 text-background"
-                    onClick={handlePlayAnalysis}
-                    disabled={isSynthesizing}
-                  >
-                    {isSynthesizing ? <Loader2 className="h-5 w-5 animate-spin" /> : <Volume2 className="h-5 w-5" />}
-                  </Button>
-                )}
-              </div>
-              {aiAnalysis ? (
-                <div className="space-y-6 animate-in slide-in-from-bottom-2 duration-500">
-                  <div className="p-5 bg-background/20 rounded-2xl border border-background/10">
-                    <p className="text-[11px] leading-relaxed font-bold italic">"{aiAnalysis.summary}"</p>
-                  </div>
-                  <div className="space-y-3">
-                     {aiAnalysis.recommendations.slice(0, 3).map((rec, idx) => (
-                       <div key={idx} className="flex gap-3 items-start text-[9px] font-black uppercase tracking-wide leading-snug">
-                          <CheckCircle2 className="h-3 w-3 shrink-0 mt-0.5" />
-                          <span>{rec}</span>
-                       </div>
-                     ))}
-                  </div>
-
-                  {aiAnalysis.clusterScores && (
-                    <div className="space-y-3 pt-4 border-t border-background/10">
-                       <p className="text-[9px] font-black uppercase tracking-widest opacity-60">Cluster Efficiency</p>
-                       <div className="grid grid-cols-2 gap-3">
-                         {aiAnalysis.clusterScores.slice(0, 2).map((score, i) => (
-                           <div key={i} className="bg-background/10 p-3 rounded-xl">
-                             <div className="flex justify-between items-center mb-1">
-                               <span className="text-[8px] font-bold uppercase">{score.category}</span>
-                               <span className="text-[10px] font-black">{score.score}%</span>
-                             </div>
-                             <div className="h-1 w-full bg-background/10 rounded-full overflow-hidden">
-                               <div className="h-full bg-background/60" style={{ width: `${score.score}%` }} />
-                             </div>
-                           </div>
-                         ))}
-                       </div>
-                    </div>
-                  )}
-
-                  <Button variant="secondary" className="w-full h-12 rounded-xl font-black text-[9px] uppercase tracking-widest bg-background text-primary hover:bg-background/90" onClick={handleRunAIAnalysis} disabled={isAnalyzing}>
-                    {isAnalyzing ? <Loader2 className="h-4 w-4 animate-spin" /> : "Refresh Intelligence"}
-                  </Button>
-                </div>
-              ) : (
-                <div className="space-y-6">
-                  <p className="text-[11px] font-bold opacity-90 leading-relaxed">Synthesize logistics patterns and stock density for strategic oversight.</p>
-                  <Button 
-                    className="w-full h-12 bg-background/20 backdrop-blur-sm text-background hover:bg-background hover:text-primary font-black rounded-xl shadow-lg transition-all uppercase tracking-widest text-[9px] border border-background/20"
-                    onClick={handleRunAIAnalysis}
-                    disabled={isAnalyzing}
-                  >
-                    {isAnalyzing ? <Loader2 className="h-4 w-4 animate-spin" /> : "Run Neural Audit"}
-                  </Button>
-                </div>
-              )}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        <Card className="lg:col-span-2 glass-card border-none rounded-[2rem] overflow-hidden">
+          <CardHeader className="border-b border-white/5 py-8 px-10 flex flex-row items-center justify-between">
+            <div className="flex items-center gap-3"><BarChart3 className="h-5 w-5 text-primary" /><CardTitle className="text-xl font-black uppercase italic text-white">Profit Intensity Log</CardTitle></div>
+            <Badge className="text-[9px] font-black uppercase tracking-widest bg-primary/10 text-primary px-4 py-1.5 rounded-lg">7 Cycle Intensity</Badge>
+          </CardHeader>
+          <CardContent className="p-10">
+            <div className="h-[300px] w-full">
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart data={chartData}>
+                  <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{fill: '#64748b', fontSize: 10, fontWeight: 800}} dy={10} />
+                  <YAxis hide />
+                  <Tooltip cursor={{fill: 'rgba(255,255,255,0.05)'}} contentStyle={{backgroundColor: '#020617', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '12px'}} labelStyle={{color: '#f8fafc', fontWeight: 800, textTransform: 'uppercase', fontSize: '10px'}} />
+                  <Bar dataKey="profit" radius={[4, 4, 0, 0]}>
+                    {chartData.map((entry, index) => <Cell key={index} fill={entry.profit > 0 ? '#10b981' : '#334155'} fillOpacity={0.8} />)}
+                  </Bar>
+                </BarChart>
+              </ResponsiveContainer>
             </div>
-          </Card>
+          </CardContent>
+        </Card>
 
-          <Card className="glass-card border-none rounded-[2rem] p-8 space-y-6">
-            <h3 className="text-[9px] font-black text-muted-foreground uppercase tracking-widest">Network Stability</h3>
-            <div className="space-y-4">
-              <div className="flex justify-between items-center text-[10px] font-black uppercase">
-                <span className="text-muted-foreground">Encryption</span>
-                <span className="text-emerald-500">Active</span>
-              </div>
-              <div className="flex justify-between items-center text-[10px] font-black uppercase">
-                <span className="text-muted-foreground">Grid Uptime</span>
-                <span className="text-primary">99.98%</span>
-              </div>
-              <div className="flex justify-between items-center text-[10px] font-black uppercase">
-                <span className="text-muted-foreground">Sync Latency</span>
-                <span className="text-primary">12ms</span>
-              </div>
+        <Card className="command-gradient text-background border-none shadow-xl rounded-[2.5rem] p-10 relative overflow-hidden flex flex-col justify-between">
+          <div className="space-y-8">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-4"><Cpu className="h-7 w-7" /><CardTitle className="text-2xl font-black uppercase italic">AI Synthesis</CardTitle></div>
+              {aiAnalysis && <Button variant="ghost" size="icon" className="h-10 w-10 rounded-full bg-background/20 text-background" onClick={handlePlayAnalysis} disabled={isSynthesizing}>{isSynthesizing ? <Loader2 className="h-5 w-5 animate-spin" /> : <Volume2 className="h-5 w-5" />}</Button>}
             </div>
-          </Card>
-        </div>
+            {aiAnalysis ? (
+              <div className="space-y-6 animate-in slide-in-from-bottom-2 duration-500">
+                <div className="p-5 bg-background/20 rounded-2xl border border-background/10"><p className="text-[11px] leading-relaxed font-bold italic">"{aiAnalysis.summary}"</p></div>
+                <div className="space-y-3">{aiAnalysis.recommendations.slice(0, 3).map((rec, idx) => (<div key={idx} className="flex gap-3 items-start text-[9px] font-black uppercase tracking-wide leading-snug"><CheckCircle2 className="h-3 w-3 shrink-0 mt-0.5" /><span>{rec}</span></div>))}</div>
+              </div>
+            ) : (
+              <p className="text-[11px] font-bold opacity-90 leading-relaxed">Synthesize regional patterns and profitability trends for strategic oversight.</p>
+            )}
+          </div>
+          <Button className="w-full h-14 bg-background/20 backdrop-blur-sm text-background hover:bg-background hover:text-primary font-black rounded-xl transition-all uppercase tracking-widest text-[9px] mt-8" onClick={handleRunAIAnalysis} disabled={isAnalyzing}>{isAnalyzing ? <Loader2 className="h-4 w-4 animate-spin" /> : "Run Neural Audit"}</Button>
+        </Card>
       </div>
-
-      <style jsx global>{`
-        @keyframes marquee {
-          0% { transform: translateX(0); }
-          100% { transform: translateX(-50%); }
-        }
-        .animate-marquee {
-          animation: marquee 40s linear infinite;
-        }
-        .pause {
-          animation-play-state: paused;
-        }
-      `}</style>
     </div>
   );
 }

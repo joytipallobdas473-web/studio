@@ -3,31 +3,32 @@
 
 import { useFirestore, useCollection, useUser, useMemoFirebase } from "@/firebase";
 import { collection, query, where } from "firebase/firestore";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { 
   Search, 
-  Filter, 
   Clock, 
   Truck, 
-  PackageCheck, 
-  XCircle, 
   Loader2, 
   MapPin, 
   ChevronRight, 
-  ArrowLeft,
   Calendar,
   Layers,
   Zap,
   Box,
   CheckCircle2,
-  AlertCircle
+  AlertCircle,
+  XCircle,
+  CopyPlus
 } from "lucide-react";
 import { useState, useMemo } from "react";
 import { format } from "date-fns";
 import { cn } from "@/lib/utils";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { Button } from "@/components/ui/button";
+import { toast } from "@/hooks/use-toast";
 
 const STATUS_MAP = {
   pending: { label: "Logged", color: "text-amber-500", icon: Clock, step: 1 },
@@ -42,6 +43,7 @@ const STATUS_MAP = {
 export default function HistoryPage() {
   const db = useFirestore();
   const { user } = useUser();
+  const router = useRouter();
   const [searchTerm, setSearchTerm] = useState("");
 
   const historyQuery = useMemoFirebase(() => {
@@ -71,9 +73,23 @@ export default function HistoryPage() {
     );
   }, [orders, searchTerm]);
 
+  const handleCloneManifest = (order: any) => {
+    // Pack the manifest into local storage for the order page to pick up
+    try {
+      localStorage.setItem("aether_clone_payload", JSON.stringify({
+        items: order.items,
+        timestamp: Date.now()
+      }));
+      toast({ title: "Manifest Cloned", description: "Packet repopulated for high-speed reorder." });
+      router.push("/dashboard/order");
+    } catch (e) {
+      toast({ title: "Protocol Failure", description: "Could not cache manifest signature.", variant: "destructive" });
+    }
+  };
+
   if (loading) {
     return (
-      <div className="flex h-[60vh] items-center justify-center">
+      <div className="flex h-[70vh] items-center justify-center">
         <div className="flex flex-col items-center gap-4">
           <Loader2 className="h-10 w-10 animate-spin text-emerald-600 opacity-30" />
           <p className="text-[10px] font-black uppercase tracking-[0.4em] text-slate-400">Syncing Packet Log...</p>
@@ -84,7 +100,6 @@ export default function HistoryPage() {
 
   return (
     <div className="space-y-10 animate-in fade-in duration-700 pb-20">
-      {/* Header Protocol */}
       <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-8 bg-white p-8 rounded-[2rem] border border-slate-200 shadow-sm">
         <div className="space-y-1">
           <div className="flex items-center gap-3">
@@ -110,7 +125,6 @@ export default function HistoryPage() {
         </div>
       </div>
 
-      {/* Grid Log */}
       {filteredOrders.length > 0 ? (
         <div className="grid grid-cols-1 gap-6">
           {filteredOrders.map((order) => {
@@ -122,7 +136,6 @@ export default function HistoryPage() {
               <Card key={order.id} className="group border-none shadow-sm bg-white rounded-[2rem] overflow-hidden hover:shadow-md transition-all duration-500">
                 <CardContent className="p-0">
                   <div className="flex flex-col lg:flex-row items-stretch">
-                    {/* Primary Info */}
                     <div className="flex-1 p-8 space-y-6">
                        <div className="flex justify-between items-start">
                          <div className="space-y-1">
@@ -165,7 +178,6 @@ export default function HistoryPage() {
                        </div>
                     </div>
 
-                    {/* Timeline Protocol */}
                     <div className="lg:w-80 bg-slate-50/50 border-t lg:border-t-0 lg:border-l border-slate-100 p-8 flex flex-col justify-center gap-6">
                        <div className="flex items-center justify-between mb-2">
                          <span className="text-[9px] font-black uppercase tracking-[0.2em] text-slate-400">Logistics Flow</span>
@@ -175,7 +187,6 @@ export default function HistoryPage() {
                          </div>
                        </div>
                        
-                       {/* Visual Timeline Stepper */}
                        <div className="relative h-1 w-full bg-slate-200 rounded-full overflow-hidden">
                           <div 
                             className={cn("absolute top-0 left-0 h-full transition-all duration-1000 ease-out", 
@@ -195,10 +206,17 @@ export default function HistoryPage() {
                          ))}
                        </div>
 
-                       <div className="pt-2">
+                       <div className="pt-2 grid grid-cols-2 gap-3">
+                         <Button 
+                            variant="outline" 
+                            className="h-11 rounded-xl border-slate-200 text-slate-500 hover:text-emerald-600 hover:bg-white font-black uppercase tracking-widest text-[9px] transition-all"
+                            onClick={() => handleCloneManifest(order)}
+                          >
+                           <CopyPlus className="mr-2 h-3.5 w-3.5" /> Clone
+                         </Button>
                          <Link href={`/dashboard/history/${order.id}`} className="block">
                            <Button variant="outline" className="w-full h-11 rounded-xl border-slate-200 text-slate-500 hover:text-emerald-600 hover:bg-white font-black uppercase tracking-widest text-[9px] transition-all">
-                             Expand telemetry <ChevronRight className="ml-2 h-3.5 w-3.5" />
+                             Expand <ChevronRight className="ml-1 h-3.5 w-3.5" />
                            </Button>
                          </Link>
                        </div>
