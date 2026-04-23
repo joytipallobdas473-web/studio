@@ -82,12 +82,6 @@ export default function AdminOrdersPage() {
     toast({ title: "Protocol Synchronized" });
   };
 
-  const handlePaymentUpdate = (orderId: string, newPaymentMethod: string) => {
-    if (!db) return;
-    updateDocumentNonBlocking(doc(db, "orders", orderId), { paymentMethod: newPaymentMethod });
-    toast({ title: "Payment Synchronized" });
-  };
-
   const handleOpenEdit = (order: any) => {
     setEditingOrder(order);
     setEditForm({
@@ -112,12 +106,24 @@ export default function AdminOrdersPage() {
     setEditingOrder(null);
   };
 
+  const getStatusColor = (status: string) => {
+    switch ((status || "").toLowerCase()) {
+      case "delivered": return "text-emerald-400 border-emerald-400/20 bg-emerald-400/5";
+      case "processing": return "text-cyan-400 border-cyan-400/20 bg-cyan-400/5";
+      case "pending": return "text-amber-400 border-amber-400/20 bg-amber-400/5";
+      case "shipped": return "text-blue-400 border-blue-400/20 bg-blue-400/5";
+      case "cancelled": return "text-rose-500 border-rose-500/20 bg-rose-500/5";
+      case "return_pending": return "text-orange-400 border-orange-400/20 bg-orange-400/5";
+      default: return "text-slate-400 border-white/10 bg-white/5";
+    }
+  };
+
   const filteredOrders = useMemo(() => {
-    const query = searchQuery.toLowerCase();
+    const queryStr = searchQuery.toLowerCase();
     return orders.filter(order => {
       const matchesStore = storeFilter === "all" || order.storeName === storeFilter;
       const matchesStatus = statusFilter === "all" || order.status === statusFilter;
-      const matchesSearch = order.id.toLowerCase().includes(query) || (order.storeName || "").toLowerCase().includes(query);
+      const matchesSearch = order.id.toLowerCase().includes(queryStr) || (order.storeName || "").toLowerCase().includes(queryStr);
       return matchesStore && matchesStatus && matchesSearch;
     });
   }, [orders, storeFilter, statusFilter, searchQuery]);
@@ -241,6 +247,71 @@ export default function AdminOrdersPage() {
           </Table>
         </CardContent>
       </Card>
+
+      <div className="md:hidden grid grid-cols-1 gap-4 print:hidden">
+        {filteredOrders.length > 0 ? filteredOrders.map((order) => (
+          <Card key={order.id} className="border-none glass-card rounded-3xl overflow-hidden p-6 relative group">
+            <div className="space-y-5">
+              <div className="flex justify-between items-start">
+                <div className="flex flex-col">
+                   <span className="text-[9px] font-mono font-black text-primary uppercase tracking-widest">PKT-{order.id.substring(0, 8)}</span>
+                   <span className="font-black text-white text-base uppercase italic mt-1 leading-none">{order.storeName}</span>
+                </div>
+                <Badge variant="outline" className={cn("h-7 px-3 font-black rounded-lg text-[8px] tracking-widest uppercase border shadow-none", getStatusColor(order.status))}>
+                  {order.status}
+                </Badge>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4 py-4 border-t border-b border-white/5">
+                 <div className="space-y-1">
+                    <span className="text-[8px] font-black uppercase text-muted-foreground tracking-widest">Revenue</span>
+                    <p className="text-sm font-black text-primary font-mono">₹{(order.total || 0).toFixed(2)}</p>
+                 </div>
+                 <div className="space-y-1 text-right">
+                    <span className="text-[8px] font-black uppercase text-muted-foreground tracking-widest">Net Profit</span>
+                    <p className="text-sm font-black text-emerald-400 font-mono">₹{(order.profit || 0).toFixed(2)}</p>
+                 </div>
+              </div>
+
+              <div className="space-y-2">
+                 <p className="text-[10px] font-bold text-white uppercase italic truncate">{order.items}</p>
+                 <div className="flex flex-col gap-1.5 opacity-60">
+                    <div className="flex items-center gap-2 text-[9px] text-muted-foreground font-bold">
+                       <Mail className="h-3 w-3" /> {order.email}
+                    </div>
+                    <div className="flex items-start gap-2 text-[8px] text-muted-foreground leading-tight">
+                       <MapPin className="h-3 w-3 shrink-0" /> {order.deliveryAddress}
+                    </div>
+                 </div>
+              </div>
+
+              <div className="flex gap-2 pt-1">
+                 <Select value={order.status} onValueChange={(val) => handleStatusUpdate(order.id, val)}>
+                    <SelectTrigger className="flex-1 h-12 text-[10px] font-black uppercase rounded-xl border-white/10 bg-white/5">
+                       <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent className="glass-card border-white/10 text-white rounded-2xl">
+                       {STATUS_OPTIONS.slice(1).map(opt => (
+                          <SelectItem key={opt.value} value={opt.value} className="text-[10px] font-black uppercase">{opt.label}</SelectItem>
+                       ))}
+                    </SelectContent>
+                 </Select>
+                 <Button size="icon" variant="outline" className="h-12 w-12 rounded-xl bg-white/5 border-white/10 text-rose-500" onClick={() => handleOpenEdit(order)}>
+                    <Edit2 className="h-5 w-5" />
+                 </Button>
+                 <Button size="icon" variant="outline" className="h-12 w-12 rounded-xl bg-white/5 border-white/10 text-primary" onClick={() => setSelectedInvoice(order)}>
+                    <Printer className="h-5 w-5" />
+                 </Button>
+              </div>
+            </div>
+          </Card>
+        )) : (
+          <div className="text-center py-20 glass-card rounded-[2.5rem] border border-dashed border-white/10">
+             <Globe className="h-12 w-12 mx-auto mb-4 text-primary opacity-20 animate-spin-slow" />
+             <p className="text-[10px] text-muted-foreground font-black uppercase tracking-widest">No Packet Telemetry Detected</p>
+          </div>
+        )}
+      </div>
 
       <style jsx global>{`
         @media print {
