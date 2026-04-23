@@ -28,7 +28,8 @@
         "category": { "type": "string" },
         "distributorName": { "type": "string", "description": "The name of the distributor who supplied the stock." },
         "imageUrl": { "type": "string", "description": "Primary public URL for the product identity image." },
-        "imageUrls": { "type": "array", "items": { "type": "string" }, "description": "Up to 3 product identity images for multi-angle view." }
+        "imageUrls": { "type": "array", "items": { "type": "string" }, "description": "Up to 3 product identity images for multi-angle view." },
+        "isHidden": { "type": "boolean", "description": "If true, this SKU is hidden from the branch portal." }
       },
       "required": ["id", "name", "price", "stockQuantity"]
     },

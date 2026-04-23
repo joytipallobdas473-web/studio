@@ -10,10 +10,11 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { Plus, Search, Edit2, Trash2, Loader2, Filter, CheckCircle2, ImageIcon, Camera, CameraOff, Sparkles, Globe, X, Box, Upload, Wand2, Truck, Printer, FileText, TrendingUp, DollarSign } from "lucide-react";
+import { Plus, Search, Edit2, Trash2, Loader2, Filter, CheckCircle2, ImageIcon, Camera, CameraOff, Sparkles, Globe, X, Box, Upload, Wand2, Truck, Printer, FileText, TrendingUp, DollarSign, Eye, EyeOff } from "lucide-react";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Switch } from "@/components/ui/switch";
 import { toast } from "@/hooks/use-toast";
 import { addDocumentNonBlocking, updateDocumentNonBlocking, deleteDocumentNonBlocking } from "@/firebase";
 import { Badge } from "@/components/ui/badge";
@@ -60,6 +61,7 @@ export default function InventoryControl() {
     category: "Electronics",
     distributorName: "",
     description: "",
+    isHidden: false,
     imageUrls: ["", "", ""]
   };
 
@@ -92,6 +94,7 @@ export default function InventoryControl() {
         category: product.category || "Electronics",
         distributorName: product.distributorName || "",
         description: product.description || "",
+        isHidden: product.isHidden || false,
         imageUrls: initialImages
       });
     } else {
@@ -210,6 +213,7 @@ export default function InventoryControl() {
       category: formData.category,
       distributorName: formData.distributorName.trim(),
       description: formData.description.trim(),
+      isHidden: formData.isHidden,
       imageUrl: primaryImage,
       imageUrls: formData.imageUrls,
       updatedAt: serverTimestamp()
@@ -399,9 +403,19 @@ export default function InventoryControl() {
                               className="object-cover" 
                               data-ai-hint="product photo"
                             />
+                            {product.isHidden && (
+                              <div className="absolute inset-0 bg-black/60 flex items-center justify-center">
+                                <EyeOff className="h-4 w-4 text-rose-500" />
+                              </div>
+                            )}
                           </div>
                           <div className="flex flex-col">
-                            <span className="font-black text-white text-sm uppercase italic">{product.name}</span>
+                            <div className="flex items-center gap-2">
+                              <span className="font-black text-white text-sm uppercase italic">{product.name}</span>
+                              {product.isHidden && (
+                                <Badge variant="outline" className="text-[8px] border-rose-500/20 text-rose-500 uppercase font-black px-1.5 py-0">Hidden</Badge>
+                              )}
+                            </div>
                             <span className="text-[10px] font-mono text-muted-foreground uppercase">{product.sku}</span>
                           </div>
                         </div>
@@ -476,6 +490,11 @@ export default function InventoryControl() {
                       className="object-cover" 
                       data-ai-hint="product photo"
                     />
+                    {product.isHidden && (
+                      <div className="absolute inset-0 bg-black/60 flex items-center justify-center">
+                        <EyeOff className="h-4 w-4 text-rose-500" />
+                      </div>
+                    )}
                   </div>
                   <div className="flex-1 space-y-3 min-w-0">
                     <div className="flex justify-between items-start">
@@ -483,8 +502,8 @@ export default function InventoryControl() {
                         <span className="font-black text-white text-base uppercase italic truncate">{product.name}</span>
                         <span className="text-[10px] font-mono text-muted-foreground uppercase">{product.sku}</span>
                       </div>
-                      <Badge variant="outline" className="text-[8px] uppercase font-black px-2 py-0.5 rounded-lg border-white/10 text-primary">
-                        {product.category}
+                      <Badge variant="outline" className={cn("text-[8px] uppercase font-black px-2 py-0.5 rounded-lg border-white/10", product.isHidden ? "text-rose-500 border-rose-500/20" : "text-primary")}>
+                        {product.isHidden ? "Hidden" : product.category}
                       </Badge>
                     </div>
                     
@@ -536,9 +555,20 @@ export default function InventoryControl() {
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
         <DialogContent className="sm:max-w-[800px] rounded-[2.5rem] p-10 glass-card border-none shadow-2xl overflow-y-auto max-h-[95vh] bg-white text-slate-900">
           <DialogHeader>
-            <DialogTitle className="text-3xl font-black uppercase italic text-primary">
-              {editingProduct ? "Modify SKU Node" : "Provision Cluster"}
-            </DialogTitle>
+            <div className="flex justify-between items-start">
+              <DialogTitle className="text-3xl font-black uppercase italic text-primary">
+                {editingProduct ? "Modify SKU Node" : "Provision Cluster"}
+              </DialogTitle>
+              <div className="flex flex-col items-end gap-2 bg-slate-50 p-4 rounded-2xl border border-slate-100">
+                <Label className="text-[9px] font-black uppercase tracking-widest text-slate-500">Stealth Protocol</Label>
+                <div className="flex items-center gap-3">
+                  <span className={cn("text-[9px] font-black uppercase tracking-widest", formData.isHidden ? "text-rose-500" : "text-slate-400")}>
+                    {formData.isHidden ? "Stealth Active" : "Visible on Grid"}
+                  </span>
+                  <Switch checked={formData.isHidden} onCheckedChange={(val) => setFormData({...formData, isHidden: val})} className="data-[state=checked]:bg-rose-500" />
+                </div>
+              </div>
+            </div>
           </DialogHeader>
           <div className="grid gap-8 py-6">
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-10 items-start">

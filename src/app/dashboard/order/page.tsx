@@ -122,7 +122,10 @@ export default function NewOrderPage() {
 
   const filteredProducts = useMemo(() => {
     if (!products) return [];
-    let list = [...products].sort((a, b) => (a.name || "").localeCompare(b.name || ""));
+    // Only show products that are NOT hidden by stealth protocol
+    let list = [...products]
+      .filter(p => !p.isHidden)
+      .sort((a, b) => (a.name || "").localeCompare(b.name || ""));
     
     const queryStr = searchQuery.toLowerCase();
     return list.filter(p => {
