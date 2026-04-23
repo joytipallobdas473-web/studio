@@ -43,6 +43,7 @@
         "items": { "type": "string" },
         "quantity": { "type": "number" },
         "total": { "type": "number" },
+        "profit": { "type": "number", "description": "Net profit generated from this order (Revenue - Cost)." },
         "status": { "type": "string", "enum": ["pending", "processing", "shipped", "delivered", "cancelled", "return_pending", "returned"] },
         "paymentMethod": { "type": "string", "enum": ["cash", "after_delivery", "paid"] },
         "storeName": { "type": "string" },

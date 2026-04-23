@@ -9,7 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Download, Search, FileText, Filter, Loader2, Phone, MapPin, Mail, Globe, CheckCircle2, Truck, Printer, X, Edit2, ShieldAlert, Save } from "lucide-react";
+import { Download, Search, FileText, Filter, Loader2, Phone, MapPin, Mail, Globe, CheckCircle2, Truck, Printer, X, Edit2, ShieldAlert, Save, TrendingUp, DollarSign } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
 import { format } from "date-fns";
 import { updateDocumentNonBlocking } from "@/firebase";
@@ -45,6 +45,7 @@ export default function AdminOrdersPage() {
   const [editForm, setEditForm] = useState({
     items: "",
     total: "0",
+    profit: "0",
     quantity: "0"
   });
 
@@ -98,6 +99,7 @@ export default function AdminOrdersPage() {
     setEditForm({
       items: order.items || "",
       total: (order.total || 0).toString(),
+      profit: (order.profit || 0).toString(),
       quantity: (order.quantity || 0).toString()
     });
   };
@@ -109,6 +111,7 @@ export default function AdminOrdersPage() {
     updateDocumentNonBlocking(orderRef, {
       items: editForm.items,
       total: parseFloat(editForm.total) || 0,
+      profit: parseFloat(editForm.profit) || 0,
       quantity: parseInt(editForm.quantity) || 0
     });
 
@@ -135,7 +138,7 @@ export default function AdminOrdersPage() {
     const ordersToExport = orderId ? orders.filter(o => o.id === orderId) : filteredOrders;
     if (!ordersToExport || ordersToExport.length === 0) return;
 
-    const headers = ["Packet ID", "Node", "Gmail", "Phone", "Delivery Address", "Payment", "Timestamp", "Items", "Quantity", "Total (₹)", "Status"];
+    const headers = ["Packet ID", "Node", "Gmail", "Phone", "Delivery Address", "Payment", "Timestamp", "Items", "Quantity", "Total (₹)", "Profit (₹)", "Status"];
     const csvContent = [
       headers,
       ...ordersToExport.map(o => [
@@ -149,6 +152,7 @@ export default function AdminOrdersPage() {
         `"${o.items || 'Restock'}"`,
         o.quantity || 1,
         (o.total || 0).toFixed(2),
+        (o.profit || 0).toFixed(2),
         o.status
       ])
     ].map(e => e.join(",")).join("\n");
@@ -218,7 +222,7 @@ export default function AdminOrdersPage() {
                  />
               </div>
 
-              <div className="grid grid-cols-2 gap-6">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                  <div className="space-y-3">
                     <Label className="text-[9px] font-black uppercase tracking-widest text-muted-foreground ml-1">Commit Valuation (₹)</Label>
                     <Input 
@@ -226,6 +230,15 @@ export default function AdminOrdersPage() {
                        value={editForm.total}
                        onChange={(e) => setEditForm({...editForm, total: e.target.value})}
                        className="h-14 bg-white/5 border-white/10 rounded-2xl text-white font-mono font-black"
+                    />
+                 </div>
+                 <div className="space-y-3">
+                    <Label className="text-[9px] font-black uppercase tracking-widest text-muted-foreground ml-1">Net Profit (₹)</Label>
+                    <Input 
+                       type="number"
+                       value={editForm.profit}
+                       onChange={(e) => setEditForm({...editForm, profit: e.target.value})}
+                       className="h-14 bg-white/5 border-white/10 rounded-2xl text-emerald-500 font-mono font-black"
                     />
                  </div>
                  <div className="space-y-3">
@@ -474,11 +487,17 @@ export default function AdminOrdersPage() {
                             </SelectContent>
                           </Select>
                         </div>
-                        <div className="flex items-center gap-2">
-                           <span className="text-[10px] font-black text-primary tracking-widest">₹{(order.total || 0).toFixed(2)}</span>
-                           <span className="text-[9px] text-muted-foreground font-mono">Qty: {order.quantity || 1}</span>
+                        <div className="flex items-center gap-3">
+                           <div className="flex flex-col">
+                             <span className="text-[10px] font-black text-primary tracking-widest">₹{(order.total || 0).toFixed(2)}</span>
+                             <div className="flex items-center gap-1 mt-0.5">
+                               <TrendingUp className="h-2.5 w-2.5 text-emerald-500" />
+                               <span className="text-[8px] font-black text-emerald-500 uppercase">Profit: ₹{(order.profit || 0).toFixed(2)}</span>
+                             </div>
+                           </div>
+                           <span className="text-[9px] text-muted-foreground font-mono self-start mt-1">Qty: {order.quantity || 1}</span>
                         </div>
-                        <span className="text-[9px] text-muted-foreground font-mono">
+                        <span className="text-[9px] text-muted-foreground font-mono mt-1">
                           {order.createdAt?.seconds ? format(order.createdAt.seconds * 1000, 'MMM dd • HH:mm') : 'SYNCING'}
                         </span>
                       </div>
@@ -625,7 +644,10 @@ export default function AdminOrdersPage() {
 
             <div className="flex items-center justify-between border-t border-white/5 pt-4">
                <div className="space-y-0.5">
-                  <p className="text-xs font-black text-primary font-mono">₹{(order.total || 0).toFixed(2)}</p>
+                  <div className="flex items-center gap-2">
+                    <p className="text-xs font-black text-primary font-mono">₹{(order.total || 0).toFixed(2)}</p>
+                    <p className="text-[8px] font-black text-emerald-500 uppercase tracking-tighter">P: ₹{(order.profit || 0).toFixed(2)}</p>
+                  </div>
                   <p className="text-[9px] text-muted-foreground font-mono truncate max-w-[150px]">{order.items || 'Payload'}</p>
                </div>
                <div className="flex gap-2">

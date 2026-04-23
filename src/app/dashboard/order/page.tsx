@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, useMemo, useEffect } from "react";
@@ -71,6 +72,7 @@ interface CartItem {
   name: string;
   price: number;
   mrp: number;
+  costPrice: number;
   quantity: number;
   sku: string;
 }
@@ -165,6 +167,7 @@ export default function NewOrderPage() {
           name: product.name,
           price: product.price,
           mrp: product.mrp || product.price,
+          costPrice: product.costPrice || 0,
           sku: product.sku,
           quantity: qtyToApply
         }
@@ -191,13 +194,15 @@ export default function NewOrderPage() {
     toast({ title: "Item Purged", variant: "destructive" });
   };
 
-  const { cartTotal, cartMrpTotal, cartDiscount, cartItemCount } = useMemo(() => {
+  const { cartTotal, cartCostTotal, cartMrpTotal, cartDiscount, cartItemCount } = useMemo(() => {
     const items = Object.values(cart);
     const total = items.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+    const costTotal = items.reduce((sum, item) => sum + (item.costPrice * item.quantity), 0);
     const mrpTotal = items.reduce((sum, item) => sum + (item.mrp * item.quantity), 0);
     const count = items.reduce((sum, item) => sum + item.quantity, 0);
     return {
       cartTotal: total,
+      cartCostTotal: costTotal,
       cartMrpTotal: mrpTotal,
       cartDiscount: mrpTotal - total,
       cartItemCount: count
@@ -228,11 +233,15 @@ export default function NewOrderPage() {
       .map(i => `${i.name} (x${i.quantity})`)
       .join(", ");
 
+    const totalRevenue = cartTotal + deliveryFee;
+    const totalProfit = cartTotal - cartCostTotal;
+
     const orderData = {
       items: itemSummary,
       userId: user.uid,
       quantity: cartItemCount,
-      total: cartTotal + deliveryFee,
+      total: totalRevenue,
+      profit: totalProfit,
       phoneNumber: phoneNumber.trim(),
       deliveryAddress: deliveryAddress.trim(),
       paymentMethod: paymentMethod,
