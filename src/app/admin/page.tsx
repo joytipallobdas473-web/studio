@@ -236,7 +236,7 @@ export default function AdminOverview() {
                   <AlertCircle className="h-5 w-5 text-rose-500" />
                   <CardTitle className="text-lg font-black uppercase italic text-white">Critical Stock Nodes</CardTitle>
                </div>
-               <Badge className="text-[8px] font-bold uppercase tracking-widest bg-rose-500/10 text-rose-500 border-none">Safety Threshold < 10</Badge>
+               <Badge className="text-[8px] font-bold uppercase tracking-widest bg-rose-500/10 text-rose-500 border-none">Safety Threshold &lt; 10</Badge>
             </CardHeader>
             <CardContent className="p-0">
                <div className="divide-y divide-white/5">
