@@ -441,7 +441,9 @@ export default function NewOrderPage() {
                 const price = product.price || 0;
                 const marginAmount = mrp - price;
                 const marginPercent = mrp > 0 ? ((marginAmount / mrp) * 100).toFixed(1) : 0;
-                const isHighDemand = Math.random() > 0.7; // Simulation logic
+                
+                // Stable demand logic based on SKU characters
+                const isHighDemand = (product.sku?.charCodeAt(0) || 0) % 3 === 0;
 
                 return (
                   <Card key={product.id} className="group overflow-hidden border border-slate-200 shadow-sm hover:shadow-md transition-all duration-500 flex flex-col bg-white rounded-3xl relative">

@@ -35,6 +35,11 @@ export default function InventoryControl() {
   const [selectedLabelProduct, setSelectedLabelProduct] = useState<any>(null);
   const [isBulkImportOpen, setIsBulkImportOpen] = useState(false);
   const [isImporting, setIsImporting] = useState(false);
+  const [isClient, setIsClient] = useState(false);
+
+  useEffect(() => {
+    setIsClient(true);
+  }, []);
   
   const isAdmin = useMemo(() => {
     return user?.email?.toLowerCase().includes("admin") || user?.uid === MASTER_ADMIN_UID;
@@ -273,7 +278,7 @@ export default function InventoryControl() {
     return list;
   }, [products, searchQuery, filterCategory, filterDistributor]);
 
-  if (loading) {
+  if (!isClient || loading) {
     return (
       <div className="flex h-[70vh] items-center justify-center">
         <Loader2 className="h-12 w-12 animate-spin text-primary opacity-50" />
@@ -310,9 +315,11 @@ export default function InventoryControl() {
                  </div>
                  <div className="w-full h-12 bg-slate-900 flex items-center justify-center rounded">
                     <div className="h-10 w-[90%] bg-white flex items-center justify-around px-2">
-                       {Array.from({length: 30}).map((_, i) => (
-                         <div key={i} className="h-full bg-slate-900" style={{width: `${Math.random() * 4 + 1}px`}} />
-                       ))}
+                       {Array.from({length: 30}).map((_, i) => {
+                         const barWidth = ((selectedLabelProduct?.sku?.charCodeAt(i % (selectedLabelProduct?.sku?.length || 1)) || 0) % 4) + 1;
+                         return (
+                          <div key={i} className="h-full bg-slate-900" style={{width: `${barWidth}px`}} />
+                       )})}
                     </div>
                  </div>
               </div>
