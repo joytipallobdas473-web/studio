@@ -101,8 +101,18 @@
   100% { box-shadow: 0 0 0 0 rgba(245, 158, 11, 0); }
 }
 
+@keyframes pulse-emerald {
+  0% { transform: scale(1); opacity: 1; }
+  50% { transform: scale(1.1); opacity: 0.8; }
+  100% { transform: scale(1); opacity: 1; }
+}
+
 .animate-pulse-gold {
   animation: pulse-gold 3s infinite;
+}
+
+.animate-pulse-emerald {
+  animation: pulse-emerald 2s infinite ease-in-out;
 }
 
 .text-stroke {

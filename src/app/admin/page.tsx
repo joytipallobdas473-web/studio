@@ -4,7 +4,7 @@ import { useState, useMemo, useEffect, useRef } from "react";
 import { useFirestore, useCollection, useMemoFirebase, useUser, useDoc } from "@/firebase";
 import { collection, query, doc } from "firebase/firestore";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Store, Package, ShoppingCart, AlertCircle, Loader2, Cpu, Activity, Zap, Globe, TrendingUp, BarChart3, CheckCircle2, Volume2, Box } from "lucide-react";
+import { Store, Package, ShoppingCart, AlertCircle, Loader2, Cpu, Activity, Zap, Globe, TrendingUp, BarChart3, CheckCircle2, Volume2, Box, Database, ShieldCheck } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { analyzeInventory, type InventoryAnalysisOutput } from "@/ai/flows/inventory-analyst";
@@ -92,21 +92,21 @@ export default function AdminOverview() {
       {audioUrl && <audio ref={audioRef} src={audioUrl} className="hidden" onEnded={() => setAudioUrl(null)} autoPlay />}
       
       {/* Event Ticker */}
-      <div className="w-full h-12 bg-white/5 border-y border-white/5 overflow-hidden flex items-center relative rounded-xl">
-         <div className="absolute left-0 top-0 bottom-0 bg-primary px-4 flex items-center z-10">
-            <span className="text-[10px] font-black uppercase text-black">Live_Feed</span>
+      <div className="w-full h-12 bg-white/5 border-y border-white/5 overflow-hidden flex items-center relative rounded-xl group hover:bg-white/10 transition-colors">
+         <div className="absolute left-0 top-0 bottom-0 bg-primary px-4 flex items-center z-10 shadow-[5px_0_15px_rgba(0,0,0,0.5)]">
+            <span className="text-[10px] font-black uppercase text-black italic">Live_Telemetry</span>
          </div>
-         <div className="flex gap-12 animate-marquee whitespace-nowrap px-4 ml-24">
-            {orders?.slice(0, 5).map((o, i) => (
-              <div key={i} className="flex items-center gap-3 text-[10px] font-bold text-muted-foreground uppercase">
+         <div className="flex gap-12 animate-marquee whitespace-nowrap px-4 ml-36">
+            {orders?.slice(0, 8).map((o, i) => (
+              <div key={i} className="flex items-center gap-3 text-[10px] font-bold text-muted-foreground uppercase tracking-tight">
                 <div className="h-1 w-1 rounded-full bg-primary" />
-                Packet Provision: PKT-{o.id.substring(0,6)} // {o.storeName} // ₹{o.total.toFixed(0)}
+                Packet Protocol: <span className="text-white">PKT-{o.id.substring(0,8)}</span> // {o.storeName} // Valuation: <span className="text-primary">₹{o.total.toFixed(0)}</span>
               </div>
             ))}
-            {stores?.slice(0, 3).map((s, i) => (
-              <div key={`s-${i}`} className="flex items-center gap-3 text-[10px] font-bold text-muted-foreground uppercase">
-                <div className="h-1 w-1 rounded-full bg-primary" />
-                Node Registry: {s.name} Registered // Status: {s.status}
+            {stores?.slice(0, 5).map((s, i) => (
+              <div key={`s-${i}`} className="flex items-center gap-3 text-[10px] font-bold text-muted-foreground uppercase tracking-tight">
+                <div className="h-1 w-1 rounded-full bg-emerald-500" />
+                Node Identity: <span className="text-white">{s.name}</span> // Registered // Grid Location: {s.location}
               </div>
             ))}
          </div>
@@ -114,13 +114,20 @@ export default function AdminOverview() {
 
       <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-6">
         <div className="space-y-1">
-          <div className="flex items-center gap-3"><div className="h-1.5 w-1.5 rounded-full bg-primary animate-pulse-gold" /><span className="text-[10px] font-black tracking-[0.4em] text-primary uppercase">Regional Command v7.0</span></div>
+          <div className="flex items-center gap-3"><div className="h-1.5 w-1.5 rounded-full bg-primary animate-pulse-gold" /><span className="text-[10px] font-black tracking-[0.4em] text-primary uppercase">Regional Command v8.0</span></div>
           <h1 className="text-4xl font-black text-white uppercase italic">Command Center</h1>
         </div>
         <div className="flex gap-4">
           <Button variant="outline" className="h-12 px-6 rounded-xl font-black border-white/10 bg-white/5 text-[10px] uppercase text-white hover:text-primary" onClick={() => window.location.reload()}>
             <Zap className="mr-2 h-4 w-4" /> Refresh Grid
           </Button>
+          <div className="hidden lg:flex items-center gap-4 bg-white/5 border border-white/10 px-6 rounded-xl">
+             <div className="flex flex-col items-end">
+                <span className="text-[8px] font-black text-muted-foreground uppercase">Grid Health</span>
+                <span className="text-[10px] font-bold text-emerald-500 uppercase">Optimal Sync</span>
+             </div>
+             <Activity className="h-4 w-4 text-emerald-500" />
+          </div>
         </div>
       </div>
 

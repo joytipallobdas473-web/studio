@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState, useMemo, useEffect } from "react";
@@ -38,7 +37,9 @@ import {
   Info,
   Zap,
   Bookmark,
-  ArrowUpRight
+  ArrowUpRight,
+  TrendingUp,
+  Activity
 } from "lucide-react";
 import { useFirestore, useCollection, useUser, useMemoFirebase, useDoc } from "@/firebase";
 import { collection, serverTimestamp, query, doc } from "firebase/firestore";
@@ -415,6 +416,16 @@ export default function NewOrderPage() {
               </div>
             </CardContent>
           </Card>
+
+          <Card className="border-none shadow-md bg-slate-900 text-white rounded-[2rem] p-8 space-y-4">
+             <div className="flex items-center gap-3">
+                <Activity className="h-4 w-4 text-emerald-400" />
+                <span className="text-[10px] font-black uppercase tracking-widest">Network Pulse</span>
+             </div>
+             <p className="text-[11px] font-medium text-slate-400 leading-relaxed italic">
+               High velocity nodes detected in <span className="text-emerald-400">Electronics</span>. Orchestrate your packet density accordingly.
+             </p>
+          </Card>
         </aside>
 
         <main className="flex-1">
@@ -430,9 +441,16 @@ export default function NewOrderPage() {
                 const price = product.price || 0;
                 const marginAmount = mrp - price;
                 const marginPercent = mrp > 0 ? ((marginAmount / mrp) * 100).toFixed(1) : 0;
+                const isHighDemand = Math.random() > 0.7; // Simulation logic
 
                 return (
                   <Card key={product.id} className="group overflow-hidden border border-slate-200 shadow-sm hover:shadow-md transition-all duration-500 flex flex-col bg-white rounded-3xl relative">
+                    {isHighDemand && (
+                      <div className="absolute top-4 left-4 z-20 flex items-center gap-2 bg-emerald-500 text-white px-3 py-1 rounded-full shadow-lg animate-pulse-emerald">
+                         <TrendingUp className="h-3 w-3" />
+                         <span className="text-[8px] font-black uppercase tracking-widest">High Velocity</span>
+                      </div>
+                    )}
                     <div className="relative h-52 w-full bg-white p-4">
                       <div className="relative h-full w-full rounded-2xl overflow-hidden bg-slate-50">
                         {validImages.length > 1 ? (

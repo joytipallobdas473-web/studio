@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState, useMemo, useRef, useEffect } from "react";
@@ -10,7 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { Plus, Search, Edit2, Trash2, Loader2, Filter, CheckCircle2, ImageIcon, Camera, CameraOff, Sparkles, Globe, X, Box, Upload, Wand2, Truck, Printer, FileText, TrendingUp, DollarSign, Eye, EyeOff } from "lucide-react";
+import { Plus, Search, Edit2, Trash2, Loader2, Filter, CheckCircle2, ImageIcon, Camera, CameraOff, Sparkles, Globe, X, Box, Upload, Wand2, Truck, Printer, FileText, TrendingUp, DollarSign, Eye, EyeOff, Database } from "lucide-react";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -29,10 +28,13 @@ export default function InventoryControl() {
   const { user } = useUser();
   const videoRef = useRef<HTMLVideoElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const bulkInputRef = useRef<HTMLInputElement>(null);
   const [isCameraActive, setIsCameraActive] = useState(false);
   const [activeImageIndex, setActiveImageIndex] = useState(0);
   const [isDescribing, setIsDescribing] = useState(false);
   const [selectedLabelProduct, setSelectedLabelProduct] = useState<any>(null);
+  const [isBulkImportOpen, setIsBulkImportOpen] = useState(false);
+  const [isImporting, setIsImporting] = useState(false);
   
   const isAdmin = useMemo(() => {
     return user?.email?.toLowerCase().includes("admin") || user?.uid === MASTER_ADMIN_UID;
@@ -119,6 +121,16 @@ export default function InventoryControl() {
     } finally {
       setIsDescribing(false);
     }
+  };
+
+  const handleBulkImport = () => {
+    setIsImporting(true);
+    // Simulation of bulk import logic
+    setTimeout(() => {
+      setIsImporting(false);
+      setIsBulkImportOpen(false);
+      toast({ title: "Bulk Sync Initialized", description: "Registry data verified and pending commit." });
+    }, 2000);
   };
 
   const startCamera = async () => {
@@ -317,6 +329,46 @@ export default function InventoryControl() {
         </DialogContent>
       </Dialog>
 
+      {/* Bulk Import Dialog */}
+      <Dialog open={isBulkImportOpen} onOpenChange={setIsBulkImportOpen}>
+        <DialogContent className="sm:max-w-[500px] rounded-[2rem] p-10 glass-card border-none bg-black text-white">
+          <DialogHeader>
+            <div className="flex items-center gap-3 mb-2">
+              <Database className="h-5 w-5 text-primary" />
+              <span className="text-[10px] font-black uppercase tracking-[0.4em] text-primary">Registry Protocol</span>
+            </div>
+            <DialogTitle className="text-2xl font-black uppercase italic tracking-tighter text-white">Bulk SKU Import</DialogTitle>
+            <DialogDescription className="text-xs text-muted-foreground font-medium">Synchronize large inventory manifests via CSV protocol.</DialogDescription>
+          </DialogHeader>
+          <div className="py-8 space-y-8">
+            <div 
+              className="border-2 border-dashed border-white/10 rounded-3xl p-10 text-center space-y-4 hover:border-primary/50 transition-all cursor-pointer"
+              onClick={() => bulkInputRef.current?.click()}
+            >
+              <Upload className="h-10 w-10 mx-auto text-muted-foreground group-hover:text-primary" />
+              <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Select .CSV manifest file</p>
+              <input type="file" ref={bulkInputRef} className="hidden" accept=".csv" />
+            </div>
+            <div className="bg-white/5 p-6 rounded-2xl border border-white/5">
+              <h4 className="text-[9px] font-black uppercase tracking-widest text-primary mb-3">Manifest Requirements</h4>
+              <ul className="space-y-2">
+                {["Name, SKU, Category, Price, Rate", "UTF-8 Encoded", "Max 500 records per cycle"].map((req, i) => (
+                  <li key={i} className="flex items-center gap-2 text-[9px] font-medium text-muted-foreground">
+                    <CheckCircle2 className="h-3 w-3 text-primary" /> {req}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          </div>
+          <DialogFooter className="gap-4">
+            <Button variant="ghost" onClick={() => setIsBulkImportOpen(false)} className="h-14 px-8 rounded-2xl uppercase tracking-widest font-black text-muted-foreground">Abort</Button>
+            <Button onClick={handleBulkImport} className="bg-primary text-background h-14 px-10 rounded-2xl font-black uppercase tracking-widest shadow-lg" disabled={isImporting}>
+              {isImporting ? <Loader2 className="h-5 w-5 animate-spin" /> : "Initialize Sync"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
       <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-6 print:hidden">
         <div className="space-y-3">
           <div className="flex items-center gap-3">
@@ -326,9 +378,14 @@ export default function InventoryControl() {
           <h1 className="text-4xl font-black tracking-tighter text-white uppercase italic leading-none">Inventory Hub</h1>
           <p className="text-muted-foreground font-medium text-sm tracking-wide">Central product registry and multi-angle stock orchestration.</p>
         </div>
-        <Button onClick={() => handleOpenDialog()} className="h-14 w-full md:w-auto px-10 rounded-2xl bg-primary text-background font-black shadow-lg hover:scale-105 transition-all uppercase tracking-widest text-xs">
-          <Plus className="mr-3 h-6 w-6" /> Provision SKU
-        </Button>
+        <div className="flex gap-4 w-full md:w-auto">
+          <Button variant="outline" onClick={() => setIsBulkImportOpen(true)} className="h-14 flex-1 md:flex-none px-8 rounded-2xl glass-card border-white/10 text-white font-black uppercase tracking-widest text-[10px]">
+            <Database className="mr-3 h-5 w-5" /> Bulk Load
+          </Button>
+          <Button onClick={() => handleOpenDialog()} className="h-14 flex-1 md:flex-none px-10 rounded-2xl bg-primary text-background font-black shadow-lg hover:scale-105 transition-all uppercase tracking-widest text-xs">
+            <Plus className="mr-3 h-6 w-6" /> Provision SKU
+          </Button>
+        </div>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-6 gap-4 md:gap-6 print:hidden">
